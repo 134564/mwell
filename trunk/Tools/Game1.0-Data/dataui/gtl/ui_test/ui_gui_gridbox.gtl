@@ -1,0 +1,172 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_bag";
+DESCRIPTION "GListBox Demo";
+
+#include "../core/gui/guiInclude.h"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GGridBox demoGridBox;
+
+	//GGrid []gridItems;
+
+	int screenWidth;
+	int screenHeight;
+
+	int itemsCount;
+//	ImageSet numberRes;
+}
+
+FUNCTION init()
+{
+//	numberRes = Realize(ImageSet_Create("number240.pip"));
+	screenWidth = GetScreenWidth();
+	screenHeight = GetScreenHeight();
+	itemsCount = 100;
+
+	create_canvasUnit();
+	create_GGridBox();
+	Create_gridItems();
+	
+//	init_focusGrid();
+	
+//	Gui_GW_RequestFocus(gridItems[0]);
+}
+
+
+FUNCTION event() {
+}
+
+/////////////// common function //////////////////////
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	free (vmCU);
+	free (demoGridBox);
+//	OBJECT_FREE(gridItems);
+}
+
+FUNCTION processPacket()
+{
+}
+
+/////////////// create function //////////////////////
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(NULL,cuName));
+	free cuName;
+
+	// 设置显示大小
+	GW_setBound(vmCU, 0, 0, screenWidth, screenHeight);
+	vmCU.func_handleKey = cu_handleKey;
+}
+
+FUNCTION create_GGridBox()
+{
+	// 创建一个gridbox
+	String bagName = Realize(Object_Create("gridbox"));
+	demoGridBox = Realize(GGB_makeGGridBox(NULL, bagName, 0, 0, TRUE, TRUE, FALSE, FALSE));
+	free bagName;
+	
+	// 将gridbox添加到GVMCanvasUnit中
+	GC_addChildWidget(vmCU, demoGridBox, 0);
+	OBJECT_FREE(vmCU);
+	
+	GGB_setGaps(demoGridBox, 2, 5);
+	
+	// 设置gridbox的bound信息
+	GW_setBorderSize(demoGridBox, 2, 2, 2, 2);
+	demoGridBox.isBorderPainted = TRUE;
+	demoGridBox.borderColor = 0xff00ffff;
+	// 如果gridbox想要一些border和inset的效果，需要在调用GGB_setBound之前处理，
+	// 否则界面位置会出现偏差，因为GGB_setBound方法会根据border和inset大小调整子scrollpanel的属性
+	GGB_setBound(demoGridBox, 20, 20, screenWidth - 40, screenHeight - 40);
+}
+
+FUNCTION init_focusGrid(){
+/*	for(int i=0; i<11; i++){
+		GW_setRelativeRightWidget(gridItems[i],  gridItems[i + 1]);
+	}
+	GW_setRelativeRightWidget(gridItems[11],  gridItems[0]);
+	
+	for (i=0; i< 6; i++){
+		GW_setRelativeDownWidget(gridItems[i],  gridItems[i + 6]);
+	}
+	
+	for (i=6; i< 11; i++){
+		GW_setRelativeDownWidget(gridItems[i],  gridItems[i - 6]);
+	}*/
+}
+// 创建grids并添加到gridbox中
+FUNCTION Create_gridItems()
+{
+	//gridItems = new GGrid[itemsCount];
+	
+	for (int i=0; i<itemsCount; i++)
+	{
+		String itemsName = Realize(Object_Create("123" + i));
+		GGrid tmpGrid = Realize(GBtn_makeGButton(new GButton, "test", "btn", NULL, -1, 0));//Realize(GG_makeGGrid(NULL,itemsName, NULL, -1));
+		
+		// 初始化grid，设置了大小和一些属性
+		init_Grid(tmpGrid);
+		
+		// NOTE:	值得注意的地方，这里往gridbox中添加子控件时要求子控件必须有是有大小的，
+		//			而且这里能处理的情况是子控件大小都是一样大的，特殊情况需要自己特殊处理
+		GGB_addGrid(demoGridBox, tmpGrid);
+		
+		// 设置gris的个数
+		//GG_setNumberInfo(gridItems[i], numberRes, 120, i+1, TRUE);
+		GG_setNumberInfo(tmpGrid, NULL, -1, -1, FALSE);
+		//gridItems[i] = tmpGrid;
+		
+		if (i == 0){
+			Gui_GW_RequestFocus(tmpGrid);
+		}
+		free tmpGrid;
+
+		free itemsName;
+	}
+
+	// 当gridbox子控件都添加完毕后需要调用此方法来处理滚动效果，（会根据实际情况显示滚动条）
+	GGB_update(demoGridBox);
+}
+
+// 初始化grids的基本信息
+FUNCTION init_Grid(GGrid this)
+{
+	this.isBorderPainted = TRUE;
+	this.borderColor = 0xFF757575;
+	this.backgroundColor = 0xFFFFFFFF;
+	this.isBackgroundPainted = TRUE;
+	this.selectionColor = 0xFFff0000;
+	this.isSelectionPainted = TRUE;
+	this.w = 20;
+	this.h = 20;
+	GW_setBorderSize(this, 1, 1, 1, 1);
+}
+
+FUNCTION cu_handleKey(GWidget this, int eventType, int keyCode, int modifierCode){
+	if (EVENT_TYPE_KEYRELEASED == eventType && SOFT_LAST_PRESSED == keyCode){
+		CloseUI();
+		int textboxToMain = OpenUI("ui_gui_main");
+		return TRUE;
+	}
+	
+	return FALSE;
+}

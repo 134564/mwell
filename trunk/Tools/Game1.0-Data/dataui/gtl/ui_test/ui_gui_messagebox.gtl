@@ -1,0 +1,138 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_test";
+DESCRIPTION "gui测试界面"; 
+
+#include "../core/gui/guiInclude.h"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GWindow window;
+
+	int screenHeight;
+	int screenWidth;
+	
+	GMessageBox mb;
+	ImageSet res;
+}
+
+FUNCTION init()
+{
+	res = Realize(ImageSet_Create("ui_res240.pip", TRUE));
+	screenHeight = GetScreenHeight();
+	screenWidth = GetScreenWidth();
+	// 创建canvasUnit以及一个container.
+	create_canvasUnit();
+	
+	// 创建一个窗口
+	create_Window();
+}
+
+FUNCTION event() {
+}
+
+/////////////// common function //////////////////////
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	free vmCU;
+	free window;
+	free mb;
+	free res;
+}
+
+FUNCTION processPacket()
+{
+
+}
+
+
+/////////////// create function //////////////////////
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(NULL,cuName));
+	free cuName;
+	GW_setBound(vmCU, 0, 0, screenWidth, screenHeight);
+}
+
+FUNCTION create_Window()
+{
+	String windowName = Realize(Object_Create("window"));
+	String windowCaption = Realize(Object_Create("测试模态对话框"));
+	window = Realize(GWnd_makeGWindow(NULL,windowName, windowCaption, res, 10, 11,NULL,NULL));
+	free windowName;
+	free windowCaption;
+	
+	GC_addChildWidget(vmCU, window, 0);
+	GWnd_setBound(window, 0, 0, screenWidth, screenHeight);
+	GW_requestFocus(window.leftButton);
+	window.leftButton.btn_clicked = leftbutton_Clicked;
+	window.rightButton.btn_clicked = rightbutton_Clicked;
+}
+
+FUNCTION leftbutton_Clicked(GButton this)
+{
+	// 测试MessageBox
+	if (mb == NULL)
+	{
+		create_MessageBox();
+	}
+	else
+	{
+		mb.isVisible = TRUE;
+		mb.isModal = TRUE;
+	}
+	
+	return TRUE;
+}
+FUNCTION rightbutton_Clicked(GButton this)
+{
+	CloseUI();
+	int messageboxToMain = OpenUI("ui_gui_main");
+	return TRUE;
+}
+
+FUNCTION create_MessageBox()
+{
+	String mbName = Realize(Object_Create("messageBOx"));
+	String mbCaption = Realize(Object_Create("提示"));
+	String mbText = Realize(Object_Create("提示信息。"));
+	mb = Realize(GMB_makeGMessageBox(NULL,mbName, mbCaption, mbText,NULL, MB_OKCANCEL));
+	free mbText;
+	free mbCaption;
+	free mbName;
+
+	GW_requestFocus(mb.OK);
+	
+	mb.OK.btn_clicked = ok_Clicked;
+	mb.Cancle.btn_clicked = ok_Clicked;
+}
+
+FUNCTION ok_Clicked(GButton this)
+{
+	// 测试MessageBox
+	GMessageBox _mb = GW_getParent(this);
+
+	if (_mb)
+	{
+		_mb.isVisible = FALSE;
+		_mb.isModal = FALSE;
+	}
+	
+	return TRUE;
+}

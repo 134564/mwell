@@ -1,0 +1,241 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_grid";
+DESCRIPTION "gui测试界面"; 
+
+#include "../core/gui/guiInclude.h"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GContainer container;
+	
+	GButton btn_grid1;
+	GButton btn_grid2;
+	GButton btn_grid3;
+	GButton btn_grid4;
+	GButton btn_grid5;
+	GButton btn_grid6;
+	GButton btn_grid7;
+	GButton btn_grid8;
+	GButton btn_grid9;
+	GButton btn_grid10;
+	GButton btn_grid11;
+	GButton btn_grid12;
+	GButton btn_grid13;
+	GButton btn_grid14;
+	GButton btn_grid15;
+	GButton btn_grid16;
+	
+	boolean isDestroyed;
+}
+
+/////////////// common function //////////////////////
+FUNCTION init()
+{
+	// 创建canvasUnit以及一个container.
+	create_canvasUnit();
+
+	test_gridLayout();
+}
+
+FUNCTION event() {
+}
+
+FUNCTION cycle()
+{
+	if(isDestroyed){
+		GW_destroy(btn_grid1);
+		isDestroyed = FALSE;
+	}
+}
+
+FUNCTION cycleUI()
+{
+	if(KeyPressed(SOFT_LAST_PRESSED, TRUE)){
+		CloseUI();
+	}
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	GW_destroy(vmCU);
+	GW_destroy(container);
+	GW_destroy(btn_grid1);
+	GW_destroy(btn_grid2);
+	GW_destroy(btn_grid3);
+	GW_destroy(btn_grid4);
+	GW_destroy(btn_grid5);
+	GW_destroy(btn_grid6);
+	GW_destroy(btn_grid7);
+	GW_destroy(btn_grid8);
+	GW_destroy(btn_grid9);
+	GW_destroy(btn_grid10);
+	GW_destroy(btn_grid11);
+	GW_destroy(btn_grid12);
+	GW_destroy(btn_grid13);
+	GW_destroy(btn_grid14);
+	GW_destroy(btn_grid15);
+	GW_destroy(btn_grid16);
+}
+
+FUNCTION processPacket()
+{
+}
+
+/////////////// create function //////////////////////
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(NULL, cuName));
+	vmCU.isBackgroundPainted = TRUE;
+	vmCU.backgroundColor = 0xFF;
+	// 创建一个container.
+	String containerName = Realize(Object_Create("Container"));
+	container = Realize(GC_makeGContainer(NULL, containerName));
+	free cuName;
+	free containerName;
+	
+	Gui_GW_SetBound(vmCU, 0, 0, 240, 320);
+	
+	vmCU.backgroundColor = 0x00FF00;
+	vmCU.isBackgroundPainted = TRUE;
+	vmCU.isBorderPainted = TRUE;
+	container.borderColor = 0xff0000;
+	container.backgroundColor = 0x000000FF;
+	container.isBackgroundPainted = TRUE;
+	container.isBorderPainted = TRUE;
+	GW_setBorderSize(container, 2, 2, 2, 2);
+	GW_setInsetSize(container, 2, 2, 2, 2);
+	
+	Gui_GC_AddChildWidget(vmCU, container, 0);
+}
+
+FUNCTION create_grid()
+{
+	String btn1Text = Realize(Object_Create("grid01"));
+	String btn2Text = Realize(Object_Create("grid02"));
+	String btn3Text = Realize(Object_Create("TO MAIN"));
+	String btn4Text = Realize(Object_Create("grid04"));
+	String btn5Text = Realize(Object_Create("grid05"));
+	String btn6Text = Realize(Object_Create("grid06"));
+	String btn7Text = Realize(Object_Create("grid07"));
+	String btn8Text = Realize(Object_Create("grid08"));
+	String btn9Text = Realize(Object_Create("grid09"));
+	String btn10Text = Realize(Object_Create("grid10"));
+	String btn11Text = Realize(Object_Create("grid11"));
+	String btn12Text = Realize(Object_Create("grid12"));
+	String btn13Text = Realize(Object_Create("grid13"));
+	String btn14Text = Realize(Object_Create("grid14"));
+	String btn15Text = Realize(Object_Create("grid15"));
+	String btn16Text = Realize(Object_Create("grid16"));
+	
+	btn_grid1 = Realize(GBtn_makeGButton(NULL, btn1Text, btn1Text, 0, -1, 0));
+	btn_grid2 = Realize(GBtn_makeGButton(NULL, btn2Text, btn2Text, 0, -1, 0));
+	btn_grid3 = Realize(GBtn_makeGButton(NULL, btn3Text, btn3Text, 0, -1, 0));
+	btn_grid4 = Realize(GBtn_makeGButton(NULL, btn4Text, btn4Text, 0, -1, 0));
+	btn_grid5 = Realize(GBtn_makeGButton(NULL, btn5Text, btn5Text, 0, -1, 0));
+	btn_grid6 = Realize(GBtn_makeGButton(NULL, btn6Text, btn6Text, 0, -1, 0));
+	btn_grid7 = Realize(GBtn_makeGButton(NULL, btn7Text, btn7Text, 0, -1, 0));
+	btn_grid8 = Realize(GBtn_makeGButton(NULL, btn8Text, btn8Text, 0, -1, 0));
+	btn_grid9 = Realize(GBtn_makeGButton(NULL, btn9Text, btn9Text, 0, -1, 0));
+	btn_grid10 = Realize(GBtn_makeGButton(NULL, btn10Text, btn10Text, 0, -1, 0));
+	btn_grid11 = Realize(GBtn_makeGButton(NULL, btn11Text, btn11Text, 0, -1, 0));
+	btn_grid12 = Realize(GBtn_makeGButton(NULL, btn12Text, btn12Text, 0, -1, 0));
+	btn_grid13 = Realize(GBtn_makeGButton(NULL, btn13Text, btn13Text, 0, -1, 0));
+	btn_grid14 = Realize(GBtn_makeGButton(NULL, btn14Text, btn14Text, 0, -1, 0));
+	btn_grid15 = Realize(GBtn_makeGButton(NULL, btn15Text, btn15Text, 0, -1, 0));
+	btn_grid16 = Realize(GBtn_makeGButton(NULL, btn16Text, btn16Text, 0, -1, 0));
+	
+	init_gbutton(btn_grid1);
+	init_gbutton(btn_grid2);
+	init_gbutton(btn_grid3);
+	init_gbutton(btn_grid4);
+	init_gbutton(btn_grid5);
+	init_gbutton(btn_grid6);
+	init_gbutton(btn_grid7);
+	init_gbutton(btn_grid8);
+	init_gbutton(btn_grid9);
+	init_gbutton(btn_grid10);
+	init_gbutton(btn_grid11);
+	init_gbutton(btn_grid12);
+	init_gbutton(btn_grid13);
+	init_gbutton(btn_grid14);
+	init_gbutton(btn_grid15);
+	init_gbutton(btn_grid16);
+	
+	OBJECT_FREE(btn1Text);
+	OBJECT_FREE(btn2Text);
+	OBJECT_FREE(btn3Text);
+	OBJECT_FREE(btn4Text);
+	OBJECT_FREE(btn5Text);
+	OBJECT_FREE(btn6Text);
+	OBJECT_FREE(btn7Text);
+	OBJECT_FREE(btn8Text);
+	OBJECT_FREE(btn9Text);
+	OBJECT_FREE(btn10Text);
+	OBJECT_FREE(btn11Text);
+	OBJECT_FREE(btn12Text);
+	OBJECT_FREE(btn13Text);
+	OBJECT_FREE(btn14Text);
+	OBJECT_FREE(btn15Text);
+	OBJECT_FREE(btn16Text);
+}
+
+FUNCTION test_gridLayout()
+{
+	create_grid();
+	
+	Gui_GC_SetGridLayout(container, 0, 0);
+	Gui_GC_AddChildWidget(container, btn_grid1, NULL);
+	Gui_GC_AddChildWidget(container, btn_grid2, NULL);
+	Gui_GC_AddChildWidget(container, btn_grid3, NULL);
+	Gui_GC_AddChildWidget(container, btn_grid4, NULL);
+	Gui_GC_AddChildWidget(container, btn_grid5, NULL);
+	Gui_GC_AddChildWidget(container, btn_grid6, NULL);
+	Gui_GC_AddChildWidget(container, btn_grid7, NULL);
+	Gui_GC_AddChildWidget(container, btn_grid8, NULL);
+	Gui_GC_AddChildWidget(container, btn_grid9, NULL);
+	Gui_GC_AddChildWidget(container, btn_grid10, NULL);
+	Gui_GC_AddChildWidget(container, btn_grid11, NULL);
+	Gui_GC_AddChildWidget(container, btn_grid12, NULL);
+	Gui_GC_AddChildWidget(container, btn_grid13, NULL);
+	Gui_GC_AddChildWidget(container, btn_grid14, NULL);
+	Gui_GC_AddChildWidget(container, btn_grid15, NULL);
+	Gui_GC_AddChildWidget(container, btn_grid16, NULL);
+	
+	btn_grid3.btn_clicked = gridToMainclicked;
+	Gui_GC_Pack(container);
+	GLayout_initRelativeFocus(container);
+	Gui_GW_RequestFocus(btn_grid1);
+}
+//////////////// Event handling //////////////////////
+
+FUNCTION gridToMainclicked(GButton this)
+{
+	container.backgroundColor = 0x0f0f0f;
+	CloseUI();
+	int gridToMain = OpenUI("ui_gui_main");
+	
+	return TRUE;
+}
+
+//////////////////// Init function ////////////////////////
+FUNCTION init_gbutton(GButton btn)
+{
+	btn.borderColor = 0xffff0000;
+	btn.backgroundColor = 0xff006666;
+	btn.isBackgroundPainted = TRUE;
+	btn.isBorderPainted = TRUE;
+	btn.foregroundColor = 0xffff0000;
+	btn.selectionColor = 0xffffffff;
+	btn.isSelectionPainted = TRUE;
+	GW_setBorderSize(btn, 2, 2, 2, 2);
+}
+

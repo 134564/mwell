@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="GBK"?>
+<downloadsetting>
+    <variable name="Revision" value="PiP" />
+    <variable name="DEBUG" value="true" />
+    <variable name="GTLVersion" value="3" />
+    <models>
+        <model title="MIDP2.0触摸屏" device="Generic/midp2" id="Midp2Touch">
+            <comments></comments>
+            <variable name="ModelID" value="Midp2Touch" />
+            <variable name="ScreenSize" value="240x320" />
+            <variable name="TouchScreen" value="true" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="false" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="false" />
+            <variable name="SupportSound" value="false" />
+        </model>
+        <model title="MIDP2.0大屏" device="Generic/midp2" id="Midp2Big">
+            <comments></comments>
+            <variable name="ModelID" value="Midp2Big" />
+            <variable name="ScreenSize" value="240x320" />
+            <variable name="TouchScreen" value="false" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="false" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="false" />
+            <variable name="SupportSound" value="false" />
+        </model>
+        <model title="MIDP2.0小屏" device="Generic/midp2" id="Midp2Small">
+            <comments></comments>
+            <variable name="ModelID" value="Midp2Small" />
+            <variable name="ScreenSize" value="176x208" />
+            <variable name="TouchScreen" value="false" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="false" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="false" />
+            <variable name="SupportSound" value="false" />
+        </model>
+        <model title="Nokia5800" device="Generic/midp2" id="Nokia5800">
+            <comments></comments>
+            <variable name="ModelID" value="Nokia5800" />
+            <variable name="ScreenSize" value="360x640" />
+            <variable name="TouchScreen" value="true" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="true" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="true" />
+            <variable name="SupportSound" value="false" />
+        </model>
+        <model title="NokiaE62" device="Generic/midp2" id="NokiaE62">
+            <comments></comments>
+            <variable name="ModelID" value="NokiaE62" />
+            <variable name="ScreenSize" value="320x240" />
+            <variable name="TouchScreen" value="false" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="false" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="false" />
+            <variable name="SupportSound" value="false" />
+        </model>
+        <model title="Nokia7370" device="Generic/midp2" id="Nokia7370">
+            <comments></comments>
+            <variable name="ModelID" value="Nokia7370" />
+            <variable name="ScreenSize" value="240x320" />
+            <variable name="TouchScreen" value="false" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="false" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="1" />
+            <variable name="DoubleScreen" value="false" />
+            <variable name="SupportSound" value="false" />
+        </model>
+        <model title="SEK750" device="Generic/midp2" id="SEK750">
+            <comments></comments>
+            <variable name="ModelID" value="SEK750" />
+            <variable name="ScreenSize" value="176x220" />
+            <variable name="TouchScreen" value="false" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="small" />
+            <variable name="ScreenCanReset" value="false" />
+            <variable name="RoleAnimate" value="single" />
+            <variable name="ArmorCount" value="2" />
+            <variable name="DoubleScreen" value="false" />
+            <variable name="SupportSound" value="false" />
+        </model>
+        <model title="联想" device="Generic/midp2" id="Lenovo">
+            <comments>CustomMode表示定制机型：0未定制，1移动定制，2联通定制</comments>
+            <variable name="ModelID" value="Lenovo" />
+            <variable name="ScreenSize" value="480x800" />
+            <variable name="TouchScreen" value="true" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="true" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="true" />
+            <variable name="SupportSound" value="true" />
+            <variable name="CustomMode" value="2" />
+        </model>
+        <model title="Nokia Series60 v3(Symbian)" device="Generic/midp2" id="NokiaS60V3">
+            <comments></comments>
+            <variable name="ModelID" value="NokiaS60V3" />
+            <variable name="ScreenSize" value="240x320" />
+            <variable name="TouchScreen" value="false" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="true" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="false" />
+            <variable name="SupportSound" value="true" />
+        </model>
+        <model title="Nokia Series60 v2(Symbian)" device="Generic/midp2" id="NokiaS60V2">
+            <comments></comments>
+            <variable name="ModelID" value="NokiaS60V2" />
+            <variable name="ScreenSize" value="176x208" />
+            <variable name="TouchScreen" value="false" />
+            <variable name="SupportSMS" value="false" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="true" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="false" />
+            <variable name="SupportSound" value="false" />
+        </model>
+        <model title="苹果" device="Generic/midp2" id="iPhone">
+            <comments></comments>
+            <variable name="ModelID" value="iPhone" />
+            <variable name="ScreenSize" value="320x480" />
+            <variable name="TouchScreen" value="true" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="true" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="false" />
+            <variable name="SupportSound" value="true" />
+        </model>
+        <model title="Window Mobile" device="Generic/midp2" id="WindowMobile">
+            <comments></comments>
+            <variable name="ModelID" value="WindowMobile" />
+            <variable name="ScreenSize" value="240x320" />
+            <variable name="TouchScreen" value="true" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="true" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="false" />
+            <variable name="SupportSound" value="true" />
+        </model>
+        <model title="Pocket PC" device="Generic/midp2" id="PocketPC">
+            <comments></comments>
+            <variable name="ModelID" value="PocketPC" />
+            <variable name="ScreenSize" value="240x320" />
+            <variable name="TouchScreen" value="true" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="true" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="false" />
+            <variable name="SupportSound" value="false" />
+        </model>
+        <model title="Android" device="Generic/midp2" id="Android">
+            <comments></comments>
+            <variable name="ModelID" value="Android" />
+            <variable name="ScreenSize" value="320x480" />
+            <variable name="TouchScreen" value="true" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="true" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="false" />
+            <variable name="SupportSound" value="true" />
+        </model>
+        <model title="Flash" device="Generic/midp2" id="Flash">
+            <comments></comments>
+            <variable name="ModelID" value="Flash" />
+            <variable name="ScreenSize" value="800x480" />
+            <variable name="TouchScreen" value="true" />
+            <variable name="SupportSMS" value="false" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="true" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="true" />
+            <variable name="SupportSound" value="false" />
+        </model>
+        <model title="Android小屏" device="Generic/midp2" id="AndroidSmall">
+            <comments></comments>
+            <variable name="ModelID" value="AndroidSmall" />
+            <variable name="ScreenSize" value="240x320" />
+            <variable name="TouchScreen" value="true" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="true" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="false" />
+            <variable name="SupportSound" value="true" />
+        </model>
+        <model title="Android大屏" device="Generic/midp2" id="AndroidLarge">
+            <comments></comments>
+            <variable name="ModelID" value="AndroidLarge" />
+            <variable name="ScreenSize" value="480x800" />
+            <variable name="TouchScreen" value="true" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="true" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="true" />
+            <variable name="SupportSound" value="true" />
+        </model>
+        <model title="Nokia Series60 v5(symbian)" device="Generic/midp2" id="NokiaS60V5">
+            <comments></comments>
+            <variable name="ModelID" value="NokiaS60V5" />
+            <variable name="ScreenSize" value="360x640" />
+            <variable name="TouchScreen" value="true" />
+            <variable name="SupportSMS" value="true" />
+            <variable name="JBlend" value="false" />
+            <variable name="FullScreen" value="true" />
+            <variable name="MemoryMode" value="unlimited" />
+            <variable name="ScreenCanReset" value="true" />
+            <variable name="RoleAnimate" value="dual" />
+            <variable name="ArmorCount" value="4" />
+            <variable name="DoubleScreen" value="true" />
+            <variable name="SupportSound" value="false" />
+        </model>
+    </models>
+    <target revision="PiP" output="/data/scripts" />
+    <target revision="TAIWAN" output="/data_zh_TW/revision_resources/scripts" />
+    <target revision="CMCC" output="/data/Branches/CMCC/scripts" />
+    <target revision="TELECOM" output="/data/Branches/TELECOM/scripts" />
+</downloadsetting>
+

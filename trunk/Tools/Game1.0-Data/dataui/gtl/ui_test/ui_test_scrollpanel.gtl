@@ -1,0 +1,85 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_test_scrollpanel";
+DESCRIPTION "gui scrollpanelµÄ²âÊÔ½Å±¾"; 
+
+
+#include "../core/gui/guiInclude.h"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GContainer container1;
+	GScrollPanel scrollpanel;
+}
+
+FUNCTION cycle()
+{
+	
+}
+
+FUNCTION cycleUI()
+{
+	
+}
+
+FUNCTION paint()
+{
+	
+}
+
+FUNCTION destroy()
+{
+	free vmCU;
+	free scrollpanel;
+	free container1;
+
+}
+
+FUNCTION processPacket()
+{
+}
+
+FUNCTION event()
+{
+
+}
+
+FUNCTION init()
+{
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(NULL, cuName));
+	
+	GW_setBound(vmCU, 0, 0, 240, 320);
+	
+	String Contain1Text = Realize(Object_Create("Gift"));
+	container1 = Realize(GC_makeGContainer(NULL, Contain1Text + "Container"));
+	free Contain1Text;
+	//GC_SetProperty(container1);
+	GW_setBound(container1, 
+	0, 
+	0, 
+	240, 
+	320);
+	container1.isBackgroundPainted = TRUE;
+	container1.backgroundColor = 0xff00ffff;
+	
+	String scrollPanelName = Realize(Object_Create("ScrollPanel"));
+	scrollpanel = GSP_makeGScrollPanel(NULL, scrollPanelName, TRUE, TRUE, FALSE, FALSE);
+	free scrollPanelName;
+	scrollpanel.isBorderPainted = TRUE;
+	scrollpanel.borderColor = 0xff00ffff;
+	scrollpanel.vScrollBar.w = 20;
+	
+	GSP_setBounds(scrollpanel, 20, 100, 200, 150);
+	boolean bJudge = GSP_isScrollBarNeeded(scrollpanel, 200);
+	GSP_setScrollAmount(scrollpanel, 200, 50);
+	
+	GC_addChildWidget(vmCU, scrollpanel, 0);	
+	GSP_addWidget(scrollpanel, container1);
+	scrollpanel.isBackgroundPainted = TRUE;
+	scrollpanel.backgroundColor = 0x00ff00;
+	
+	scrollpanel.contentArea.isBackgroundPainted = TRUE;
+	scrollpanel.contentArea.backgroundColor = 0xffff0000;
+}

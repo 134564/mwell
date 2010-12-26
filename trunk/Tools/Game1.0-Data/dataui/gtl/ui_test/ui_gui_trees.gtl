@@ -1,0 +1,170 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_test";
+DESCRIPTION "gui测试界面"; 
+
+#include "../core/gui/guiInclude.h"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GTreeView treeView;
+	GTree[] trees;
+	
+	int screenWidth;
+	int screenHeight;
+	
+	int clientWidth;
+}
+
+/////////////// common function //////////////////////
+FUNCTION init()
+{
+	// 创建canvasUnit以及一个container.
+	screenWidth = GetScreenWidth();
+	screenHeight = GetScreenHeight();
+	
+	create_canvasUnit();
+	
+	create_treeView();
+}
+
+FUNCTION event() {
+}
+
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	free vmCU;
+	free treeView;
+	free trees;
+}
+
+FUNCTION processPacket()
+{
+	return FALSE;
+}
+//////////////// Event handling //////////////////////
+
+/////////////// create function //////////////////////
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(NULL, cuName));
+	vmCU.isBackgroundPainted = TRUE;
+	vmCU.backgroundColor = 0xFF0000FF;
+	free cuName;
+
+	GW_setBound(vmCU, 0, 0, screenWidth, screenHeight);
+	
+	clientWidth = GC_getContentAreaWidth(vmCU);
+}
+
+FUNCTION create_treeView()
+{
+	trees = new GTree[5];
+
+	for (int i=0; i<5; i++)
+	{
+		trees[i] = new GTree;
+		String buttonName = Realize(Object_Create("button_" + i));
+		GButton tmpBtn = Realize(GBtn_makeGButton(new GButton, buttonName, buttonName, NULL, -1, NULL));
+		tmpBtn.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+		tmpBtn.hAlignment = LAYOUT_ALIGN_HLEFT;
+		tmpBtn.is3D = TRUE;
+		trees[i].root = tmpBtn;
+		trees[i].root.w = screenWidth;
+		free buttonName;
+	}
+
+	trees[2].children = Realize(Vector_Create());
+	trees[2].isNeedExpand = TRUE;
+	for (i=0; i<3; i++)
+	{
+		GTree tmpTree = new GTree;
+		buttonName = Realize(Object_Create("child_btn_" + i));
+		tmpBtn = Realize(GBtn_makeGButton(new GButton, buttonName, buttonName, NULL, -1, NULL));
+		tmpTree.root = tmpBtn;
+		tmpBtn.backgroundColor = 0xFFFFFFFF;
+		tmpBtn.isBackgroundPainted = TRUE;
+		tmpBtn.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+		tmpBtn.hAlignment = LAYOUT_ALIGN_HLEFT;
+		tmpBtn.is3D = TRUE;
+		tmpTree.root.w = screenWidth;
+		Vector_Add(trees[2].children, tmpTree);
+		free tmpTree;
+		free buttonName;
+	}
+	
+	GTree tree2 = Vector_Get(trees[2].children, 2);
+	tree2.children = Realize(Vector_Create());
+
+	for (i=0; i<4; i++)
+	{
+		tmpTree = new GTree;
+		buttonName = Realize(Object_Create("btn_3_" + i));
+		tmpBtn = Realize(GBtn_makeGButton(new GButton, buttonName, buttonName, NULL, -1, NULL));
+		tmpTree.root = tmpBtn;
+		tmpBtn.backgroundColor = 0xFFFFFFFF;
+		tmpBtn.isBackgroundPainted = TRUE;
+		tmpBtn.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+		tmpBtn.hAlignment = LAYOUT_ALIGN_HLEFT;
+		tmpBtn.is3D = TRUE;
+		tmpTree.root.w = screenWidth;
+		Vector_Add(tree2.children, tmpTree);
+		free buttonName;
+		free tmpTree;
+	} 
+	
+	trees[0].children = Realize(Vector_Create());
+	for (i=0; i<2; i++)
+	{
+		tmpTree = new GTree;
+		buttonName = Realize(Object_Create("child_0btn_" + i));
+		tmpBtn = Realize(GBtn_makeGButton(new GButton, buttonName, buttonName, NULL, -1, NULL));
+		tmpTree.root = tmpBtn;
+		tmpBtn.backgroundColor = 0xFFFFFFFF;
+		tmpBtn.isBackgroundPainted = TRUE;
+		tmpBtn.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+		tmpBtn.hAlignment = LAYOUT_ALIGN_HLEFT;
+		tmpBtn.is3D = TRUE;
+		tmpTree.root.w = screenWidth;
+		Vector_Add(trees[0].children, tmpTree);
+		free tmpTree;
+	}
+	
+	free buttonName;
+	free tmpBtn;
+	treeView = Realize(GTV_makeGTreeView("test_tree", trees));
+	
+	GC_addChildWidget(vmCU, treeView, 0);
+	GW_setBound(treeView, 0, 0, screenWidth, screenHeight);
+	GW_requestFocus(trees[2].root);
+	treeView.func_handleKey = click_handle;
+}
+
+FUNCTION click_handle(GWidget this, int eventType, int keyCode, int modifierCode)
+{
+	boolean eventComsumed = FALSE;
+	
+	if (eventType == EVENT_TYPE_KEYRELEASED && keyCode == SOFT_LAST_PRESSED)
+	{
+		CloseUI();
+		int textboxToMain = OpenUI("ui_gui_main");
+		eventComsumed = TRUE;
+	}
+	return eventComsumed;
+}

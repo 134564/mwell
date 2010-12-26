@@ -1,0 +1,293 @@
+#include "./GContainer.h"
+#include "./GWidget.gtl"
+
+//	公共接口
+//	public:
+
+/**
+ * 创建GContainer.
+ * @param widgetName 控件的名称.
+ * @return的对象是Realize过的
+ */
+FUNCTION GC_makeGContainer(GContainer this, String widgetName)
+{
+	GContainer cont = NULL;
+	
+	if(IsNotNull(this)){
+		cont = Realize(Gui_GC_MakeGContainer(this, widgetName));
+	}
+	else{
+		cont = Realize(Gui_GC_MakeGContainer(new GContainer, widgetName));
+	}
+	 	
+	//GC_initGContainer(cont);
+	cont.func_paint = GW_paint;
+	cont.func_destroy = GW_destroy;
+
+	GContainer ret = Object_Create(cont);
+	free cont;
+	
+	return ret;
+}
+
+/**
+ * 判断控件是否是GContainer中的子控件或者是子控件的子控件…….
+ * @param this   	容器控件.
+ * @param widget 	子控件
+ */
+FUNCTION GC_isInContainer(GContainer this, GWidget widget){
+	return Gui_GC_IsInContainer(this, widget);
+}
+
+/**
+ * 重置子控件的绝对坐标.
+ * @param this   需要重置子控件绝对位置的容器控件.
+ */
+FUNCTION GC_resetChildrenAbs(GContainer this)
+{
+	Gui_GC_SetChildrenOffset(this, 0, 0);
+}
+
+/****************************************************************
+ * Gui_GC_GetChildByIndex(this, index)
+ * 根据索引获取子控件.
+ * @param this   	容器控件.
+ * @param widget 	子控件
+ * @return GWidget控件
+ *
+ * NOTE: 注意需要处理返回值！
+ ***************************************************************/
+FUNCTION GC_getChildByIndex(GContainer this, int index){
+	return Gui_GC_GetChildByIndex(this, index);
+}
+/***************************************************************************
+ * Gui_GC_AddChildWidget(GContainer this, GWidget widget, int constraint)
+ * 添加子控件.
+ * @param this   容器控件.
+ * @param widget 要添加的子控件.
+ * @param constraint 限制条件：如布局方位等信息（本条件只对borderlayout有效）.
+ **************************************************************************/
+FUNCTION GC_addChildWidget(GContainer this, GWidget widget, int constraint)
+{
+	Gui_GC_AddChildWidget(this, widget, constraint);
+}
+
+/*****************************************************************************
+ * Gui_GC_InsertChildWidget(GContainer this, GWidget widget, int index)
+ * 插入子控件.
+ * @param this   容器控件.
+ * @param widget 要插入的子控件.
+ * @param index  要插入的索引号（在index的位置插入，例在2的位置插入，则原来2位置的控件索引变成了3）.
+ *******************************************************************************/
+FUNCTION GC_insertChildWidget(GContainer this, GWidget widget, int index)
+{
+	Gui_GC_InsertChildWidget(this, widget, index);
+}
+
+/******************************************************************
+ * Gui_GC_RemoveChildWidget(GContainer this, GWidget widget, boolean destroy);
+ * 删除子控件.
+ * @param this 		容器控件.
+ * @param widget 	要删除的子控件. 
+ * @param destroy	是否同时销毁该子控件
+ *****************************************************************/
+FUNCTION GC_removeChildWidget(GContainer this, GWidget widget, boolean destroy)
+{
+	if (destroy) {
+		Gui_GW_destroyGWidget(widget);
+	} else {
+		Gui_GC_RemoveChildWidget(this, widget);
+	}
+}
+
+/**
+ * Gui_GC_Clear(GContainer this, TRUE)
+ * 清空GContainer.
+ * @param this 		容器控件.
+ * @param destroy	是否同时删除子控件
+ */
+FUNCTION GC_clear(GContainer this, boolean destroy)
+{
+	Gui_GC_Clear(this, destroy);
+}
+
+/**
+ * Gui_GC_SetLineLayout(GContainer this, int orientation, int alignement, int gap)
+ * 添加line layout.
+ * @param orientation 朝向
+ * @param alignement 对齐方式
+ * @param gap 间隙
+ */
+FUNCTION GC_setLineLayout(GContainer this, int orientation, int alignement, int gap)
+{
+	Gui_GC_SetLineLayout(this, orientation, alignement, gap);
+}
+
+/**
+ * Gui_GC_SetBorderLayout(GContainer this, int leftGap, int upGap, int rightGap, int bottomGap)
+ * 添加border layout.
+ *
+ * @param leftGap		左（西）方位与中间方位的间隙
+ * @param upGap			上（北）方位与中间方位的间隙
+ * @param rightGap		右（东）方位与中间方位的间隙
+ * @param bottomGap		下（南）方位与中间方位的间隙
+ */
+FUNCTION GC_setBorderLayout(GContainer this, int leftGap, int upGap, int rightGap, int bottomGap)
+{
+	Gui_GC_SetBorderLayout(this, leftGap, upGap, rightGap, bottomGap);
+}
+
+/**
+ * Gui_GC_SetGridLayout(GContainer this, int cols, int rows)
+ * 添加grid layout.
+ * 
+ * @param cols	列数
+ * @param rows	行数
+ *
+ * NOTE: 	grid layout 默认的 hGap = 2, vGap = 2;
+ */
+FUNCTION GC_setGridLayout(GContainer this, int cols, int rows)
+{
+	Gui_GC_SetGridLayout(this, cols, rows);
+}
+
+/**
+ * Gui_GC_SetGridLayoutConstraint(GContainer this, GWidget widget, int gridX, int gridY, int gridWidth, int gridHeight, int insetLeft, int insetTop, int insetRight, int insetBottom)
+ * grid layout子控件添加限制条件.
+ *
+ * @param this			子控件所在的容器控件.
+ * @param widget		要添加限制条件的子控件.
+ * @param gridX			指定控件在布局中的x坐标(以Cell为单元).
+ * @param gridY 		指定控件在布局中的y坐标(以Cell为单元).
+ * @param gridWidth		指定控件在布局中所占的宽度(以Cell为单元).
+ * @param gridHieght	指定控件在布局中所占的高度(以Cell为单元).
+ * @param insetLeft		指定控件在布局范围内的一个left inset.
+ * @param insetTop		指定控件在布局范围内的一个top inset.
+ * @param insetRight	指定控件在布局范围内的一个right inset.
+ * @param insetBottom	指定控件在布局范围内的一个bottom inset.
+ */
+FUNCTION GC_setGridLayoutConstraint(GContainer this, GWidget widget, int gridX, int gridY, int gridWidth, int gridHeight, int insetLeft, int insetTop, int insetRight, int insetBottom)
+{
+	Gui_GC_SetGridLayoutConstraint(this, widget, gridX, gridY, gridWidth, gridHeight, insetLeft, insetTop, insetRight, insetBottom);
+}
+
+/**
+ * Gui_GC_SetLayoutGaps(GContainer this, int hGap, int vGap)
+ * 设置layout中的水平和垂直方向上的间隙.
+ * 
+ * @param hGap	水平方向上的间隙
+ * @param vGap	垂直方向上的间隙
+ *
+ * NOTE: 	要设置的container需要先设置过layout方法，否则没有效果;
+ */
+FUNCTION GC_setLayoutGaps(GContainer this, int hGap, int vGap)
+{
+	Gui_GC_SetLayoutGaps(this, hGap, vGap);
+}
+
+/**
+ * Gui_GC_GetLayoutedWidgets(GContainer this)
+ * 获取container被layout过后, 按照一定顺序返回的被布局控件序列.
+ * @return Object[] container被layout过后的子控件序列.
+ *		      返回数组的第一个元素是layout的类型;
+ *
+ *		      返回数组中的第二个元素是被布局的控件数目;
+ *
+ *		      第三个元素对于lineLayout, borderLayout来说保存的是
+ *        布局映射排列的控件虚拟机地址; 
+ *		      对于gridlayout而言,该元素和第四个元素分别保存的是
+ *		  gridLayout的行数和列数,第五个元素保存的才是布局映射
+ *		      排列的控件虚拟机地址。
+ *
+ * @note  对于linelayout返回的子控件序列为其被添加进container的
+ * 		     先后顺序;
+ *
+ * 		    对于borderLayout返回的子控件序列为东西南北中的子控件序列, 
+ * 		    如果不存在相应控件, 则保存为NULL; 
+ *
+ * 		    对于girdLayout的布局映射, 如果某一个grid cell中没有放置
+ *		   任何widget, 则保存的数值为NULL; 多个gridcell保存的widget
+ *		   可能是同一个, 表示的是widget跨了多行(或多列)。 
+ */
+FUNCTION GC_getLayoutedWidgets(GContainer this)
+{
+	return Gui_GC_GetLayoutedWidgets(this);
+}
+
+/**
+ * 获取container中的子控件.
+ * @return object[] 按照加入顺序加入的子控件列表.
+ */
+FUNCTION GC_getChildrenWidgets(GContainer this)
+{
+	GWidget[] tmp = Realize(Gui_GC_GetChildrenWidgets(this));
+	int cnt = Length(tmp);
+	GWidget[] childrenWidgets = new GWidget[cnt];
+	
+	for (int i=0; i<cnt; i++){
+		childrenWidgets[i] = tmp[i];
+	}
+	Gui_GC_FreeChildrenWidgets(tmp);
+	free tmp;
+	
+	return childrenWidgets;
+}
+
+/**
+ * Gui_GC_Pack(GContainer this)
+ * 执行一次pack操作.
+ * 进行一次获取最佳尺寸的操作,并将最佳尺寸赋值给控件的尺寸.
+ */
+FUNCTION GC_pack(GContainer this)
+{
+	Gui_GC_Pack(this);
+}
+
+/**
+ * Gui_GC_doLayout(GContainer this)
+ * 执行一次layout操作.
+ */
+FUNCTION GC_doLayout(GContainer this)
+{
+	Gui_GC_doLayout(this);
+}
+
+/**
+ * 获取container的客户区域的宽度.
+ */
+FUNCTION GC_getContentAreaWidth(GContainer this)
+{
+	return (this.w - this.borderLeft - this.borderRight - this.insetLeft - this.insetRight);
+}
+
+/**
+ * 获取container的客户区域的高度.
+ */
+FUNCTION GC_getContentAreaHeight(GContainer this)
+{
+	return (this.h - this.borderTop - this.borderBottom - this.insetTop - this.insetBottom);
+}
+//
+//FUNCTION GC_destroy(GContainer this)
+//{
+//	free (this.leftWidget);
+//	free (this.rightWidget);
+//	free (this.upWidget);
+//	free (this.downWidget);
+//	free (this.observer);
+//	free (this);
+//}
+
+//	私有接口
+//	protected:
+
+/**
+ * 初始化GContainer, 每次创建GContainer子控件时必须调用此方法,相当于调用了
+ * 基类的构造方法.
+ * @param this 要初始化的GContainer指针地址.
+ */
+//FUNCTION GC_initGContainer(GContainer this) 
+//{
+//	this.func_paint = GW_paint;
+//	this.func_destroy = GC_destroy;
+//}

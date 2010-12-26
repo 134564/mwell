@@ -1,0 +1,408 @@
+#include "../../core/common/commonDef.h"
+#include "../../core/gui/common/GuiCommonDef.h"
+
+#include "opCode.gtl"
+#include "eventCode.gtl"
+#include "resource.gtl"
+#include "commandCode.gtl"
+
+//引用GUI库
+#library "../lib/lib_guiInclude.gtl"
+//引用全局库
+#library "../lib/lib_global.gtl"
+
+//品质颜色
+#define XY_CL_WHITE			0xffffff
+#define XY_CL_YELLOW		0xfff600
+#define XY_CL_BLUE			0x00c6ff 
+#define XY_CL_GREEN			0x00ff0c
+#define XY_CL_PURPLE       	0xff00f0
+#define XY_CL_ORANGE		0xff6c00
+#define XY_CL_BLACK			0x000000
+#define XY_CL_RED			0xff0000
+
+
+//相对于精灵的定位
+#define A_TOPLEFT                                                               5
+#define A_TOPRIGHT                                                              9
+#define A_BOTTOMLEFT                                                            6
+#define A_BOTTOMRIGHT                                                           10
+#define A_TOPCENTER                                                             17
+#define A_BOTTOMCENTER                                                          18
+#define A_LEFTCENTER                                                            36
+#define A_RIGHTCENTER                                                           40
+#define A_CENTER                                                                48
+#define A_TOPX                                                                  65
+#define A_BOTTOMX                                                               66
+#define A_LEFTY                                                                 132
+#define A_RIGHTY                                                                136
+#define A_XY                                                                    192
+#define A_HEADLEFT                                                              260
+#define A_HEADRIGHT                                                             264
+#define A_HEADCENTER                                                            272
+#define A_HEADX                                                                 320
+
+
+#define DRAW_ORDER_TOP                                                          0 //在整个屏幕最上层绘制
+#define DRAW_ORDER_FRONT                                                        1 //在精灵的前方绘制，但和精灵共享绘制时机
+#define DRAW_ORDER_BACK                                                         2 //在精灵后方绘制，但和精灵共享绘制时机
+#define DRAW_ORDER_TOP_TOP                                                      3 //在整个屏幕最上层绘制，对于头顶叹号之类再加一层，会更晚绘制
+    
+// 定义游戏中的常量
+#define VM_PROCESSOR_PANEL                                                      -2 //控制机游戏面板
+#define VM_PROCESSOR_WORLD                                                      -1 //控制机World
+#define VM_PROCESSOR_GAMESPRITE                                                 -100 //netplayer按照instanceid取
+
+
+#define SPRITE_TYPE_ROLE                                            30 //主角 客户端用
+#define SPRITE_TYPE_PLAYER                                          1 //玩家
+#define SPRITE_TYPE_NPC                                             2 //npc
+#define SPRITE_TYPE_CREATURE                                        2 //怪物
+#define SPRITE_TYPE_GATHER_NPC                                      7 //采集NPC
+#define SPRITE_TYPE_EXIT                                            8 //门，客户端用
+#define SPRITE_TYPE_ICON                                            100 //图标，客户端用
+#define SPRITE_TYPE_PET                                             33 //宠物
+#define SPRITE_TYPE_VEHICLE                                   35  // 载具
+
+
+#define A_HEADX                                                     320
+
+#define DRAW_ORDER_TOP_TOP                                          3 //在整个屏幕最上层绘制，对于头顶叹号之类再加一层，会更晚绘制
+
+
+
+// 游戏事件
+#define EVENT_MESSAGE                                                           0 //消息框
+#define EVENT_CHAT                                                              1 //对话框
+#define EVENT_QUESTION                                                          2 //问题框
+
+//打开邮件(ui_mail.gtl)的类型
+#define OPEN_MAIL_NEW                                                           0 //新建邮件
+#define OPEN_MAIL_SEND                                                          1 //发送邮件
+#define OPEN_MAIL_READ                                                          2 //阅读邮件
+#define OPEN_MAIL_REPLY                                                          3 //回复邮件
+
+#define ANIMATE_CALL_BACK_ATTACK_END                                            1 //攻击动画播放结束
+#define ANIMATE_CALL_BACK_RELIVE_END                                            2 //复活动画播放结束
+#define ANIMATE_CALL_BACK_DIE_END                                               3 //死亡动画播放结束
+#define ANIMATE_CALL_BACK_UPLEVLE_END                                           4 //升级动画播放结束
+#define ANIMATE_CALL_BACK_EXTRA_ATTACK_END                                      5 //攻击附加动画播放结束
+#define ANIMATE_CALL_BACK_ATTACKED_END                                          6 //被攻击动画播放结束
+#define ANIMATE_CALL_BACK_PRE_ATTACK_END                                        7 //准备攻击动画播放结束
+#define ANIMATE_CALL_BACK_SELECTED_END                                          8 //被选中动画播放结束
+
+#define ANIMATE_KEY_TARGET                                                      "AnimateKey_Target"
+#define ANIMATE_KEY_HINT                                                        "AnimateKey_Hint"
+#define ANIMATE_KEY_PRE_ATTACK                                                  "AnimateKey_PreAttack"
+#define ANIMATE_KEY_BATTLE_FLAG                                                  "AnimateKey_BattleFlag"
+#define ANIMATE_KEY_SELECTED                                                    "AnimateKey_Selected"
+
+//用于在客户端存放脚本中创建的sprite结构
+#define GAME_VM_DATA_SPRITE_DATA													"sprite_data"  
+
+//客户端内置动画
+#define CLIENT_ANIMATE_DOING_QUEST                                              0 //灰问号
+#define CLIENT_ANIMATE_HAS_QUEST                                                1 //黄叹号
+#define CLIENT_ANIMATE_FINISH_QUEST                                             2 //黄问号
+#define CLIENT_ANIMATE_HAS_REPERAT_QUEST                                        3 //蓝叹号
+#define CLIENT_ANIMATE_FINISH_REPERAT_QUEST                                     4 //蓝问号
+#define CLIENT_ANIMATE_TARGET_ENEMY                                             5 //红选框
+#define CLIENT_ANIMATE_TARGET_ALLY                                              6 //蓝选框
+#define CLIENT_ANIMATE_SHADOW                                                   7 //阴影
+#define CLIENT_ANIMATE_DOOR                                                     8 //传送门
+#define CLIENT_ANIMATE_TARGET_NOEXP                                             9 //灰选框
+#define CLIENT_ANIMATE_DENOTE_ARROW                                             10 //指示箭头
+#define CLIENT_ANIMATE_LEADER_ARROW                                             11 //队长
+#define CLIENT_ANIMATE_TEAMER_ARROW                                             12 //队员
+#define CLIENT_ANIMATE_TAKE_FLAG                                                13 //夺旗
+#define CLIENT_ANIMATE_SWORD_LEFT                                               14 //宝剑左
+#define CLIENT_ANIMATE_SWORD_RIGHT                                              15 //宝剑右
+
+
+//飞行数字颜色
+#define FLYING_NUMBER_COLOR_YELLOW                                              0
+#define FLYING_NUMBER_COLOR_GREEN                                               1
+#define FLYING_NUMBER_COLOR_RED                                                 2
+#define FLYING_NUMBER_COLOR_BLUE                                                3
+
+//飞行文字模式
+#define FLYING_STRING_TYPE_NUMBER                                               0
+#define FLYING_STRING_TYPE_STRING                                               1
+#define FLYING_STRING_TYPE_3DSTRING                                             2
+
+
+//方向定义
+#define DIR_NONE                                                                -1
+#define DIR_DOWN                                                                0
+#define   DIR_LEFT                                                           1
+#define    DIR_RIGHT                                                          2
+#define DIR_UP                                                                  3
+
+//number.pip
+//飞行数字组，于number.pip对应
+#define NUMBER_GRP_DAMAGE                                                       0 //伤害
+#define NUMBER_GRP_ADD_HP                                                       1 //加血
+#define NUMBER_GRP_ADD_DEL_MP                                                   2 //加蓝和抽蓝
+#define NUMBER_GRP_CRI                                                          3 //爆击
+#define NUMBER_GRP_DEFAULT_1                                                    4 //默认字体1
+#define NUMBER_GRP_ATTR_PLUS                                                    5 //属性值加
+#define NUMBER_GRP_ATTR_SUB                                                     6 //属性值减
+#define NUMBER_GRP_DEFAULT_2                                                    7 //默认字体2
+#define NUMBER_GRP_MONEY                                                        8 //金钱数量
+#define NUMBER_GRP_LEVEL                                                        9 //等级
+#define NUMBER_GRP_GAIN_EXP                                                     10 //获得经验
+
+
+//notify通知
+#define NOTIFY_GAME_ITEM														0
+
+//脚本定义
+
+#define GAME_VM_UI_ID_QUEST_GAME                                                "ui_quest_game" //NPC任务界面
+#define GAME_VM_UI_ID_SHOP                                                      "ui_shop" //商店
+#define GAME_VM_UI_ID_MAIL												   		"ui_mail"
+
+#define GAME_VM_UI_ID_GAME_PANEL                                                "game_panel" //游戏面板
+#define GAME_VM_UI_EXCHANGE                                                     "ui_exchange" //游戏初始化
+#define GAME_VM_UI_GAME_INIT                                                    "game_init" //游戏初始化
+#define GAME_VM_UI_GAME_LOADING                                                 "ui_game_loading" //游戏载入
+#define GAME_VM_UI_GAME_CHANGE_MAP                                              "ui_change_map" //切换地图
+#define GAME_VM_ID_GAME_GO_MAP                                                  "ui_go_map" //跳地图
+#define GAME_VM_ID_GAME_WORLD                                                   "game_world" //
+////#define GAME_VM_DATA_NPC_DATA													"npc_data"
+
+#define ROLE_LIST_OPEN_TYPE_SWITCH		 										 0 //切换角色
+#define ROLE_LIST_OPEN_TYPE_FAST_REG					  						  1 //快速注册
+
+#define GAME_VM_UI_ID_ROLE_LIST													"ui_role_list"//选择角色界面
+#define GAME_VM_UI_ID_CREATE_ROLE												"ui_create_role"//创建角色界面
+#define GAME_VM_UI_ID_SPLASH                                                    "ui_splash" //标题画面 
+#define GAME_VM_UI_ID_ABILITY                                                   "ui_ability" //技能界面
+#define GAME_VM_UI_ID_BAG                                                       "ui_bag" //背包界面
+#define GAME_VM_UI_ID_PET                                                       "ui_pet"//宠物界面
+#define GAME_VM_UI_ID_CHAT                                                      "ui_chat" //npc对话界面
+#define GAME_VM_UI_ID_GAMEMENU                                                  "ui_gamemenu" //游戏内主菜单
+#define GAME_VM_UI_ID_MAINMENU                                                  "ui_mainmenu" //游戏外主菜单
+#define GAME_VM_UI_ID_MESSAGE                                                   "ui_message" //消息界面
+
+#define GAME_VM_UI_ID_PUSH_QUEST_GAME                                           "ui_push_quest_game" //
+#define GAME_VM_UI_ID_QUESTION                                                  "ui_question" //问题界面(任务相关)
+#define GAME_VM_UI_ID_QUESTION2                                                 "ui_question2" //问题界面
+#define GAME_VM_UI_ID_ROLEINFO                                                  "ui_roleinfo" //人物属性界面
+#define GAME_VM_UI_ID_QUEST_MANAGER                                             "ui_quest_manager" //任务管理
+#define GAME_VM_UI_ID_HOTKEY_CONFIG                                             "ui_hotkey_config" //快捷键配置
+#define GAME_VM_UI_ID_TEAM_LIST                                                 "ui_team_list" //任务管理
+#define GAME_VM_UI_ID_NET_PLAYER_INFO                                           "ui_net_player_info" //任务管理
+#define GAME_VM_UI_ID_GATHER                                                    "ui_gather" //采集
+#define GAME_VM_UI_ID_CHAT_CHANEL_SETTING                                       "ui_chat_chanel_setting" //聊天频道设置
+#define GAME_VM_UI_ID_CHAT_COUNTRYMEN_SETTING                                   "ui_chat_countrymen_setting" //同乡设定
+#define GAME_VM_UI_ID_CHAT_CHECK_MSG                                            "ui_chat_check_msg" //查看消息
+#define GAME_VM_UI_ID_CHAT_SEND_MSG                                             "ui_chat_send_msg" //发送聊天
+#define GAME_VM_UI_SYMBIAN_CHAT                                                 "ui_symbian_chat"  //symbian发送聊天
+#define GAME_VM_UI_ANDROID_CHAT                                                 "ui_android_send_msg"  //android发送聊天
+#define GAME_VM_UI_ADDRESS														"ui_address"	//通讯录	
+#define GAME_VM_UI_ADDRESS_COMMEND												"ui_address_commend"	//通讯录推荐	
+#define GAME_VM_UI_GAME_ROLE                                                    "game_role" //主角
+#define GAME_VM_UI_GAME_NETPLAYER                                               "game_netplayer" //
+#define GAME_VM_UI_GAME_NPC                                                     "game_npc" //
+#define GAME_VM_UI_ID_MAIL_LIST                                                 "ui_mail_list" //飞鸽邮件列表
+#define GAME_VM_UI_ID_MAIL                                                      "ui_mail" //飞鸽邮件
+#define GAME_VM_UI_ID_TONG_CREATE                                               "ui_tong_create" //军团建立
+#define GAME_VM_UI_ID_TONG_MANAGER                                              "ui_tong_manager" //军团管理
+#define GAME_VM_UI_ID_RELATION                                                  "ui_relation" //关系管理
+#define GAME_VM_UI_ID_NETPLAYER_LIST                                            "ui_netplayer_list" //周围玩家列表
+#define GAME_VM_UI_ID_NETPLAYER_INFO                                            "ui_netplayer_info" //周围玩家详细信息
+#define GAME_VM_UI_ID_PK                                                        "ui_pk" //
+#define GAME_VM_UI_ID_TEAM_ROLL                                                 "ui_team_roll" //
+#define GAME_VM_UI_ID_ROLE_DIE_RELIVE                                           "ui_role_die_relive" //玩家死亡与复活
+#define GAME_VM_UI_ADD_ITEM														"ui_add_item" 
+
+#define GAME_VM_UI_ID_HORSE_MGR                                                 "ui_horse_manager" //坐骑管理
+#define GAME_VM_UI_ID_HORSE_EQUIP                                               "ui_horse_equip"   //坐骑装备
+#define GAME_VM_UI_ID_HORSE_INFO                                                "ui_horse_info"    //坐骑信息
+#define GAME_VM_UI_HOTKEY_MENU                                                  "ui_hotkey_menu" //pound键菜单
+#define GAME_VM_UI_GAME_ICON                                                    "game_icon" //
+#define GAME_VM_UI_GAME_EXIT                                                    "game_exit" //
+#define GAME_VM_UI_ID_BUFF_LIST_PLAYER                                          "ui_buff_list_player" //
+#define GAME_VM_UI_SELECT_TEAMMATE                                              "ui_select_teammate"
+#define GAME_VM_UI_GET_GIFT			                                            "ui_get_gift"
+#define GAME_VM_UI_TITLE_APPLY                                                  "ui_title_apply"
+#define GAME_VM_UI_TITLE_MANAGER                                                "ui_title_manager"
+#define GAME_VM_UI_SYSTEM_OPTION                                                "ui_system_option"
+#define GAME_VM_UI_JEWELS                                                       "ui_jewels" //宝石镶嵌
+#define GAME_VM_UI_JEWELS_COMB                                                  "ui_jewels_comb" //宝石合成
+#define GAME_VM_UI_CHARGE                                                       "ui_charge"
+#define GAME_VM_ID_RANKING_LIST                                                 "ui_ranking_list"
+#define GAME_VM_ID_EMPIRE                                                       "ui_empire" //国家一
+#define GAME_VM_ID_COUNTRY                                                      "ui_country"//国家二
+#define GAME_VM_ID_NATION                                                       "ui_nation"//国家二
+#define GAME_VM_ID_UPDATE                                                       "ui_update"//
+#define GAME_VM_ID_SYMBIAN_UPDATE_BAR											"ui_symbianupdate_bar"
+#define GAME_VM_ID_SYMBIAN_UPDATE_OPTION										"ui_symbianupdate"
+
+//-------------------------轩辕通用界面色值宏
+
+/*--通用地板--*/
+/*左右软键字体内层颜色值*/
+#define COLOR_GWND_TEXTINSET						0xfff600
+/*左右软键字体border颜色值*/
+#define COLOR_GWND_TEXTBORDER					0x000000
+/*轩辕通用底板底色*/
+#define COLOR_BKG							0x6D574A
+///////////////////////////////////////////////////////////////////////////////
+
+/*--标题栏--*/
+/*描边色从外到内*/
+#define COLOR_TITLE_OUTSIDE				0x000000
+#define COLOR_TITLE_MIDDLE				0x987A6A
+#define COLOR_TITLE_INNER					0xE5AE7B
+/*
+*描边色含参宏绘制
+*border		整形数组首地址
+*/
+#define COLOR_TITLE_BORDER(border)  if(IsNull(border) == FALSE){border[0] = COLOR_TITLE_OUTSIDE; border[1] = COLOR_TITLE_MIDDLE; } border[2] = COLOR_TITLE_INNER
+/*文字*/
+#define COLOR_TITLE_TEXTINSET		0xFFF600
+#define COLOR_TITLE_TEXTBORDER		0x000000
+/*
+*字体含参宏绘制
+*widget		需要绘制字体的控件对象
+*/
+#define COLOR_TITLE_FONT(widget)	if(IsNull(widget) == FALSE){widget.is3D = TRUE; widget.textInsetColor = COLOR_TITLE_TEXTINSET; } widget.textBorderColor = COLOR_TITLE_TEXTBORDER
+///////////////////////////////////////////////////////////////////////////////
+
+/*--内容底板-1--*/
+/*底板色从外到内*/
+#define COLOR_BASEPLATE_OUTSIDE		0x696554
+#define COLOR_BASEPLATE_INNER		0xE1AF84
+/*
+*描边色含参宏绘制
+*border		整形数组首地址
+*/
+#define COLOR_BASEPLATE_BORDER(border) if(IsNull(border) == FALSE){border[0] = COLOR_BASEPLATE_OUTSIDE;}	border[1] = COLOR_BASEPLATE_INNER
+/*--内容底板-2--*/
+/*底板色从外到内*/
+#define COLOR_BASEPLATE2_OUTSIDE		0x987A6A
+#define COLOR_BASEPLATE2_INNER			0xE5AE7B
+/*
+*描边色含参宏绘制
+*border		整形数组首地址
+*/
+#define COLOR_BASEPLATE2_BORDER(border) if(IsNull(border) == FALSE){border[0] = COLOR_BASEPLATE2_OUTSIDE;} border[1] = COLOR_BASEPLATE2_INNER
+/*填充色*/
+#define COLOR_BASEPLATE_FILL		0xFCECCC
+///////////////////////////////////////////////////////////////////////////////
+
+/*--栏目信息显示底板--*/
+/*描边色*/
+#define COLOR_SUBJECT_OUTSIDE			0x987A6A
+#define COLOR_SUBJECT_MIDDLE			0xE5AE7B
+#define COLOR_SUBJECT_INNER				0xFCECCC
+/*选中描边色*/
+#define COLOR_FOCUS_SUBJECT_OUTSIDE		0x000000
+#define COLOR_FOCUS_SUBJECT_MIDDLE		0x00F6FF
+#define COLOR_FOCUS_SUBJECT_INNER		0xE5AE7B
+/*
+*描边色含参宏绘制
+*border		整形数组首地址
+*/
+#define COLOR_SUBJECT_BORDER(border) if(IsNull(border) == FALSE){border[0] = COLOR_SUBJECT_OUTSIDE; border[1] = COLOR_SUBJECT_MIDDLE;}	border[2] = COLOR_SUBJECT_INNER
+#define COLOR_FOCUS_SUBJECT_BORDER(border) if(IsNull(border) == FALSE){border[0] = COLOR_FOCUS_SUBJECT_OUTSIDE; border[1] = COLOR_FOCUS_SUBJECT_MIDDLE;}	border[2] = COLOR_FOCUS_SUBJECT_INNER
+/*填充色*/
+#define COLOR_SUBJECT_FILL		0xD4B69B
+///////////////////////////////////////////////////////////////////////////////
+
+/*--滚动条--*/
+/*滑块描边色*/
+#define COLOR_SCROLL_OUTSIDE	0x3E291D
+#define COLOR_SCROLL_INNER		0xE5AE7B
+/*
+*描边色含参宏绘制
+*border		整形数组首地址
+*/
+#define COLOR_SCROLL_BORDER(border) if(IsNull(border) == FALSE){border[0] = COLOR_SCROLL_OUTSIDE;}	border[1] = COLOR_SCROLL_INNER
+/*填充色*/
+#define COLOR_SCROLL_FILL		COLOR_BASEPLATE_FILL
+/*底板描边色*/
+#define COLOR_SCROLL_BASELINE		0x987A6A
+/*底板填充色*/
+#define COLOR_SCROLL_BASE_FILL		0x6D574A
+
+///////////////////////////////////////////////////////////////////////////////
+
+/*--注释底板--*/
+/*注释底板描边色*/
+#define COLOR_NOTEBASE_OUTSIDE			0xD4B69B
+#define COLOR_NOTEBASE_MIDDLE			0xFCECCC
+#define COLOR_NOTEBASE_INNER			0xFFFFFF
+
+/*注释底板选中描边色*/
+#define COLOR_FOCUS_NOTEBASE_OUTSIDE	0x000000
+#define COLOR_FOCUS_NOTEBASE_MIDDLE		0x00F6FF
+#define COLOR_FOCUS_NOTEBASE_INNER		0xFFFFFF
+
+/*
+*描边色含参宏绘制
+*border		整形数组首地址
+*/
+#define COLOR_NOTEBASE_BORDER(border) if(IsNull(border) == FALSE){border[0] = COLOR_NOTEBASE_OUTSIDE; border[1] = COLOR_NOTEBASE_MIDDLE; }border[2] = COLOR_NOTEBASE_INNER
+#define COLOR_FOCUS_NOTEBASE_BORDER(border) if(IsNotNull(border)){border[0] = COLOR_FOCUS_NOTEBASE_OUTSIDE; border[1] = COLOR_FOCUS_NOTEBASE_MIDDLE;} border[2] = COLOR_FOCUS_NOTEBASE_INNER
+
+/*填充色*/
+#define COLOR_NOTEBASE_FILL				0xFBE2B0
+/*选中填充色*/
+#define COLOR_FOCUS_NOTEBASE_FILL		0xD4B69B
+///////////////////////////////////////////////////////////////////////////////
+
+/*--背包包格--*/
+/*描边色*/
+#define COLOR_BAG_GRID(border) if(IsNull(border) == FALSE){border[0] = 0xFCECCC; border[1] = 0xFCECCC; border[2] = 0xFCECCC; border[3] = 0xE5AE7B;} border[4] = 0xE5AE7B
+#define COLOR_BAG_FOCUS_GRID(border) {border[0] = 0x000000; border[1] = 0x00F6FF; border[2] = 0xFCECCC; border[3] = 0xE5AE7B;} border[4] = 0xE5AE7B
+
+
+/*标签色*/
+
+//标签文字色
+#define COLOR_TAB_TEXTINSET		0xffffff
+#define COLOR_TAB_TEXTBORDER		0x000000
+
+#define COLOR_TAB(border)	if(IsNull(widget) == FALSE){widget.is3D = TRUE; widget.textInsetColor = COLOR_TAB_TEXTINSET; } widget.textBorderColor = COLOR_TAB_TEXTBORDER
+
+
+//--------聊天宏
+
+/*发送聊天信息*/
+//私聊的ID
+#define PRIVATE_CHAT			7
+
+
+//#define		 CHAT_TYPE_WORLD			0
+
+#define		 CHAT_TYPE_WORLD			0//世界
+#define 	 CHAT_TYPE_INFLUENCE		1//势力：国家
+#define 	 CHAT_TYPE_AREA				2//地区
+#define      CHAT_TYPE_TOWNEE			3//同乡
+#define 	 CHAT_TYPE_BLOOD			4//血盟
+#define 	 CHAT_TTPE_TROOP			5//队伍
+#define		 CHAT_TYPE_PRIVATE			6//私聊
+#define 	 CHAT_TYPE_SYSTEM			7//系统
+
+#define 	 CHAT_CHANNEL_INTEGRATION	0//综合:世界，私聊，势力， 血盟
+#define 	 CHAT_CHANNEL_PRIVATE		1//私聊
+#define 	 CHAT_CHANNEL_BLOOD			2//势力
+#define 	 CHAT_CHANNEL_TROOP			3//小队
+#define 	 CHAT_CHANNEL_SYSTEM		4//系统
+/*快速回复的信息条数*/
+#define EVENT_QUICK_ANSWER_NUMBER		0//应该为10条，目前服务器没有数据，故先写零
+/*容器最带容纳聊天记录数量*/
+#define MAX_CHAT_RECORD_NUMBER		10
+///////////////////////////////////////////////////////////////////////////////
+#define BAG_NUMBER						40
+
+
+#define SYSTEM_HEIGHT		(GetScreenHeight())
+#define SYSTEM_WIDTH		(GetScreenWidth())
+
+
+#define OBJECT_EQUIP		-1
+#define OBJECT_GOOD		0

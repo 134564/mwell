@@ -1,0 +1,94 @@
+#include "./GTextField.h"
+#include "./GWidget.gtl"
+
+ //------------------------ public --------------------------------------------
+/**
+ * 创建GTextFile.
+ *
+ * @param widgetName	控件名（用于客户端调试用）
+ *
+ * NOTE:	需要用户通过GW_setBound方法设置控件的大小和位置.
+ */
+FUNCTION GTF_makeGTextField(GTxtField this, String widgetName, boolean isMultiline)
+{
+	GTxtField gtf = NULL;
+	if(IsNotNull(this)){
+		gtf = Realize(Gui_GTF_MakeGTextField(this, widgetName, isMultiline));
+	}
+	
+	else{
+		gtf = Realize(Gui_GTF_MakeGTextField(new GTxtField, widgetName, isMultiline));
+	}
+	
+	//GTF_initGTextFile(gtf);
+	gtf.func_paint = GW_paint;
+	gtf.func_destroy = GW_destroy;
+	
+	GTxtField ret = Object_Create(gtf);
+	free gtf;
+	return ret;
+}
+
+ /**
+ * 获取GTextFile的文本内容.
+ *
+ * @param this	要获取文本的GTexeArea
+ * @return		文本内容
+ */
+FUNCTION GTF_getText(GTxtField this)
+{
+	return Gui_GTF_GetText(this);
+}
+
+ /**
+ * 设置GTextFile的文本内容.
+ *
+ * @param this	要设置文本的GTexeArea
+ * @param text	文本内容
+ */
+FUNCTION GTF_setText(GTxtField this, String text)
+{
+	Gui_GTF_SetText(this, text);
+}
+
+ /**
+ * 请求成为焦点.
+ *
+ * @param this	要请求焦点的GTexeArea
+ *
+ * NOTE:		由于请求焦点的时候其它控件必然失去焦点，所以不用lostfocus方法
+ */
+FUNCTION GTF_requestFocus(GTxtField this)
+{
+	Gui_GW_RequestFocus(this);
+	Gui_GTF_RequestFocus(this);
+}
+
+FUNCTION GTF_setBound(GTxtField this, int x, int y, int width, int height){
+	Gui_GTF_setBound(this, x, y, width, height);
+}
+
+FUNCTION GTF_show(GTxtField this, boolean show)
+{
+	Gui_GW_SetVisible(this, show);
+	Gui_GTF_Show(this, show);
+}
+
+//FUNCTION GTF_destroy(GTxtField this)
+//{
+//	free (this.leftWidget);
+//	free (this.rightWidget);
+//	free (this.upWidget);
+//	free (this.downWidget);
+//	free (this.observer);
+//	free (this);
+//}
+ //------------------------ protected --------------------------------------------
+ /**
+ * 初始化GIcon.
+ */
+//FUNCTION GTF_initGTextFile(GTxtField this)
+//{
+//	this.func_paint = GW_paint;
+//	this.func_destroy = GTF_destroy;
+//}

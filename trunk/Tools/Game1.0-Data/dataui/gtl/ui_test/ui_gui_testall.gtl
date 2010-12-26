@@ -1,0 +1,477 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_test";
+DESCRIPTION "gui测试界面"; 
+
+#include "../core/common/general.gtl"
+#include "../core/gui/guicommon.gtl"
+#include "../core/gui/gbutton.gtl"
+#include "../core/gui/gcontainer.gtl"
+#include "../core/gui/gvmcanvasunit.gtl"
+#include "../core/gui/ggameicon.gtl"
+#include "../core/gui/gslider.gtl"
+#include "../core/gui/ggridbox.gtl"
+#include "../core/gui/gmessagebox.gtl"
+#include "../core/gui/gwindow.gtl"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GContainer container;
+	GWindow window;
+
+	int screenHeight;
+	int screenWidth;
+	
+/*	GButton btn1;
+	GButton btn2;
+	GButton btn3;
+	GButton btn4;
+	GButton btn5;
+	GGameIcon gicon;
+	GSlider gSlider;
+	
+	GButton btn_grid1;
+	GButton btn_grid2;
+	GButton btn_grid3;
+	GButton btn_grid4;
+	GButton btn_grid5;
+	GButton btn_grid6;
+	GButton btn_grid7;
+	GButton btn_grid8;
+	GButton btn_grid9;
+	GButton btn_grid10;
+	GButton btn_grid11;
+	GButton btn_grid12;
+	GButton btn_grid13;
+	GButton btn_grid14;
+	GButton btn_grid15;
+	GButton btn_grid16;*/
+	
+	// container 中包含container的layout
+	GLabel testLabel;
+	GGridBox box;
+	
+	GMessageBox mb;
+}
+
+FUNCTION init()
+{
+	screenHeight = GetScreenHeight();
+	screenWidth = GetScreenWidth();
+	// 创建canvasUnit以及一个container.
+	create_canvasUnit();
+	
+	// 测试控件.
+	// test_control();
+	// 测试linelayout.
+	//test_lineLayout()
+	// 测试border layout.
+	//test_borderLayout();
+	// 测试gridlayout.
+	//test_gridLayout();
+	// 测试gridbaglayout.
+	//test_gridBaglayout();
+	// 测试slider.
+	//test_slider();
+	//test_containerLayout();
+	// 测试MessageBox
+	test_MessageBox();
+	
+/*	if(btn1 != NULL && btn2 != NULL)
+	{
+		GW_setRelativeDownWidget(btn1, btn2);
+		GW_setRelativeUpWidget(btn1, btn2);
+		GW_requestFocus(btn1);
+		
+		btn1.btn_clicked = btn1_clicked;
+		btn2.btn_clicked = btn2_clicked;
+	}*/
+}
+
+/////////////// common function //////////////////////
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	free vmCU;
+	free container;
+	
+	//free btn1;
+	//free btn2;
+	//free btn3;
+	//free btn4;
+	//free btn5;
+	//free gicon;
+	//free gSlider;
+	
+	/*free btn_grid1;
+	free btn_grid2;
+	free btn_grid3;
+	free btn_grid4;
+	free btn_grid5;
+	free btn_grid6;
+	free btn_grid7;
+	free btn_grid8;
+	free btn_grid9;
+	free btn_grid10;
+	free btn_grid11;
+	free btn_grid12;
+	free btn_grid13;
+	free btn_grid14;
+	free btn_grid15;
+	free btn_grid16;*/
+}
+
+FUNCTION processPacket()
+{
+
+}
+
+FUNCTION event()
+{
+}
+//////////////// Event handling //////////////////////
+FUNCTION btn1_clicked(GButton this)
+{
+	container.backgroundColor = 0xf0f0f0;
+	return TRUE;
+}
+
+FUNCTION btn2_clicked(GButton this)
+{
+	container.backgroundColor = 0x0f0f0f;
+	return TRUE;
+}
+
+/////////////// create function //////////////////////
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(cuName));
+	// 创建一个container.
+	String containerName = Realize(Object_Create("Container"));
+	container = Realize(GC_makeGContainer(containerName));
+	free cuName;
+	free containerName;
+	
+	GW_setBound(vmCU, 0, 0, screenWidth, screenHeight);
+	GW_setBound(container, 0, 0, screenWidth, screenHeight);
+	
+	container.borderColor = 0xff0000;
+	//container.isBackgroundPainted = TRUE;
+	//container.backgroundColor = 0x00ff00;
+	container.isBorderPainted = TRUE;
+	GW_setBorderSize(container, 2, 2, 2, 2);
+	GW_setInsetSize(container, 2, 2, 2, 2);
+	
+	GC_addChildWidget(vmCU, container, 0);
+}
+
+FUNCTION test_MessageBox()
+{
+	String windowName = Realize(Object_Create("window"));
+	String windowCaption = Realize(Object_Create("测试模态对话框"));
+	window = Realize(GWnd_makeGWindow(windowName, windowCaption, 0, -1, -1));
+	window.contentArea.isBackgroundPainted = TRUE;
+	window.contentArea.backgroundColor = 0x00ff00;
+	free windowName;
+	free windowCaption;
+	GC_addChildWidget(container, window, 0);
+	GWnd_setBound(window, 0, 0, screenWidth, screenHeight);
+	
+	String mbName = Realize(Object_Create("messageBOx"));
+	String mbCaption = Realize(Object_Create("测试"));
+	String mbText = Realize(Object_Create("MessageBox是一个很好用的工具！！！o(∩_∩)o 哈哈"));
+	mb = Realize(GMB_makeGMessageBox(mbName, mbCaption, mbText, MB_OKCANCEL));
+	free mbText;
+	free mbCaption;
+	free mbName;
+	
+	//GWnd_addChildWidget(window, mb, 0);
+
+	GW_requestFocus(mb.OK);
+}
+
+/*FUNCTION create_btn()
+{
+	// 创建button.
+	String btn1Text = Realize(Object_Create("North"));
+	String btn2Text = Realize(Object_Create("South"));
+	String btn3Text = Realize(Object_Create("West"));
+	String btn4Text = Realize(Object_Create("East"));
+	String btn5Text = Realize(Object_Create("Center"));
+	
+	btn1 =  Realize(GBtn_makeGButton(NULL, btn1Text, btn1Text, 0, 0));
+	btn2 =  Realize(GBtn_makeGButton(NULL, btn2Text, btn2Text, 0, 0));
+	btn3 =  Realize(GBtn_makeGButton(NULL, btn3Text, btn3Text, 0, 0));
+	btn4 =  Realize(GBtn_makeGButton(NULL, btn4Text, btn4Text, 0, 0));
+	btn5 =  Realize(GBtn_makeGButton(NULL, btn5Text, btn5Text, 0, 0));
+	
+	free btn2Text;
+	free btn1Text;
+	free btn3Text;
+	free btn4Text;
+	free btn5Text;
+	
+	init_gbutton(btn1);
+	init_gbutton(btn2);
+	init_gbutton(btn3);
+	init_gbutton(btn4);
+	init_gbutton(btn5);
+}
+
+
+FUNCTION init_gbutton(GButton btn)
+{
+	btn.borderColor = 0xff0000;
+	btn.backgroundColor = 0x00ff00;
+	btn.isBackgroundPainted = TRUE;
+	btn.isBorderPainted = TRUE;
+	btn.foregroundColor = 0xff0000;
+	btn.selectionColor = 0xffffff;
+	btn.isSelectionPainted = TRUE;
+	GW_setBorderSize(btn, 2, 2, 2, 2);
+}*/
+
+FUNCTION create_ggameicon()
+{
+	// 创建一个gameicon.
+/*	String gameIconName = Realize(Object_Create("gameIcon"));
+	Object gameSprite = Realize(GetRoleProcessor());
+	Object[] animateList = Realize(Gui_Gamesprite_GetAnimateSetList(gameSprite));
+	
+	gicon = Realize(GGI_makeGGameIcon(gameIconName, animateList));
+	
+	gicon.borderColor = 0xff045f;
+	gicon.backgroundColor = 0x040f04;
+	gicon.foregroundColor = 0xff0f00;
+	gicon.selectionColor = 0xf00f0f; 
+	gicon.isBackgroundPainted = TRUE;
+	gicon.isBorderPainted = TRUE;
+	GW_setBorderSize(gicon, 2, 2, 2, 2);
+	
+	free gameSprite;
+	free animateList;
+	free gameIconName;*/
+}
+
+/*FUNCTION create_grid()
+{
+	String btn1Text = Realize(Object_Create("grid01"));
+	String btn2Text = Realize(Object_Create("grid02"));
+	String btn3Text = Realize(Object_Create("grid03"));
+	String btn4Text = Realize(Object_Create("grid04"));
+	String btn5Text = Realize(Object_Create("grid05"));
+	String btn6Text = Realize(Object_Create("grid06"));
+	String btn7Text = Realize(Object_Create("grid07"));
+	String btn8Text = Realize(Object_Create("grid08"));
+	String btn9Text = Realize(Object_Create("grid09"));
+	String btn10Text = Realize(Object_Create("grid10"));
+	String btn11Text = Realize(Object_Create("grid11"));
+	String btn12Text = Realize(Object_Create("grid12"));
+	String btn13Text = Realize(Object_Create("grid13"));
+	String btn14Text = Realize(Object_Create("grid14"));
+	String btn15Text = Realize(Object_Create("grid15"));
+	String btn16Text = Realize(Object_Create("grid16"));
+	
+	btn_grid1 = Realize(GBtn_makeGButton(NULL, btn1Text, btn1Text, 0, 0));
+	btn_grid2 = Realize(GBtn_makeGButton(NULL, btn2Text, btn2Text, 0, 0));
+	btn_grid3 = Realize(GBtn_makeGButton(NULL, btn3Text, btn3Text, 0, 0));
+	btn_grid4 = Realize(GBtn_makeGButton(NULL, btn4Text, btn4Text, 0, 0));
+	btn_grid5 = Realize(GBtn_makeGButton(NULL, btn5Text, btn5Text, 0, 0));
+	btn_grid6 = Realize(GBtn_makeGButton(NULL, btn6Text, btn6Text, 0, 0));
+	btn_grid7 = Realize(GBtn_makeGButton(NULL, btn7Text, btn7Text, 0, 0));
+	btn_grid8 = Realize(GBtn_makeGButton(NULL, btn8Text, btn8Text, 0, 0));
+	btn_grid9 = Realize(GBtn_makeGButton(NULL, btn9Text, btn9Text, 0, 0));
+	btn_grid10 = Realize(GBtn_makeGButton(NULL, btn10Text, btn10Text, 0, 0));
+	btn_grid11 = Realize(GBtn_makeGButton(NULL, btn11Text, btn11Text, 0, 0));
+	btn_grid12 = Realize(GBtn_makeGButton(NULL, btn12Text, btn12Text, 0, 0));
+	btn_grid13 = Realize(GBtn_makeGButton(NULL, btn13Text, btn13Text, 0, 0));
+	btn_grid14 = Realize(GBtn_makeGButton(NULL, btn14Text, btn14Text, 0, 0));
+	btn_grid15 = Realize(GBtn_makeGButton(NULL, btn15Text, btn15Text, 0, 0));
+	btn_grid16 = Realize(GBtn_makeGButton(NULL, btn16Text, btn16Text, 0, 0));
+	
+	init_gbutton(btn_grid1);
+	init_gbutton(btn_grid2);
+	init_gbutton(btn_grid3);
+	init_gbutton(btn_grid4);
+	init_gbutton(btn_grid5);
+	init_gbutton(btn_grid6);
+	init_gbutton(btn_grid7);
+	init_gbutton(btn_grid8);
+	init_gbutton(btn_grid9);
+	init_gbutton(btn_grid10);
+	init_gbutton(btn_grid11);
+	init_gbutton(btn_grid12);
+	init_gbutton(btn_grid13);
+	init_gbutton(btn_grid14);
+	init_gbutton(btn_grid15);
+	init_gbutton(btn_grid16);
+	
+	free btn1Text;
+	free btn2Text;
+	free btn3Text;
+	free btn4Text;
+	free btn5Text;
+	free btn6Text;
+	free btn7Text;
+	free btn8Text;
+	free btn9Text;
+	free btn10Text;
+	free btn11Text;
+	free btn12Text;
+	free btn13Text;
+	free btn14Text;
+	free btn15Text;
+	free btn16Text;
+}*/
+
+FUNCTION test_containerLayout()
+{
+	GW_setBound(container, 0, 0, 0, 0);
+	GC_setLineLayout(container, LAYOUT_ORIENT_HORIZON, LAYOUT_ALIGN_VMIDDLE, 2);
+	
+	String labelName = Realize(Object_Create("test_label"));
+	testLabel = Realize(GL_makeGLabel(labelName, labelName, 0, -1));
+	GL_SetCaptionInfo(testLabel, TRUE, LAYOUT_ALIGN_HCENTER, LAYOUT_ALIGN_VMIDDLE);
+	free labelName;
+	
+	GC_addChildWidget(container, testLabel, 0);
+	
+	String boxName = Realize(Object_Create("test_Gridbox"));
+	box = Realize(GGB_makeGGridBox(boxName/*, 5, 1, 0, 0*/));
+	free boxName;
+	
+	for (int i=0; i<5; i++)
+	{
+		String tmpIconName = Realize(Object_Create("testIcon_" + i));
+		GIcon tempIcon = Realize(GI_makeGIcon(tmpIconName, 0, 0, -1, 0, 0, 0));
+		GW_setBorderSize(tempIcon, 2, 2, 2, 2);
+		tempIcon.isBorderPainted = TRUE;
+		tempIcon.borderColor = 0xff7575;
+		tempIcon.backgroundColor = 0x00ff00;
+		tempIcon.isBackgroundPainted = TRUE;
+		tempIcon.selectionColor = 0xff0000;
+		tempIcon.isSelectionPainted = TRUE;
+		tempIcon.w = 20;
+		tempIcon.h = 20;
+		
+		GC_addChildWidget(box, tempIcon, 0);
+		free tempIcon;
+		free tmpIconName;
+	}
+	
+	GC_setGridLayout(box, 5, 1);
+	GC_addChildWidget(container, box, 0);
+	GC_pack(box);
+	GC_pack(container);
+}
+/*FUNCTION test_control()
+{
+	create_btn();
+	create_ggameicon();
+	
+	GC_addChildWidget(container, btn1, 0);
+	GC_addChildWidget(container, btn2, 0);
+	GC_addChildWidget(container, gicon, 0);
+	
+	GW_setBound(container, 0, 0, 200, 300);
+	GW_setBound(btn1, 10, 10, 80, 30);
+	GW_setBound(btn2, 100, 150, 80, 30);
+	GW_setBound(gicon, 50, 80, 100, 100);
+}*/
+
+/*FUNCTION test_lineLayout()
+{
+	create_btn();
+	
+	// 垂直layout.
+	GC_setLineLayout(container, LAYOUT_ORIENT_VERTICAL, LAYOUT_ALIGN_HCENTER, 2);
+	// 水平layout.
+	//GC_setLineLayout(container, LAYOUT_ORIENT_HORIZON,  LAYOUT_ALIGN_VMIDDLE, 2);
+	GC_addChildWidget(container, btn1, 0);
+	GC_addChildWidget(container, btn2, 0);
+	GC_addChildWidget(container, btn3, 0);
+	GC_pack(container);
+}
+*/
+/*FUNCTION test_borderLayout()
+{
+	create_btn();
+	
+	GC_setBorderLayout(container, 6, 6, 6, 6);
+	GC_addChildWidget(container, btn1, BLAYOUT_LOC_NORTH);
+	GC_addChildWidget(container, btn2, BLAYOUT_LOC_SOUTH);
+	GC_addChildWidget(container, btn3, BLAYOUT_LOC_WEST);
+	GC_addChildWidget(container, btn4, BLAYOUT_LOC_EAST);
+	GC_addChildWidget(container, btn5, BLAYOUT_LOC_CENTER);
+	GC_pack(container);
+}
+
+FUNCTION test_gridLayout()
+{
+	create_grid();
+	
+	GC_setGridLayout(container, 4, 4);
+	GC_addChildWidget(container, btn_grid1, NULL);
+	GC_addChildWidget(container, btn_grid2, NULL);
+	GC_addChildWidget(container, btn_grid3, NULL);
+	GC_addChildWidget(container, btn_grid4, NULL);
+	GC_addChildWidget(container, btn_grid5, NULL);
+	GC_addChildWidget(container, btn_grid6, NULL);
+	GC_addChildWidget(container, btn_grid7, NULL);
+	GC_addChildWidget(container, btn_grid8, NULL);
+	GC_addChildWidget(container, btn_grid9, NULL);
+	GC_addChildWidget(container, btn_grid10, NULL);
+	GC_addChildWidget(container, btn_grid11, NULL);
+	GC_addChildWidget(container, btn_grid12, NULL);
+	GC_addChildWidget(container, btn_grid13, NULL);
+	GC_addChildWidget(container, btn_grid14, NULL);
+	GC_addChildWidget(container, btn_grid15, NULL);
+	GC_addChildWidget(container, btn_grid16, NULL);
+	
+	GC_pack(container);
+}
+
+FUNCTION test_gridBaglayout()
+{
+	create_grid();
+	
+	GC_setGridLayout(container, 4, 4);
+	GC_addChildWidget(container, btn_grid1, NULL);
+	GC_addChildWidget(container, btn_grid2, NULL);
+	GC_addChildWidget(container, btn_grid3, NULL);
+	//GC_addChildWidget(container, btn_grid4, NULL);
+	GC_addChildWidget(container, btn_grid5, NULL);
+	//GC_addChildWidget(container, btn_grid6, NULL);
+	GC_addChildWidget(container, btn_grid7, NULL);
+	GC_addChildWidget(container, btn_grid8, NULL);
+	GC_addChildWidget(container, btn_grid9, NULL);
+	GC_addChildWidget(container, btn_grid10, NULL);
+	GC_addChildWidget(container, btn_grid11, NULL);
+	GC_addChildWidget(container, btn_grid12, NULL);
+	GC_addChildWidget(container, btn_grid13, NULL);
+	GC_addChildWidget(container, btn_grid14, NULL);
+	GC_addChildWidget(container, btn_grid15, NULL);
+	//GC_addChildWidget(container, btn_grid16, NULL);
+	
+	GC_setGridLayoutConstraint(container, btn_grid3, 2, 0, 2, 1, 0, 0, 0, 0);
+	GC_setGridLayoutConstraint(container, btn_grid5, 0, 1, 2, 1, 0, 0, 0, 0);
+	GC_setGridLayoutConstraint(container, btn_grid12, 3, 2, 1, 2, 0, 0, 0, 0);
+	
+	//GW_setBound(container, 0, 0, 80, 90);
+	GC_pack(container);
+}*/

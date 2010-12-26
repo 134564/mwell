@@ -1,0 +1,657 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_bag";
+DESCRIPTION "背包界面"; 
+
+#include "../core/common/commondef.h"
+#include "../core/gui/GContainer.gtl"
+#include "../core/gui/GWindow.gtl"
+#include "../core/gui/GVMCanvasUnit.gtl"
+#include "../core/gui/guicommon.gtl"
+#include "../core/gui/gicon.gtl"
+#include "../core/gui/glabel.gtl"
+#include "../core/gui/gbutton.gtl"
+#include "../core/gui/gscrollpanel.gtl"
+#include "../core/gui/ggridbox.gtl"
+#include "../core/gui/glistbox.gtl"
+#include "../core/gui/ggameicon.gtl"
+#include "../core/gui/ggrid.gtl"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GWindow window;
+
+	// 标签栏
+	GLabel itemButton;
+	GLabel forgeButton;
+	String itemTab;
+	String forgeTab;
+
+///////////////////////////////////////	
+	// 装备栏
+	GContainer equipmentbar;
+	GGridBox equipments;
+	GGrid []equipmentGrids;
+	GGameIcon player;
+
+
+	int equipmentbarHeight;
+	int equipmentbarWidth;
+	int ebchild_h;
+	int ebchild_w;
+	int equipmentTypes;
+	
+	GListBox attributes;
+	GLabel []attributeLists;
+	int listCount;
+	String []attributesText;
+////////////////////////////////////////	
+	// 背包栏
+	GGridBox _bag;
+	GGrid []items;
+	int bagcols;
+	int bagrows;
+	int gridH;
+	int gridW;
+	int gapsH;
+	int gapsW;
+	
+	// 金钱
+	GContainer moneyBar;
+	GIcon yuanbaoIcon;
+	GIcon jinbiIcon;
+	GLabel yuanbaoLabel;
+	GLabel jinbiLabel;
+	String yuanbaoNumber;
+	String jinbiNumber;
+
+	// 商城推荐
+	GContainer shopBar;
+	GGridBox _goshop;
+	GGrid []gsItem;
+	int gsItemCount;
+	
+	// 商城推荐提示
+	GLabel shopInfo;
+
+	// 标题
+	String caption;
+	int itemTotalCount;
+	int currentItemCount;
+	
+	// 布局
+	int screenHeight;
+	int screenWidth;
+	
+	int bagbarWidth;
+	int bagbarHeight;
+	int bagbarAreaH;
+	int bagbarAreaW;
+	
+	int itemTabWidth;
+	int itemTabHeight;
+	
+	int shopInfoHeight;
+	int yuanbaoHeight;
+	
+	int windowClientW;
+	int windowClientH;
+	
+	ImageSet srcAll;
+	ImageSet gridSrc;
+	ImageSet abilitys;
+	ImageSet numberResource;
+}
+
+FUNCTION init()
+{
+	srcAll = Realize(ImageSet_Create("ui_res240.pip", TRUE));
+	abilitys = Realize(ImageSet_Create("ability240.pip", TRUE));
+	numberResource = Realize(ImageSet_Create("number240.pip", TRUE));
+
+	screenHeight = 320;//GetScreenHeight();
+	screenWidth = 240;//GetScreenWidth();
+	itemTotalCount = 50;
+	currentItemCount = 73;
+	gridH = 20;
+	gridW = 20;
+	gapsH = 2;
+	gapsW = 2;
+	// 创建canvasUnit以及一个container.
+	create_canvasUnit();
+	create_EquipmentBar();
+	create_attributeList();
+	create_Tab();
+	create_Bag();
+	create_goshop();
+	create_moneyBar();
+
+	init_equipmentsFocus();
+	init_tabeFocus();
+	init_goshopFocus();
+	
+	GW_requestFocus(items[0]);
+	
+	window.leftButton.btn_clicked = leftButtonClicked;
+}
+
+FUNCTION event() {
+}
+
+/////////////// common function //////////////////////
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION event()
+{
+}
+
+FUNCTION destroy()
+{
+	GWnd_destroyGWindow(window);
+	
+	free vmCU;
+	free itemButton;
+	free forgeButton;
+	free itemTab;
+	free forgeTab;
+	free equipmentbar;
+	free equipments;
+	free equipmentGrids;
+	free player;
+	free attributes;
+	free attributeLists;
+	free attributesText;
+	free _bag;
+	free items;
+	free moneyBar;
+	free yuanbaoIcon;
+	free jinbiIcon;
+	free yuanbaoLabel;
+	free jinbiLabel;
+	free yuanbaoNumber;
+	free jinbiNumber;
+	free shopBar;
+	free _goshop;
+	free gsItem;
+	free shopInfo;
+	free caption;
+	free srcAll;
+	free gridSrc;
+	free abilitys;
+}
+
+FUNCTION processPacket()
+{
+}
+
+/////////////// create function //////////////////////
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(cuName));
+	
+	String windowName = Realize(Object_Create("bagWindow"));
+	caption = Realize(Object_Create("背包"));
+	window = Realize(GWnd_makeGWindow(windowName, caption, 0, -1, -1));
+	window.func_handleKey = GWnd_handlKey;
+	GW_setBorderSize(window.contentArea, 2, 2, 2, 2);
+	
+	GC_addChildWidget(vmCU, window, 0);
+	
+	free windowName;
+	free cuName;
+	
+	GWnd_setTitleBarHeight(window, ImageSet_GetFrameHeight(srcAll, 6));
+	GWnd_setBound(window, 0, 0, screenWidth, screenHeight);
+	GW_setBound(vmCU, 0, 0, screenWidth, screenHeight);
+	
+	windowClientW = window.contentArea.w - window.contentArea.borderLeft - window.contentArea.borderRight - window.contentArea.insetLeft - window.contentArea.insetRight;
+	windowClientH = window.contentArea.h - window.contentArea.borderTop - window.contentArea.borderBottom - window.contentArea.insetTop - window.contentArea.insetBottom;
+}
+
+// 创建装备栏
+FUNCTION create_EquipmentBar()
+{
+	String equipmentbarName = Realize(Object_Create("equipmentbar"));
+	equipmentbar = Realize(GC_makeGContainer(equipmentbarName));
+	free equipmentbarName;
+	
+	// 这个高度到时候动态获取，这样适应性更好些
+	equipmentbarHeight = 94;
+	equipmentbarWidth = windowClientW;
+	GWnd_addChildWidget(window, equipmentbar, 0);
+	GW_setBound(equipmentbar, 0, 0, equipmentbarWidth, equipmentbarHeight);
+	equipmentbar.backgroundColor = 0xf2d782;
+	equipmentbar.isBackgroundPainted = TRUE;
+	GW_setBorderSize(equipmentbar, 2, 2, 2, 2);
+	equipmentbar.isBorderPainted = TRUE;
+	equipmentbar.backgroundColor = 0x934000;
+
+	create_equipmentGrid();
+}
+
+// 创建装备包格
+FUNCTION create_equipmentGrid()
+{
+	ebchild_h = equipmentbarHeight - equipmentbar.borderTop - equipmentbar.borderBottom - equipmentbar.insetTop- equipmentbar.insetBottom;
+	ebchild_w = equipmentbarWidth - equipmentbar.borderLeft - equipmentbar.borderRight - equipmentbar.insetLeft- equipmentbar.insetRight;
+	
+	String equipmentsName = Realize(Object_Create("equipment_GridBox"));
+	equipments = Realize(GGB_makeGGridBox(equipmentsName, 4, 4));
+	free equipmentsName;
+
+	GGB_setBound(equipments, 0, 0, ebchild_w/2, ebchild_h);
+	GC_addChildWidget(equipmentbar, equipments, 0);
+
+	create_equipments();
+}
+
+// 创建所有装备格
+FUNCTION create_equipments()
+{
+	equipmentTypes = 10;
+	
+	// 这里目前是按照给的ui假图上的设计方式 10种装备来设计的，等作出效果，看实际需求是什么样的，再优化
+	equipmentGrids = new GGrid[equipmentTypes];
+	for (int i=0; i<equipmentTypes; i++)
+	{
+		String tmpeqgName = Realize(Object_Create("装备_" + i));
+		equipmentGrids[i] = Realize(GG_makeGGrid(tmpeqgName, 0, 0, -1));
+		free tmpeqgName;
+		init_Grid(equipmentGrids[i]);
+		GGB_addGrid(equipments, equipmentGrids[i]); 
+	}
+	
+//	Object gamePlayer = Realize(GetRoleProcessor());
+	String playerName = Realize(Object_Create("pp"));
+//	Object[] animatesetList = Realize(Gui_Gamesprite_GetAnimateSetList(gamePlayer));
+//	player = GGI_makeGGameIcon(playerName, animatesetList);
+	GIcon gi = Realize(GI_makeGIcon(playerName, 0, 0, -1));
+	free playerName;
+//	free gamePlayer;
+//	free animatesetList;
+	
+/*	player.backgroundColor = 0xFF0000;
+	player.isBackgroundPainted = TRUE;
+	player.borderColor = 0x00FF00;
+	player.isBorderPainted = TRUE;
+	GW_setBorderSize(player, 2, 2, 2, 2);*/
+	//GW_setBound(player, 0, 0, 42, 64);
+	//player.w = 40;
+	//player.h = 60;
+//	player.w = 36;
+//	player.h = 56;
+	gi.w = 36;
+	gi.h = 56;
+	GGB_addGrid(equipments, gi);
+	GGB_setGridLayoutConstraint(equipments, gi, 1, 1, 2, 3, 2, 2, 2, 2);
+
+	GGB_update(equipments);
+}
+
+FUNCTION create_Tab()
+{
+	// 创建物品栏标签
+	String itemButtonName = Realize(Object_Create("itemButton"));
+	itemTab = Realize(Object_Create("物品栏"));
+	itemButton = Realize(GL_makeGLabel(itemButtonName, itemTab, 0, 0));
+	
+	itemButton.backgroundColor = 0xffffff;
+	itemButton.isBackgroundPainted = TRUE;
+	itemButton.selectionColor = 0xff0000;
+	itemButton.isSelectionPainted = TRUE;
+	itemButton.focusable = TRUE;
+//	itemButton.func_handleFocus = itemButton_HandleFocus;
+	itemButton.isBorderPainted = TRUE;
+	GW_setBorderSize(itemButton, 2, 2, 2, 2);
+	itemButton.is3D = TRUE;
+	itemButton.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	itemButton.hAlignment = LAYOUT_ALIGN_HCENTER;
+	
+	// 创建打造栏标签
+	String forgeButtonName = Realize(Object_Create("forgeButton"));
+	forgeTab = Realize(Object_Create("打造栏"));
+	forgeButton = Realize(GL_makeGLabel(forgeButtonName, forgeTab, 0, 0));
+	
+	forgeButton.backgroundColor = 0xffffff;
+	forgeButton.isBackgroundPainted = TRUE;
+	forgeButton.selectionColor = 0xff0000;
+	forgeButton.isSelectionPainted = TRUE;
+	forgeButton.focusable = TRUE;
+//	forgeButton.func_handleFocus = forgeButton_HandleFocus;
+	forgeButton.isBorderPainted = TRUE;
+	GW_setBorderSize(forgeButton, 2, 2, 2, 2);
+	forgeButton.is3D = TRUE;
+	forgeButton.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	forgeButton.hAlignment = LAYOUT_ALIGN_HCENTER;
+
+	GWnd_addChildWidget(window, itemButton, 0);
+	GWnd_addChildWidget(window, forgeButton, 0);
+	
+	itemTabWidth = 60;
+	itemTabHeight = 22;
+	GW_setBound(itemButton, 3, equipmentbarHeight, itemTabWidth, itemTabHeight);
+	GW_setBound(forgeButton, 3 + itemTabWidth, equipmentbarHeight, itemTabWidth, itemTabHeight);
+
+	free forgeButtonName;
+	free itemButtonName;
+}
+
+FUNCTION create_Bag()
+{
+	yuanbaoHeight = 20;
+	shopInfoHeight = 28;
+	bagbarWidth = windowClientW;
+	bagbarHeight = windowClientH - equipmentbarHeight - itemTabHeight - yuanbaoHeight - shopInfoHeight;
+	
+	String bagName = Realize(Object_Create("bag"));
+	_bag = Realize(GGB_makeGGridBox(bagName, 0, 0));
+	free bagName;
+	
+	GGB_setBound(_bag, 0, equipmentbarHeight + itemTabHeight, bagbarWidth, bagbarHeight);
+	GWnd_addChildWidget(window, _bag, 0);
+	init_Bag();
+}
+
+FUNCTION init_Bag()
+{
+	items = new GGrid[currentItemCount];
+	
+	for (int i=0; i<currentItemCount; i++)
+	{
+		String itemsName = Realize(Object_Create("grid_" + i));
+		// 参数暂时设置为空
+		items[i] = Realize(GG_makeGGrid(itemsName, 0, 0, -1));
+		init_Grid(items[i]);
+		GG_setNumberInfo(items[i], numberResource, 120, i+1, TRUE);
+		GGB_addGrid(_bag, items[i]);
+
+		free itemsName;
+	}
+	
+	GGB_update(_bag);
+}
+
+FUNCTION init_Grid(GGrid this)
+{
+	this.isBorderPainted = TRUE;
+	this.borderColor = 0x757575;
+	this.backgroundColor = 0xffffff;
+	this.isBackgroundPainted = TRUE;
+	this.selectionColor = 0xff0000;
+	this.isSelectionPainted = TRUE;
+	this.w = 20;
+	this.h = 20;
+	GW_setBorderSize(this, 1, 1, 1, 1);
+}
+
+FUNCTION create_goshop()
+{
+	String shopbarName = Realize(Object_Create("shopBar"));
+	shopBar = Realize(GC_makeGContainer(shopbarName));
+	free shopbarName;
+
+	GC_setLineLayout(shopBar, LAYOUT_ORIENT_HORIZON, LAYOUT_ALIGN_VMIDDLE, 2);
+	GWnd_addChildWidget(window, shopBar, 0);
+	GW_setBound(shopBar, 0, windowClientH - shopInfoHeight, bagbarAreaW, shopInfoHeight);
+
+	// 商城推荐提示
+	String shopInfoCaption = Realize(Object_Create("西游商城推荐"));
+	shopInfo = Realize(GL_makeGLabel(shopInfoCaption, shopInfoCaption, 0, -1));
+	shopInfo.is3D = TRUE;
+	shopInfo.hAlignment = LAYOUT_ALIGN_HCENTER;
+	shopInfo.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	free shopInfoCaption;
+
+	// 商城包格
+	String _goshopName = Realize(Object_Create("recommend_shop"));
+	_goshop = Realize(GGB_makeGGridBox(_goshopName, 0, 0));
+	free _goshopName;
+	_goshop.func_handleFocus = goshopFocusGain;
+	
+	GGB_setBound(_goshop, shopInfo.w + 4, 0, windowClientW - shopInfo.w + 4, shopInfoHeight);
+	//商城推荐 目前推荐商城定位5格，要考虑它的可变化性
+	gsItemCount = 5;
+	gsItem = new GGrid[gsItemCount];
+	
+	for (int j=0; j<gsItemCount; j++)
+	{
+		String tmpgsgName = Realize(Object_Create("recommend_Grid_" + j));
+		gsItem[j] = Realize(GG_makeGGrid(tmpgsgName, 0, 0, -1));
+		free tmpgsgName;
+
+		init_goshopGrid(gsItem[j]);
+		GG_setNumberInfo(gsItem[j], numberResource, 120, 20, TRUE);
+
+		GGB_addGrid(_goshop, gsItem[j]);
+	}
+	
+	GGB_update(_goshop);
+	
+	GC_addChildWidget(shopBar, shopInfo, 0);
+	GC_addChildWidget(shopBar, _goshop, 0);
+
+	GC_pack(shopBar);
+}
+
+FUNCTION init_goshopGrid(GIcon this)
+{
+	this.isBorderPainted = TRUE;
+	this.borderColor = 0xff7575;
+	this.backgroundColor = 0x00ff00;
+	this.isBackgroundPainted = TRUE;
+	this.selectionColor = 0xff0000;
+	this.isSelectionPainted = TRUE;
+	this.w = 20;
+	this.h = 20;
+	this.func_handleKey = GGrid_handleKey;
+	GW_setBorderSize(this, 1, 1, 1, 1);
+}
+
+FUNCTION create_moneyBar()
+{
+	String moneyBarName = Realize(Object_Create("moneyBar"));
+	moneyBar = Realize(GC_makeGContainer(moneyBarName));
+	free moneyBarName;
+	
+	GWnd_addChildWidget(window, moneyBar, 0);
+	GW_setBound(moneyBar, 0, windowClientH - shopInfoHeight - yuanbaoHeight, windowClientW, yuanbaoHeight);
+	
+	String yuanbaoName = Realize(Object_Create("yuanbao_Icon"));
+	yuanbaoIcon = Realize(GI_makeGIcon(yuanbaoName, 0, srcAll, 34));
+	free yuanbaoName;
+	
+	String jinbiName = Realize(Object_Create("jinbi_Icon"));
+	jinbiIcon = Realize(GI_makeGIcon(jinbiName, 0, srcAll, 73));
+	free jinbiName;
+
+	yuanbaoNumber = Realize(Object_Create("501314"));
+	jinbiNumber = Realize(Object_Create("44944"));
+	
+	String ybName = Realize(Object_Create("yuanbao_Label"));
+	yuanbaoLabel = Realize(GL_makeGLabel(ybName, yuanbaoNumber, 0, -1));
+	free ybName;
+	yuanbaoLabel.is3D = TRUE;
+	yuanbaoLabel.hAlignment = LAYOUT_ALIGN_HCENTER;
+	yuanbaoLabel.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	
+	String jbName = Realize(Object_Create("jinbi_Label"));
+	jinbiLabel = Realize(GL_makeGLabel(jbName, jinbiNumber, 0, -1));
+	free jbName;
+	jinbiLabel.is3D = TRUE;
+	jinbiLabel.hAlignment = LAYOUT_ALIGN_HCENTER;
+	jinbiLabel.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	
+	GC_addChildWidget(moneyBar, jinbiIcon, 0);
+	GC_addChildWidget(moneyBar, jinbiLabel, 0);
+	GC_addChildWidget(moneyBar, yuanbaoIcon, 0);
+	GC_addChildWidget(moneyBar, yuanbaoLabel, 0);
+	
+	GC_setLineLayout(moneyBar, LAYOUT_ORIENT_HORIZON, LAYOUT_ALIGN_VBOTTOM, 2);
+	GC_pack(moneyBar);
+}
+
+FUNCTION create_attributeList()
+{
+	String attributeListName = Realize(Object_Create("attributes"));
+	attributes = Realize(GLB_makeGListBox(attributeListName, ebchild_w/2, ebchild_h, LAYOUT_ORIENT_VERTICAL, LAYOUT_ALIGN_HCENTER, FALSE, TRUE));
+	free attributeListName;
+	
+	GLB_setBound(attributes, 0, 0, ebchild_w/2, ebchild_h);
+	GC_setLineLayout(attributes, LAYOUT_ORIENT_VERTICAL, LAYOUT_ALIGN_HLEFT, 2);
+	GC_addChildWidget(equipmentbar, attributes, 0);
+	
+	listCount = 4;
+	
+	attributeLists = new GLabel[listCount];
+	attributesText = new String[listCount];
+
+	String tmplistName = Realize(Object_Create("attributeList_" + "li"));
+	attributesText[0] = Realize(Object_Create("力量：" + 156));
+	attributeLists[0] = Realize(GL_makeGLabel(tmplistName, attributesText[0], 0, -1));
+	attributeLists[0].is3D = TRUE;
+	attributeLists[0].hAlignment = LAYOUT_ALIGN_HCENTER;
+	attributeLists[0].vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	free tmplistName;
+	
+	tmplistName = Realize(Object_Create("attributeList_" + "zhi"));
+	attributesText[1] = Realize(Object_Create("智力：" + 846));
+	attributeLists[1] = Realize(GL_makeGLabel(tmplistName, attributesText[1], 0, -1));
+	attributeLists[1].is3D = TRUE;
+	attributeLists[1].hAlignment = LAYOUT_ALIGN_HCENTER;
+	attributeLists[1].vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	free tmplistName;
+	
+	tmplistName = Realize(Object_Create("attributeList_" + "min"));
+	attributesText[2] = Realize(Object_Create("敏捷：" + 481));
+	attributeLists[2] = Realize(GL_makeGLabel(tmplistName, attributesText[2], 0, -1));
+	attributeLists[2].is3D = TRUE;
+	attributeLists[2].hAlignment = LAYOUT_ALIGN_HCENTER;
+	attributeLists[2].vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	free tmplistName;
+	
+	tmplistName = Realize(Object_Create("attributeList_" + "ti"));
+	attributesText[3] = Realize(Object_Create("体力：" + 1073));
+	attributeLists[3] = Realize(GL_makeGLabel(tmplistName, attributesText[3], 0, -1));
+	attributeLists[3].is3D = TRUE;
+	attributeLists[3].hAlignment = LAYOUT_ALIGN_HCENTER;
+	attributeLists[3].vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	free tmplistName;
+
+	GLB_addItem(attributes, attributeLists[0]);
+	GLB_addItem(attributes, attributeLists[1]);
+	GLB_addItem(attributes, attributeLists[2]);
+	GLB_addItem(attributes, attributeLists[3]);
+	
+	GLB_setBound(attributes, ebchild_w/2, 0, ebchild_w/2, ebchild_h);
+	GLB_pack(attributes);
+}
+
+FUNCTION init_equipmentsFocus()
+{
+	GW_setRelativeRightWidget(equipmentGrids[0], equipmentGrids[1]);
+	GW_setRelativeRightWidget(equipmentGrids[1], equipmentGrids[2]);
+	GW_setRelativeRightWidget(equipmentGrids[2], equipmentGrids[3]);
+	GW_setRelativeRightWidget(equipmentGrids[3], equipmentGrids[4]);
+	GW_setRelativeRightWidget(equipmentGrids[4], equipmentGrids[5]);
+	GW_setRelativeRightWidget(equipmentGrids[5], equipmentGrids[6]);
+	GW_setRelativeRightWidget(equipmentGrids[6], equipmentGrids[7]);
+	GW_setRelativeRightWidget(equipmentGrids[7], equipmentGrids[8]);
+	GW_setRelativeRightWidget(equipmentGrids[8], equipmentGrids[9]);
+	
+	GW_setRelativeDownWidget(equipmentGrids[0], equipmentGrids[4]);
+	GW_setRelativeDownWidget(equipmentGrids[4], equipmentGrids[6]);
+	GW_setRelativeDownWidget(equipmentGrids[6], equipmentGrids[8]);
+	
+	GW_setRelativeDownWidget(equipmentGrids[3], equipmentGrids[5]);
+	GW_setRelativeDownWidget(equipmentGrids[5], equipmentGrids[7]);
+	GW_setRelativeDownWidget(equipmentGrids[7], equipmentGrids[9]);
+	
+	GW_setRelativeDownWidget(equipmentGrids[9], itemButton);
+}
+
+FUNCTION init_tabeFocus()
+{
+	GW_setRelativeUpWidget(forgeButton, equipmentGrids[8]);
+	GW_setRelativeUpWidget(itemButton, equipmentGrids[8]);
+	
+	GW_setRelativeRightWidget(itemButton, forgeButton);
+
+	itemButton.downWidget = items[0];
+	forgeButton.downWidget = items[0];
+}
+
+FUNCTION init_goshopFocus()
+{
+	_goshop.upWidget = _bag;
+	for (int i=0; i< gsItemCount - 1; i++)
+	{
+		GW_setRelativeRightWidget(gsItem[i], gsItem[i+1]);
+	}
+}
+
+FUNCTION goshopFocusGain(GGridBox this, int _type)
+{
+	GW_requestFocus(gsItem[0]);
+	return TRUE;
+}
+
+FUNCTION GWnd_handlKey(GWindow this, int eventType, int keyCode, int modifierCode)
+{
+ 	boolean eventComsumed = FALSE;
+
+ 	switch(eventType)
+ 	{
+ 		case EVENT_TYPE_KEYPRESSED:
+ 			break;
+		case EVENT_TYPE_KEYRELEASED:
+			// 定义okay和数字5键触发点击事件.
+			switch(keyCode)
+			{
+				case SOFT_FIRST_PRESSED:
+					break;
+				case SOFT_LAST_PRESSED:
+					CloseUI();
+					eventComsumed = TRUE;
+					break;
+				default:
+					break;
+			}
+			break;
+		default:
+			break;
+ 	}
+ 	
+ 	return eventComsumed;
+}
+
+FUNCTION leftButtonClicked(GButton this)
+{
+	caption = Realize(Object_Create(caption + "测试变化"));
+	GL_setLabelText(window.titleBar, caption, 0, -1);
+
+	return TRUE;
+}
+
+FUNCTION itemButton_HandleFocus(GButton this)
+{
+	return TRUE;
+}
+
+FUNCTION forgeButton_HandleFocus(GButton this)
+{
+	return TRUE;
+}

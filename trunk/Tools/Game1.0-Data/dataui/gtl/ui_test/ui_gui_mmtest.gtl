@@ -1,0 +1,137 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_mmtest";
+DESCRIPTION "内存测试";
+
+#include "../core/gui/guiInclude.h"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GContainer cont;
+
+	int screenWidth;
+	int screenHeight;
+
+	int itemsCount;
+	
+	GGrid[] testGrid;
+	GGrid[] testGrid2;
+	GTxtField tf;
+}
+
+FUNCTION init()
+{
+	screenWidth = GetScreenWidth();
+	screenHeight = GetScreenHeight();
+	itemsCount = 15;
+
+	create_canvasUnit();
+	create_GContainer();
+	
+	//test_mm();
+	test_textfield();
+	
+	testGrid2 = testGrid;
+	vmCU.func_handleKey = cu_handleKey;
+}
+
+FUNCTION test_textfield(){
+	tf = GTF_makeGTextField(new GTxtField, "test_textfield");
+	GC_addChildWidget(vmCU, tf, 0);
+	GW_setBorderSize(tf, 2, 2, 2, 2);
+	GTF_setBound(tf, 20, 40, 200, 20);
+	tf.isBorderPainted = TRUE;
+	tf.borderColor = 0xffffff00;
+	GTF_setText(tf, "测试设置输入默认字符");
+}
+
+FUNCTION event() {
+}
+
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+}
+
+FUNCTION processPacket()
+{
+}
+
+/////////////// create function //////////////////////
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = GVMCU_MakeGVMCU(NULL,cuName);
+	free cuName;
+
+	// 设置显示大小
+	GW_setBound(vmCU, 0, 0, screenWidth, screenHeight);
+}
+
+FUNCTION create_GContainer()
+{
+	cont = GC_makeGContainer(new GContainer, "testContainer");
+	
+	GC_addChildWidget(vmCU, cont, 0);
+	GC_setLineLayout(cont, LAYOUT_ORIENT_VERTICAL, LAYOUT_ALIGN_HLEFT, 3);
+	GW_setBound(cont, 0, 0, GC_getContentAreaWidth(vmCU), GC_getContentAreaHeight(vmCU));
+}
+
+FUNCTION test_mm(){
+	testGrid = new GGrid[itemsCount];
+	for (int i=0; i<itemsCount; i++){
+		GGrid tmp = GG_makeGGrid(new GGrid, "test_grid", NULL, -1);
+		testGrid[i] = tmp;
+		GC_addChildWidget(cont, tmp, 0);
+		tmp.w = 100;
+		tmp.h = 15;
+		tmp.isBackgroundPainted = TRUE;
+		tmp.backgroundColor = 0xff0000ff;
+		GW_setBorderSize(tmp, 2,2,2,2);
+		tmp.isBorderPainted = TRUE;
+		tmp.borderColor = 0xffffff00;
+		tmp.isSelectionPainted = TRUE;
+		tmp.selectionColor = 0xffff0000;
+		
+		if (i == 0){
+			Gui_GW_RequestFocus(tmp);
+		}
+		free tmp;
+	}
+	
+	GC_pack(cont);
+	GLayout_initRelativeFocus(cont);
+}
+
+FUNCTION cu_handleKey(GWidget this, int eventType, int keyCode, int modifierCode){
+	if (EVENT_TYPE_KEYPRESSED == eventType && SOFT_LAST_PRESSED == keyCode){
+//		Gui_GW_destroyGWidget(cont);
+//		//Gui_GC_Clear(demoGridBox.scrollPanel.contentArea);
+//		free testGrid;
+//		free testGrid2;
+//		int a = OpenUI("ui_gui_gridbox");
+		String text = GTF_getText(tf);
+		GLabel tmpLabel = GL_makeGLabel(new GLabel, "test_label", text);	
+		tmpLabel.x = 20;
+		tmpLabel.y = 50;
+		free text;
+		GC_addChildWidget(vmCU, tmpLabel, 0);
+		free tmpLabel;
+		return TRUE;
+	}
+	return FALSE;
+}

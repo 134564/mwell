@@ -1,0 +1,443 @@
+/**
+ * All Rights Reserved (C) PearlInPalm Co., Ltd
+ * 
+ * @file 	GLayoutData.gtl
+ * @description 实现一些通用layout操作.
+ * @author David.Wan
+ * @date   2010-09
+ */
+ 
+#include "./GLayoutData.h"
+#include "../control/GContainer.gtl"
+
+//////////////////////// Public ////////////////////////////////
+FUNCTION GLayout_makeGLayout(Object[] layoutDataInfo)
+{
+	int layoutType = ObjToInt(layoutDataInfo[0]);
+	int layoutWidgetsCount = ObjToInt(layoutDataInfo[1]);
+	GWidget[] layoutedWidgets = NULL;
+	GLayoutData layout = NULL;
+	
+	switch(layoutType){
+		case LAYOUT_TYPE_H:
+		case LAYOUT_TYPE_V:
+			layoutedWidgets = Realize(Object_Create(layoutDataInfo[2]));
+			layout = GLayout_makeGLineLayoutData(layoutType, layoutWidgetsCount, layoutedWidgets);
+			OBJECT_FREE(layoutedWidgets);
+			break;
+			
+		case LAYOUT_TYPE_BORDER:
+			layoutedWidgets = Realize(Object_Create(layoutDataInfo[2]));
+			layout = GLayout_makeGBorderLayoutData(layoutWidgetsCount, Object_Create(layoutedWidgets[0]), Object_Create(layoutedWidgets[1]), Object_Create(layoutedWidgets[2]), Object_Create(layoutedWidgets[3]), Object_Create(layoutedWidgets[4]));
+			OBJECT_FREE(layoutedWidgets);
+			break;
+			
+		case LAYOUT_TYPE_GRID:
+		case LAYOUT_TYPE_GRIDBAG:
+			int rows = ObjToInt(layoutDataInfo[2]);
+			int cols = ObjToInt(layoutDataInfo[3]);
+			layoutedWidgets = Realize(Object_Create(layoutDataInfo[4]));
+			layout = GLayout_makeGGridLayoutData(layoutWidgetsCount, rows,  cols, layoutedWidgets);
+			OBJECT_FREE(layoutedWidgets);
+			break;
+			
+		default:
+			break;
+	}
+	
+	return layout;
+}
+
+FUNCTION GLayout_destroyGLayout(GLayoutData this)
+{
+	switch(this.layoutType){
+		case LAYOUT_TYPE_H:
+		case LAYOUT_TYPE_V:
+			GLineLayoutData lineLayout = this;
+			OBJECT_FREE(lineLayout.lineLayoutedWidgets);
+			break;
+			
+		case LAYOUT_TYPE_BORDER:
+			GBorderLayoutData borderLayoutInfo = this;
+			OBJECT_FREE(borderLayoutInfo.east);
+			OBJECT_FREE(borderLayoutInfo.north);
+			OBJECT_FREE(borderLayoutInfo.west);
+			OBJECT_FREE(borderLayoutInfo.south);
+			OBJECT_FREE(borderLayoutInfo.center);
+			break;
+			
+		case LAYOUT_TYPE_GRID:
+		case LAYOUT_TYPE_GRIDBAG:
+			GGridLayoutData gridLayout = this;
+			OBJECT_FREE(gridLayout.gridLayoutedWidgets);
+			break;
+			
+		default:
+			break;
+	}
+	OBJECT_FREE(this);
+}
+
+/**
+ * lineLayout.
+ */ 
+FUNCTION GLayout_makeGLineLayoutData(int layoutType, int layoutWidgetsCount, GWidget[] layoutedWidgets)
+{
+	GLineLayoutData lineLayoutInfo = Realize(new GLineLayoutData);
+	lineLayoutInfo.layoutType = layoutType;
+	lineLayoutInfo.layoutWidgetsCount = layoutWidgetsCount;
+	lineLayoutInfo.lineLayoutedWidgets = new GWidget[layoutWidgetsCount];
+	
+	for (int i=0; i<layoutWidgetsCount; i++){
+		lineLayoutInfo.lineLayoutedWidgets[i] = layoutedWidgets[i];
+	}
+
+	return lineLayoutInfo;
+}
+
+/** 
+ * BorderLayout.
+ */
+FUNCTION GLayout_makeGBorderLayoutData(int layoutWidgetsCount, GWidget east, GWidget north, GWidget west, GWidget south, GWidget center)
+{
+	GBorderLayoutData borderLayoutInfo = Realize(new GBorderLayoutData);
+	borderLayoutInfo.layoutType = LAYOUT_TYPE_BORDER;
+	borderLayoutInfo.layoutWidgetsCount = layoutWidgetsCount;
+	borderLayoutInfo.east   = Realize(east);
+	borderLayoutInfo.north  = Realize(north);
+	borderLayoutInfo.west   = Realize(west);
+	borderLayoutInfo.south  = Realize(south);
+	borderLayoutInfo.center = Realize(center);
+	return borderLayoutInfo;
+}
+
+/**
+ * GridLayout.
+ */
+FUNCTION GLayout_makeGGridLayoutData(int layoutWidgetsCount, int rows, int cols, GWidget[] layoutedWidgets)
+{
+	GGridLayoutData gridLayoutInfo = Realize(new GGridLayoutData);
+	gridLayoutInfo.layoutType = LAYOUT_TYPE_GRID;
+	gridLayoutInfo.layoutWidgetsCount = layoutWidgetsCount;
+	gridLayoutInfo.rows = rows;
+	gridLayoutInfo.cols = cols;
+	
+	int cnt = rows * cols;
+	gridLayoutInfo.gridLayoutedWidgets =new GWidget[cnt];
+	for (int i=0; i<cnt; i++){
+		gridLayoutInfo.gridLayoutedWidgets[i] = layoutedWidgets[i];
+	}
+	
+	return gridLayoutInfo;
+}
+
+/**
+ * 为layout内部的控件自动进行焦点切换设置.
+ */
+FUNCTION GLayout_initRelativeFocus(GContainer container)
+{
+	Object[] layoutDataInfo = Realize(Gui_GC_GetLayoutedWidgets(container));
+	if(IsNull(layoutDataInfo)){
+		return;
+	}
+	GLayoutData layoutData = GLayout_makeGLayout(layoutDataInfo);
+	Gui_GC_DestroyLayoutedWidgets(layoutDataInfo);
+	OBJECT_FREE(layoutDataInfo);
+	
+	if(layoutData != NULL){
+		switch(layoutData.layoutType){
+	 		case LAYOUT_TYPE_H:
+			case LAYOUT_TYPE_V:
+				GLineLayoutData lineLayoutData = layoutData;
+				GLayout_initLineRelativeFocus(lineLayoutData);
+				break;
+				
+			case LAYOUT_TYPE_BORDER:
+				GBorderLayoutData borderLayoutData = layoutData;
+				GLayout_initBorderRelativeFocus(borderLayoutData);
+				break;
+				
+			case LAYOUT_TYPE_GRID:
+			case LAYOUT_TYPE_GRIDBAG:
+				GGridLayoutData gridLayoutedData = layoutData;
+				GLayout_initGridRelativeFocus(gridLayoutedData);
+				break;
+				
+			default:
+				break;
+	 	}
+	 	GLayout_destroyGLayout(layoutData);
+	}
+}
+
+//////////////////////// Private ////////////////////////////////
+/**
+ * 为linelayout内部的控件自动进行焦点切换设置.
+ */
+FUNCTION GLayout_initLineRelativeFocus(GLineLayoutData lineLayoutInfo)
+{
+	for(int i = 0; i < lineLayoutInfo.layoutWidgetsCount - 1; i++)
+	{
+		GWidget currentWidget = Realize(Object_Create(lineLayoutInfo.lineLayoutedWidgets[i]));
+		GWidget nextWidget = Realize(Object_Create(lineLayoutInfo.lineLayoutedWidgets[i + 1]));
+
+		if(lineLayoutInfo.layoutType == LAYOUT_TYPE_H) {
+			GW_setRelativeRightWidget(currentWidget, nextWidget);
+		}
+		else if(lineLayoutInfo.layoutType == LAYOUT_TYPE_V) {
+			GW_setRelativeDownWidget(currentWidget, nextWidget);
+		}
+		OBJECT_FREE(currentWidget);
+		OBJECT_FREE(nextWidget);
+	}
+	
+	// 设置第一个控件和最后一个控件的相对焦点.
+	GWidget firstWidget = Realize(Object_Create(lineLayoutInfo.lineLayoutedWidgets[0]));
+//	if (IsNotNull(firstWidget)){
+//		Gui_GW_RequestFocus(firstWidget);
+//	}
+	int endIndex = lineLayoutInfo.layoutWidgetsCount - 1;
+	GWidget lastWidget = Realize(Object_Create(lineLayoutInfo.lineLayoutedWidgets[endIndex]));
+	if(lineLayoutInfo.layoutType == LAYOUT_TYPE_H){
+		GW_setRelativeRightWidget(lastWidget, firstWidget);
+	}
+	else if(lineLayoutInfo.layoutType == LAYOUT_TYPE_V) {
+		GW_setRelativeDownWidget(lastWidget, firstWidget);
+	}
+	OBJECT_FREE(firstWidget);
+	OBJECT_FREE(lastWidget);
+}
+
+/**
+ * 为borderlayout内部的控件自动进行焦点切换设置.
+ */
+FUNCTION GLayout_initBorderRelativeFocus(GBorderLayoutData borderLayoutInfo)
+{
+	GWidget east = Realize(borderLayoutInfo.east);
+	GWidget north = Realize(borderLayoutInfo.north);
+	GWidget west = Realize(borderLayoutInfo.west);
+	GWidget south = Realize(borderLayoutInfo.south);
+	GWidget center = Realize(borderLayoutInfo.center);
+//	if (IsNotNull(center)){
+//		Gui_GW_RequestFocus(center);
+//	}
+	if(east != NULL)
+	{
+		if(center != NULL) {
+			GW_setRelativeLeftWidget(east, center);
+		}
+		
+		if(north != NULL) {
+			GW_setRelativeUpWidget(east, north);
+		}
+		
+		if(south != NULL) {
+			GW_setRelativeDownWidget(east, south);
+			GW_setRelativeRightWidget(east, south);
+		}
+	}
+	
+	if(north != NULL)
+	{
+		if(west != NULL){
+			GW_setRelativeRightWidget(north, west);
+		}
+		
+		if(center != NULL){
+			GW_setRelativeDownWidget(north, center);
+		}
+		
+		if(south != NULL){
+			GW_setRelativeUpWidget(north, south);
+		}
+	}
+	
+	if(west != NULL)
+	{
+		if(center != NULL){
+			GW_setRelativeRightWidget(west, center);
+		}
+		
+		if(south != NULL){
+			GW_setRelativeDownWidget(west, south);
+		}
+	}
+	
+	if(south != NULL)
+	{
+		if(center != NULL){
+			GW_setRelativeUpWidget(south, center);
+		}
+	}
+	
+	OBJECT_FREE(east);
+	OBJECT_FREE(west);
+	OBJECT_FREE(north);
+	OBJECT_FREE(south);
+	OBJECT_FREE(center);
+}
+
+/////////////////////////GridLayout焦点设置//////////////////////////////////
+/**
+ * 为Grid(Bag)layout内部的控件自动进行焦点切换设置.
+ */
+FUNCTION GLayout_initGridRelativeFocus(GGridLayoutData gridLayoutInfo)
+{
+	int rows = gridLayoutInfo.rows;
+	int cols = gridLayoutInfo.cols;
+	GWidget[] gridLayoutedWidgets = Realize(gridLayoutInfo.gridLayoutedWidgets);
+	
+	// 递归遍历所有的grid Cell.
+	for(int i = 0; i < rows; i++) {//start FOR_1
+		for(int j = 0; j < cols; j++) {// start FOR_2
+			// 获取当前cell中保存的控件.
+			GWidget currentWidget = Realize(Object_Create(gridLayoutedWidgets[i * cols + j]));
+			
+//			if (i * cols + j == 0){
+//				Gui_GW_RequestFocus(currentWidget);
+//			}
+			
+			if(currentWidget != NULL)
+			{
+				///////////// 设置当前控件的upWidget. //////////////
+				GWidget upWidget = NULL;
+				if(i > 0){// 非第一行.
+					upWidget = Realize(Object_Create(gridLayoutedWidgets[(i - 1) * cols + j]));
+				}
+				else{// 最后一行.
+					upWidget = Realize(Object_Create(gridLayoutedWidgets[(rows - 1) * cols + j]));
+				}
+				GLayout_initGridRelativeUpWidget(currentWidget, upWidget);
+				OBJECT_FREE(upWidget);
+				///////////////////////////////////////////////////
+				
+				///////////// 设置当前控件的downWidget. ////////////
+				GWidget downWidget = NULL;
+				if(i < rows - 1){ //非最后一行.
+					downWidget = Realize(Object_Create(gridLayoutedWidgets[(i + 1) * cols + j]));
+				}
+				else{ //否则设置最后一行和第一行的对应关系.
+					downWidget = Realize(Object_Create(gridLayoutedWidgets[j]));
+				}
+				GLayout_initGridRelativeDownWidget(currentWidget, downWidget);
+				OBJECT_FREE(downWidget);
+				///////////////////////////////////////////////////
+				
+				///////////// 设置当前控件的leftWidget. ////////////
+				// 对于非第一行的第一列, 其leftWidget为上一行的最后一个控件.
+				GWidget leftWidget = NULL;
+				if(i > 0 || j > 0){
+					leftWidget = Realize(Object_Create(gridLayoutedWidgets[i * cols - 1 + j]));
+				}
+				else{
+					leftWidget = Realize(Object_Create(gridLayoutedWidgets[(rows - 1) * cols + cols - 1]));
+				}
+				GLayout_initGridRelativeLeftWidget(currentWidget, leftWidget);
+				OBJECT_FREE(leftWidget);
+				///////////////////////////////////////////////////
+				
+				///////////// 设置当前控件的右控件. ////////////
+				// 对于非最后一行的最后一列, 其rightWidget为下一列的第一个cell.
+				GWidget rightWidget = NULL;
+				if(i < (rows - 1) || j < (cols - 1)){
+					rightWidget = Realize(Object_Create(gridLayoutedWidgets[i * cols + j + 1]));
+				}
+				else{
+					rightWidget = Realize(Object_Create(gridLayoutedWidgets[0 * cols + 0]));
+				} 
+				GLayout_initGridRelativeRightWidget(currentWidget, rightWidget);
+				OBJECT_FREE(rightWidget);
+				////////////////////////////////////////////////////////////////
+			} // End if
+			OBJECT_FREE(currentWidget);
+		}// End FOR_2
+	}// End FOR_1
+	OBJECT_FREE(gridLayoutedWidgets);
+}
+
+/**
+ * 前置条件currentWidget != NULL.
+ */
+FUNCTION GLayout_initGridRelativeUpWidget(GWidget currentWidget, GWidget nextWidget)
+{
+	// 防止gridBagLayout时把焦点设置到自己身上.
+	// Note: 这里不能进行进行"="操作, 只能通过client来判读是否是同一控件;
+	if(IsNotNull(nextWidget)) {
+		if(nextWidget.clientId != currentWidget.clientId){ 
+			// 设置当前控件的up焦点控件, 如果之前被设置过了, 就不再进行设置;
+			// 但是如果nextWidget的上焦点没有被设置, 还是需要将currentWidget
+			// 设置为nextWidget的下焦点.
+			if(IsNull(currentWidget.upWidget)){//Start IF_1
+				OBJECT_SET(currentWidget.upWidget, nextWidget);
+			}
+			else{
+				if(IsNull(nextWidget.downWidget)){
+					OBJECT_SET(nextWidget.downWidget, currentWidget);
+				}
+			}// End IF_1
+		}
+	}
+}
+
+/**
+ * 前置条件currentWidget != NULL.
+ */
+FUNCTION GLayout_initGridRelativeDownWidget(GWidget currentWidget, GWidget nextWidget)
+{
+	// 防止gridBagLayout时把焦点设置到自己身上.
+	if(IsNotNull(nextWidget)) {
+		if(currentWidget.clientId != nextWidget.clientId){
+			if(IsNull(currentWidget.downWidget)){// Start IF_1
+				OBJECT_SET(currentWidget.downWidget, nextWidget);
+			}
+			else{
+				// 只须设置downWidget的upWidget为当前控件即可, 因为对于gridBag来说, 可能在之前即被设置了.
+				if(IsNull(nextWidget.upWidget)){
+					OBJECT_SET(nextWidget.upWidget, currentWidget);
+				}
+			}// End IF_1
+		}
+	}
+}
+
+/**
+ * 前置条件currentWidget != NULL.
+ */
+FUNCTION GLayout_initGridRelativeLeftWidget(GWidget currentWidget, GWidget nextWidget)
+{
+	if(IsNotNull(nextWidget)) {
+		if(nextWidget.clientId != currentWidget.clientId)
+		{
+			if(IsNull(currentWidget.leftWidget)){// START IF_1
+				OBJECT_SET(currentWidget.leftWidget, nextWidget);
+			}
+			else{
+				if(IsNull(nextWidget.rightWidget)){
+					OBJECT_SET(nextWidget.rightWidget, currentWidget);
+				}
+			}// END IF_1
+		}
+	}
+}
+
+/**
+ * 前置条件currentWidget != NULL.
+ */
+FUNCTION GLayout_initGridRelativeRightWidget(GWidget currentWidget, GWidget nextWidget)
+{
+	if(IsNotNull(nextWidget)){
+		if(currentWidget.clientId != nextWidget.clientId) // START IF_1
+		{
+			if(IsNull(currentWidget.rightWidget)){
+				OBJECT_SET(currentWidget.rightWidget, nextWidget);
+			}
+			else{
+				if(IsNull(nextWidget.leftWidget)){
+					OBJECT_SET(nextWidget.leftWidget, currentWidget);
+				}
+			}
+		} // END IF_1
+	}
+}
+////////////////////////////////////////////////////////////////////
+

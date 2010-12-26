@@ -1,0 +1,251 @@
+#include "./GGridBox.h"
+#include "./GContainer.gtl"
+#include "./GScrollPanel.gtl"
+#include "../Layout/GLayoutData.gtl"
+
+//	公共接口
+//	public:
+
+/**
+ * 创建GGridBox.
+ *
+ * @param widgetName 	控件名称，调试时用到.
+ * @param rows			GridBox的行数.
+ * @param cols			GridBox的列数.
+ * @param isVBarPaint	垂直滚动条是否绘制（和isvisible有区别）
+ * @param isVArrowPaint	垂直方向导航箭头是否绘制（和isvisible有区别）
+ * @param isHBarPaint	水平滚动条是否绘制（和isvisible有区别）
+ * @param isHBarPaint	水平方向导航箭头是否绘制（和isvisible有区别）
+ * @return的对象是Realize过的.
+ * NOTE: gridBox在创建的时候就必须设定行和列, 用户有责任保证设置的行和列没有超出
+ * gridBox setBound后的范围(假如超出了, 自动提供水平和垂直滚动条)
+ */
+FUNCTION GGB_makeGGridBox(GGridBox this, String widgetName, int rows, int cols, boolean isVBarPaint, boolean isVArrowPaint, boolean isHBarPaint, boolean isHArrowPaint)
+{
+	GGridBox ggb = NULL;
+	if(IsNotNull(this)){
+		ggb = Realize(Gui_GC_MakeGContainer(this, widgetName));
+	}
+	else{
+		ggb = Realize(Gui_GC_MakeGContainer(new GGridBox, widgetName));
+	}
+	
+	ggb.rows = rows;
+	ggb.cols = cols;
+	
+	// 创建内嵌式scrollpanel
+	String scrollPanelName = Realize(Object_Create("gridbox_scrollPanel"));
+	ggb.scrollPanel = Realize(GSP_makeGScrollPanel(NULL, scrollPanelName, isVBarPaint, isVArrowPaint, isHBarPaint, isHArrowPaint));
+	OBJECT_FREE(scrollPanelName);
+
+	Gui_GC_SetGridLayout(ggb.scrollPanel.contentArea, cols, rows);
+	Gui_GC_AddChildWidget(ggb, ggb.scrollPanel, 0);
+
+//	ggb.scrollPanel.isBackgroundPainted = TRUE;
+//	ggb.scrollPanel.backgroundColor = 0xffffff00;
+	//GGB_initGGridBox(ggb);
+	ggb.func_paint = GW_paint;
+	ggb.func_destroy = GGB_destroy;
+	
+	//GGB_setGaps(this, 2, 2);
+	ggb.scrollPanel.vGap = 2;
+	ggb.scrollPanel.hGap = 2;
+	Gui_GC_SetLayoutGaps(ggb.scrollPanel.contentArea, 2, 2);
+	
+	GGridBox ret = Object_Create(ggb);
+	free ggb;
+	
+	return ret;
+}
+
+/**
+ * 销毁GGridBox.
+ GGB_destroyGGridBox
+ */
+FUNCTION GGB_destroy(GGridBox this)
+{
+	OBJECT_FREE(this.scrollPanel);
+
+	OBJECT_FREE(this.leftWidget);
+	OBJECT_FREE(this.rightWidget);
+	OBJECT_FREE(this.upWidget);
+	OBJECT_FREE(this.downWidget);
+	OBJECT_FREE(this.observer);
+	OBJECT_FREE(this);
+}
+
+/**
+ * 向GGridBox中添加Grid控件.
+ *
+ * NOTE:	需要注意的是添加到gridbox中的控件必须是已经 “有大小” 的控件.
+ */
+FUNCTION GGB_addGrid(GGridBox this, GWidget grid)
+{
+	this.gridCount++;
+	this.gridW = grid.w;
+	this.gridH = grid.h;
+/*	grid.func_handleFocus = GSP_childFocusGain;
+	grid.func_handleKey = GGrid_handleKey;*/
+	grid.func_handleTouch = GGrid_handleTouch;
+	OBJECT_SET(grid.observer, this.scrollPanel);
+	Gui_GC_AddChildWidget(this.scrollPanel.contentArea, grid, 0);
+	//GSP_addWidget(this.scrollPanel, grid);
+}
+
+/**
+ * 移除GGridBox中的Grid控件.
+ */
+FUNCTION GGB_removeGrid(GGridBox this, GWidget grid, boolean destroy)
+{
+	this.gridCount--;
+	if (destroy) {
+		Gui_GW_destroyGWidget(grid);
+	} else {
+		Gui_GC_RemoveChildWidget(this.scrollPanel.contentArea, grid);
+	}
+}
+
+/**
+ * 移除GGridBox中的Grid控件.
+ */
+FUNCTION GGB_clear(GGridBox this, boolean destroy)
+{
+	this.gridCount = 0;
+	this.rows = 0;
+	this.cols = 0;
+	Gui_GC_Clear(this.scrollPanel.contentArea, destroy);
+}
+
+/*根据索引获取子控件*/
+FUNCTION GGB_getChildByIndex(GGridBox this, int index){
+	return Gui_GC_GetChildByIndex(this.scrollPanel.contentArea, index);
+}
+
+/**
+ * 用于add grid操作完成后, 判断是否需要滚动条等操作.
+ */
+FUNCTION GGB_update(GGridBox this)
+{
+ 	int _clientAreaH = GC_getContentAreaHeight(this.scrollPanel.contentArea);
+ 	int _clientAreaW = GC_getContentAreaWidth(this.scrollPanel.contentArea);
+ 	
+ 	if (this.cols > 0 && this.rows > 0)
+ 	{
+ 		// TODO:这里判断是否需要加滚动条
+ 		int currentScrollH = (this.gridH + this.scrollPanel.hGap) * this.rows - this.scrollPanel.hGap;
+ 		if (currentScrollH > _clientAreaH){
+ 			
+			if (this.scrollPanel.isVArrowPaint){
+				this.scrollPanel.downArrow.isVisible = TRUE;
+			}
+			if (this.scrollPanel.isVScrollBarPaint){
+				GSP_setBarVisibility(this.scrollPanel, FALSE, TRUE);
+			}
+			
+			this.scrollPanel.isNeedScroll = TRUE;
+ 		}
+ 		else{
+			GSP_setBarVisibility(this.scrollPanel, FALSE, FALSE);
+			GSP_setArrowVisibility(this.scrollPanel, FALSE, FALSE);
+ 		}
+		Gui_GC_Pack(this.scrollPanel.contentArea);
+ 	}
+ 	else
+ 	{
+	 	this.cols = (_clientAreaW + this.scrollPanel.hGap) / (this.gridW + this.scrollPanel.hGap);
+	 	this.rows = (this.gridCount + this.cols - 1) / this.cols;
+	 	
+	 	Gui_GC_SetGridLayout(this.scrollPanel.contentArea, this.cols, this.rows);
+		Gui_GC_Pack(this.scrollPanel.contentArea);
+		
+		if ((this.scrollPanel.contentArea.h > _clientAreaH))
+		{
+			this.cols = (_clientAreaW - this.scrollPanel.vScrollBar.w) / (this.gridW + this.scrollPanel.hGap);
+			this.rows = (this.gridCount + this.cols - 1) / this.cols;
+			Gui_GC_SetGridLayout(this.scrollPanel.contentArea, this.cols, this.rows);
+			
+			this.scrollPanel.contentArea.preferedHeight = -1;
+			this.scrollPanel.contentArea.preferedWidth = -1;
+			Gui_GC_Pack(this.scrollPanel.contentArea);
+			
+			if (this.scrollPanel.isVArrowPaint){
+				this.scrollPanel.downArrow.isVisible = TRUE;
+			}
+			if (this.scrollPanel.isVScrollBarPaint){
+				GSP_setBarVisibility(this.scrollPanel, FALSE, TRUE);
+			}
+			this.scrollPanel.isNeedScroll = TRUE;
+		}
+		else
+		{
+			GSP_setBarVisibility(this.scrollPanel, FALSE, FALSE);
+			GSP_setArrowVisibility(this.scrollPanel, FALSE, FALSE);
+		}
+ 	}
+ 	
+	int tmpItemsH = this.scrollPanel.contentArea.h;
+	GSP_setBounds(this.scrollPanel, this.scrollPanel.x, this.scrollPanel.y, _clientAreaW, _clientAreaH);
+	GSP_setScrollAmount(this.scrollPanel, tmpItemsH, tmpItemsH / this.rows);
+
+	GLayout_initRelativeFocus(this.scrollPanel.contentArea);
+}
+
+/**
+ * 用于设置gridbox中grid之间的间隙.
+ */
+FUNCTION GGB_setGaps(GGridBox this, int hGaps, int vGaps)
+{
+	this.scrollPanel.vGap = vGaps;
+	this.scrollPanel.hGap = hGaps;
+
+	Gui_GC_SetLayoutGaps(this.scrollPanel.contentArea, hGaps, vGaps);
+}
+
+/**
+ * 设置GGridBox以及其子控件的大小和位置.
+ */
+FUNCTION GGB_setBound(GGridBox this, int x, int y, int width, int height)
+{
+	Gui_GW_SetBound(this, x, y, width, height);
+	int clientW = GC_getContentAreaWidth(this);
+	int clientH = GC_getContentAreaHeight(this);
+	GSP_setBounds(this.scrollPanel, 0, 0, clientW, clientH);
+}
+
+/**
+ * 为GGridBox的grid子控件添加layout限制条件.
+ */
+FUNCTION GGB_setGridLayoutConstraint(GGridBox this, GWidget widget, int gridX, int gridY, int gridWidth, int gridHeight, int insetLeft, int insetTop, int insetRight, int insetBottom)
+{
+	Gui_GC_SetGridLayoutConstraint(this.scrollPanel.contentArea, widget, gridX, gridY, gridWidth, gridHeight, insetLeft, insetTop, insetRight, insetBottom);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//	私有接口
+//	protected:
+
+/**
+ * 初始化GGridBox.
+ */
+//FUNCTION GGB_initGGridBox(GGridBox this)
+//{
+//	this.func_paint = GW_paint;
+//	this.func_destroy = GGB_destroy;
+//	
+//	//GGB_setGaps(this, 2, 2);
+//	this.scrollPanel.vGap = vGaps;
+//	this.scrollPanel.hGap = hGaps;
+//
+//	Gui_GC_SetLayoutGaps(this.scrollPanel.contentArea, hGaps, vGaps);
+//}
+
+// Grid的handleTouch方法
+FUNCTION GGrid_handleTouch(GWidget this, int eventType, int x, int y)
+{
+ 	if (EVENT_TYPE_TOUCHRELEASED == eventType){
+ 		Gui_GW_RequestFocus(this);
+ 		return TRUE;
+ 	}
+ 	
+ 	return FALSE;
+}

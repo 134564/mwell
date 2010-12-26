@@ -1,0 +1,204 @@
+#include "GWindow.h"
+#include "GContainer.gtl"
+#include "GLabel.gtl"
+#include "GButton.gtl"
+/**
+ * 创建GWindow.
+ * @param widgetName window的名称.
+ * @param Caption   window的标题名.
+ * @param imageLabe  标题栏用的到 资源.
+ * @param imageGIcon button用到的资源.
+ * @param nGLabelIndex  标题栏的资源索引.
+ * @param nLeftGIconIndex 左菜单 icon的索引值.
+ * @param nRightGIconIndex 右菜单 icon的索引值.
+ * @return 新创建的GWindow.
+ */
+FUNCTION GWnd_makeGWindow(GWindow gWindow, String widgetName, String Caption, ImageSet imageGIcon, int nLeftGIconIndex, int nRightGIconIndex, String leftBtnText, String rightBtnText)
+{
+	// 创建window
+	GWindow _window;
+	if(IsNotNull(gWindow)) {
+		_window = Realize(Gui_GC_MakeGContainer(gWindow, widgetName));
+	} else {
+		_window = Realize(Gui_GC_MakeGContainer(new GWindow, widgetName));	
+	}
+	
+	// 创建titlebar
+	String labelName = Realize(Object_Create("_TitleBar"));
+	_window.titleBar = Realize(GL_makeGLabel(NULL, labelName, Caption));
+	//GL_SetCaptionInfo(_window.titleBar);
+				  	
+	// 创建左右button
+   	String leftButtonName = Realize(Object_Create("_LeftButton"));
+	String rightButtonName = Realize(Object_Create("_RightButton"));
+	_window.leftButton =  Realize(GBtn_makeGButton(NULL, leftButtonName, leftBtnText, imageGIcon, nLeftGIconIndex, 0));
+	_window.rightButton =  Realize(GBtn_makeGButton(NULL, rightButtonName, rightBtnText, imageGIcon, nRightGIconIndex, 0));
+	
+	// 创建content区域
+	String contentAreaName = Realize(Object_Create(widgetName + "_ContentArea"));
+	_window.contentArea =  Realize(GC_makeGContainer(NULL, contentAreaName));
+	
+	// 创建statusbar
+	String statusBarName = Realize(Object_Create(widgetName + "_StatusBar"));
+	_window.statusBar =  Realize(GC_makeGContainer(NULL, statusBarName));
+	
+	free statusBarName;
+	free contentAreaName;
+	free rightButtonName;
+	free leftButtonName;
+	free labelName;
+	GWnd_initGWindow(_window);
+	
+	//GWnd_setBound(_window, 0, 0, nScreenWidth, nScreenHeight);
+	
+	GWindow ret = Object_Create(_window);
+	free _window;
+	return ret;
+						  	
+}	
+
+FUNCTION GWnd_setBound(GWindow this, int x, int y, int width, int height)
+{
+	Gui_GW_SetBound(this, x, y, width, height);
+	int clientW = GC_getContentAreaWidth(this);
+	int clientH = GC_getContentAreaHeight(this);
+	Gui_GW_SetBound(this.titleBar, 0, 0, clientW, this.titleBar.h);
+	//added by zxf
+	/*GW_setBound(this.leftButton, 
+				0,
+				height - this.leftButton.GB_BKG_HEIGHT, 
+				this.leftButton.GB_BKG_WIDTH, 
+				this.leftButton.GB_BKG_HEIGHT);
+	GW_setBound(this.rightButton, width -  this.rightButton.GB_BKG_WIDTH, 
+				height - this.rightButton.GB_BKG_HEIGHT, 
+				this.rightButton.GB_BKG_WIDTH, 
+				this.rightButton.GB_BKG_HEIGHT);
+				
+	GW_setBound(this.statusBar, 0, height - this.leftButton.GB_BKG_HEIGHT, 
+				width, this.leftButton.GB_BKG_HEIGHT );
+				
+	GW_setBound(this.contentArea, 0, this.titleBar.h, width, 
+	height - this.titleBar.h - this.leftButton.GB_BKG_HEIGHT);*/
+	Gui_GW_SetBound(this.leftButton, 
+				0,
+				height - this.leftButton.h, 
+				this.leftButton.w, 
+				this.leftButton.h);
+	Gui_GW_SetBound(this.rightButton, width -  this.rightButton.w, 
+				height - this.rightButton.h, 
+				this.rightButton.w, 
+				this.rightButton.h);
+				
+	Gui_GW_SetBound(this.statusBar, 0, height - this.leftButton.h, 
+				width, this.leftButton.h );
+				
+	Gui_GW_SetBound(this.contentArea, 0, this.titleBar.h, clientW, 
+	clientH - this.titleBar.h - this.leftButton.h);
+}
+
+FUNCTION GWnd_initGWindow(GWindow this) 
+{
+	//GC_initGContainer(this);
+	this.func_paint = GW_paint;
+	
+	if (this.titleBar)
+	{
+		Gui_GC_AddChildWidget(this, this.titleBar, BLAYOUT_LOC_NORTH);
+	}
+	if (this.statusBar)
+	{
+		Gui_GC_AddChildWidget(this, this.statusBar, BLAYOUT_LOC_SOUTH);
+	}
+	if (this.contentArea)
+	{
+		Gui_GC_AddChildWidget(this, this.contentArea, 0);
+	}
+	if (this.leftButton)
+	{
+		Gui_GC_AddChildWidget(this, this.leftButton, 0);
+	}
+	if (this.rightButton)
+	{
+		Gui_GC_AddChildWidget(this, this.rightButton, 0);
+	}
+
+	this.backgroundColor = 0x934000;
+	this.isBackgroundPainted = TRUE;
+	this.func_destroy = GWnd_destroy;
+}
+
+FUNCTION GWnd_addChildWidget(GWindow this, GWidget _child, int _constraint)
+{
+	if (this.contentArea)
+	{
+		Gui_GC_AddChildWidget(this.contentArea, _child, _constraint);
+	}
+}
+
+FUNCTION GWnd_setTitleBarHeight(GWindow this, int titlebarHeight)
+{
+	if (this.titleBar)
+	{
+		int lastTitleH = this.titleBar.h;
+		this.titleBar.h = titlebarHeight;
+		Gui_GW_SetBound(this.contentArea, 0, titlebarHeight, this.contentArea.w, this.contentArea.h + lastTitleH - titlebarHeight);
+	}
+}
+
+FUNCTION GWnd_setStatusBarHeight(GWindow this, int statusbarHeight)
+{
+	if (this.statusBar)
+	{
+		this.statusBar.h = statusbarHeight;
+	}
+}
+
+
+
+FUNCTION GWnd_addContentWidget(GWindow this, GWidget _contentWidget)
+{
+	if (this.contentArea)
+	{
+		Gui_GC_AddChildWidget(this.contentArea, _contentWidget, 0);
+	}
+}
+
+FUNCTION GWnd_destroy(GWindow this)
+{
+	// 析构子控件.
+	OBJECT_FREE(this.titleBar);
+	OBJECT_FREE(this.statusBar);
+	OBJECT_FREE(this.contentArea);
+	OBJECT_FREE(this.leftButton);
+	OBJECT_FREE(this.rightButton);
+		
+	OBJECT_FREE(this.leftWidget);
+	OBJECT_FREE(this.rightWidget);
+	OBJECT_FREE(this.upWidget);
+	OBJECT_FREE(this.downWidget);
+	OBJECT_FREE(this.observer);
+	OBJECT_FREE(this.userData);
+	OBJECT_FREE(this);
+}
+
+ /**
+  * GWindow 的获取Gwindow的客户区宽度的方法.
+  * @return 客户区的宽度.
+  *
+  * NOTE:	此方法前提条件是已经对window使用过GWnd_setBound()方法.
+  */
+FUNCTION GWnd_getClientWidth(GWindow this)
+{
+	return (this.contentArea.w - this.contentArea.borderLeft - this.contentArea.borderRight - this.contentArea.insetLeft - this.contentArea.insetRight);
+}
+
+ /**
+  * GWindow 的获取Gwindow的客户区高度的方法.
+  * @return 客户区的高度.
+  *
+  * NOTE:	此方法前提条件是已经对window使用过GWnd_setBound()方法.
+  */
+FUNCTION GWnd_getClientHeight(GWindow this)
+{
+	return (this.contentArea.h - this.contentArea.borderTop - this.contentArea.borderBottom - this.contentArea.insetTop - this.contentArea.insetBottom);
+}

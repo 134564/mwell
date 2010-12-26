@@ -1,0 +1,694 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_test";
+DESCRIPTION "gui测试界面"; 
+
+#include "../core/common/general.gtl"
+#include "../core/gui/guicommon.gtl"
+#include "../core/gui/gbutton.gtl"
+#include "../core/gui/gcontainer.gtl"
+#include "../core/gui/gvmcanvasunit.gtl"
+#include "../core/gui/gwindow.gtl"
+#include "../core/gui/glabel.gtl"
+#include "../core/gui/gicon.gtl"
+#include "../core/gui/gimagenumber.gtl"
+#include "../core/gui/gscrollbar.gtl"
+
+DATA{
+	GButton btn1;
+	GButton btn2;
+	
+	GIcon labelIcon1;
+	GIcon labelIcon2;
+	// 红蓝血条
+	GLabel redLabel;
+	GLabel blueLabel;
+	
+	GLabel titlebar;	// 标题栏
+	GLabel statusbar;	// 状态栏
+	GContainer container;
+
+//  上部和下部的两个容器
+	GContainer contUp;
+	GContainer contDown;
+	GWindow window;
+	GVMCanvasUnit vmCU;
+	ImageSet src;
+	ImageSet number;
+	
+	GLabel attrTitle;
+	GContainer container1;	// 力
+	GContainer container2;	// 智
+	GContainer container3;	// 敏
+	GContainer container4;	// 体
+	
+	GContainer redContainer;	// 血条
+	GContainer blueContainer;	// 精条
+	GContainer expContainer;	// 经验条
+	GIcon expIcon;
+	GImageNumber expNumber;
+	
+	GImageNumber iNumber1;
+	GImageNumber iNumber2;
+	
+	int containerX;
+	int containerY;
+	int containerWidth;
+	int containerHeight;
+
+	int container1Width;
+	int container1Height;
+	
+	int labelX;
+	int labelY;
+	int labelWidth;
+	int labelHeight;
+	
+	String[] deriveAtrrKey;        //衍生属性字符串
+	GLabel[] atrrLabelList;
+	
+//	GLabel testLabel;	// 测试label
+	GLabel containerLabel;
+	GScrollBar testScrollBar;	// 测试scrollBar
+	ImageSet scrollBarSrc;
+}
+
+FUNCTION init()
+{
+	// 测试label
+/*	String testLabelName = Realize(Object_Create("testLabel"));
+	testLabel = Realize(GL_makeGLabel(testLabelName, 0, 0, -1));
+	free testLabelName;
+	
+	testLabel.backgroundColor = 0x00ff00;
+	testLabel.borderColor = 0;
+	testLabel.borderBottom = 2;
+	testLabel.borderLeft = 2;
+	testLabel.borderRight = 2;
+	testLabel.borderTop = 2;
+	testLabel.insetBottom = 0;
+	testLabel.insetTop = 0;
+	testLabel.insetLeft = 0;
+	testLabel.insetRight = 0;
+	testLabel.isBackgroundPainted = TRUE;
+	testLabel.isBorderPainted = TRUE;
+
+	GW_setBound(testLabel, 10, 100, 200, 20);*/
+	
+	scrollBarSrc = Realize(ImageSet_Create("ui_res320.pip", TRUE));
+	
+	String scrollbarName = Realize(Object_Create("scrollbar"));
+	testScrollBar = Realize(GSB_makeGScrollBar(scrollbarName, SCROLLBAR_IVERTICAL, SCROLLBAR_ISHOW_ALWAYS, scrollBarSrc, 0, 4));
+	free scrollbarName;
+	
+////////////////////////////////////////////////////***************************//////////////	
+	src = Realize(ImageSet_Create("ui_res240.pip", TRUE));
+	number = Realize(ImageSet_Create("number240.pip", TRUE));
+
+	
+	String testLabelName = Realize(Object_Create("testLabel"));
+	containerLabel = Realize(GL_makeGLabel(testLabelName, 0, src, 7));
+	free testLabelName;
+	containerLabel.isBackgroundPainted = FALSE;
+	containerLabel.isBorderPainted = FALSE;
+	
+	
+	String att = ""+
+	"攻击:秒杀\n"+ //0
+	"护甲:无敌\n"+ //1
+	"物减:100%\n"+ //2  %
+	"命中:100%\n"+ //3  %
+	"闪避:100%\n"+ //4  %
+	"物暴:100%\n"+ //5  %
+	"法防:100%\n"+ //6
+	"法攻:145-245\n"+ //7
+	"法闪:100%\n"+ //8  %
+	"免暴:100%\n"+ //9  %  <------
+	"法命:100%\n"+ //10  %
+	"法暴:100%\n"+ //11  %
+	"回血:瞬间加满\n"+ //12
+	"回气:瞬间加满\n"+ //13
+	"治疗:100%";//14
+
+	deriveAtrrKey = Realize(GetStringArray(att));
+
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(cuName));
+	
+	// 创建一个container.
+	String containerName = Realize(Object_Create("Container"));
+	container = Realize(GC_makeGContainer(containerName));
+	
+	// 创建两个button.
+
+	String btn1Text = Realize(Object_Create("TestButton1"));
+	String btn2Text = Realize(Object_Create("TestButton2"));
+	
+	btn1 =  Realize(GBtn_makeGButton(NULL, btn1Text, btn1Text));
+	btn2 =  Realize(GBtn_makeGButton(NULL, btn2Text, btn2Text));
+	
+	String containerName = Realize(Object_Create("Container"));
+	container = Realize(GC_makeGContainer(containerName));
+
+	String titlebarName = Realize(Object_Create("titleBar"));
+	String captionText = Realize(Object_Create("测试界面"));
+	titlebar = Realize(GL_makeGLabel(titlebarName, captionText, src, 6));
+	Gui_GL_SetCaptionInfo(titlebar, TRUE, LAYOUT_TYPE_IHCENTER, LAYOUT_TYPE_IVMIDDLE);
+
+	String statusbarName = Realize(Object_Create("statusBar"));
+	statusbar = Realize(GL_makeGLabel(statusbarName, statusbarName, src, 8));
+	Gui_GL_SetCaptionInfo(statusbar, TRUE, LAYOUT_TYPE_IHCENTER, LAYOUT_TYPE_IVMIDDLE);
+
+	Gui_GL_SetCaptionInfo(btn1, TRUE, LAYOUT_TYPE_IHCENTER, LAYOUT_TYPE_IVMIDDLE);
+	Gui_GL_SetCaptionInfo(btn2, TRUE, LAYOUT_TYPE_IHCENTER, LAYOUT_TYPE_IVMIDDLE);
+	
+//  创建上下那两个容器
+	String contUpName = Realize(Object_Create("ContUp"));
+	contUp = Realize(GC_makeGContainer(contUpName));
+	String contDownName = Realize(Object_Create("ContDown"));
+	contDown = Realize(GC_makeGContainer(contDownName));
+	free contUpName;
+	free contDownName;
+
+	contUp.borderColor = 0xED621E;
+	contUp.isBackgroundPainted = FALSE;
+	contUp.isBorderPainted = TRUE;
+	contUp.borderLeft = 2;
+	contUp.borderTop = 2;
+	contUp.borderRight = 2;
+	contUp.borderBottom = 2;
+	
+	contDown.borderColor = 0xED621E;
+	contDown.isBackgroundPainted = FALSE;
+	contDown.isBorderPainted = TRUE;
+	contDown.borderLeft = 2;
+	contDown.borderTop = 2;
+	contDown.borderRight = 2;
+	contDown.borderBottom = 2;
+	
+//////////
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// 红蓝血条
+	String redLabelName = Realize(Object_Create("red"));
+	redLabel = Realize(GL_makeGLabel(redLabelName, NULL, NULL, -1));
+	String blueLabelName = Realize(Object_Create("blue"));
+	blueLabel = Realize(GL_makeGLabel(blueLabelName, NULL, NULL, -1));
+		
+	redLabel.borderColor = 0x000000;
+	redLabel.backgroundColor = 0xff0000;
+	redLabel.isBackgroundPainted = TRUE;
+	redLabel.isBorderPainted = TRUE;
+	redLabel.borderLeft = 1;
+	redLabel.borderTop = 1;
+	redLabel.borderRight = 1;
+	redLabel.borderBottom = 1;
+// 后来加上的，默认是有2像素的inset的
+	redLabel.insetBottom = 0;
+	redLabel.insetLeft = 0;
+	redLabel.insetRight = 0;
+	redLabel.insetTop = 0;
+		
+	blueLabel.borderColor = 0x000000;
+	blueLabel.backgroundColor = 0x0000ff;
+	blueLabel.isBackgroundPainted = TRUE;
+	blueLabel.isBorderPainted = TRUE;
+	blueLabel.borderLeft = 1;
+	blueLabel.borderTop = 1;
+	blueLabel.borderRight = 1;
+	blueLabel.borderBottom = 1;
+// 后来加上的，默认是有2像素的inset的
+	blueLabel.insetBottom = 0;
+	blueLabel.insetLeft = 0;
+	blueLabel.insetRight = 0;
+	blueLabel.insetTop = 0;
+	
+// 最前面的icon
+	String labelIconName1 = Realize(Object_Create("labelIcon1"));
+	labelIcon1 = Realize(GI_makeGIcon(labelIconName1, NULL, src, 22, 0, 0));
+	String labelIconName2 = Realize(Object_Create("labelIcon2"));
+	labelIcon2 = Realize(GI_makeGIcon(labelIconName2, NULL, src, 22, 0, 0));
+
+// 装红蓝血条的容器控件
+	String redContainerName = Realize(Object_Create("血条"));
+	redContainer = Realize(GC_makeGContainer(redContainerName));
+	String blueContainerName = Realize(Object_Create("精条"));
+	blueContainer = Realize(GC_makeGContainer(blueContainerName));
+
+	redContainer.isBackgroundPainted = FALSE;
+	redContainer.isBorderPainted = FALSE;
+	
+	blueContainer.isBackgroundPainted = FALSE;
+	blueContainer.isBorderPainted = FALSE;
+
+	labelX = 80;
+	labelY = 5;
+	labelWidth = 120;
+	labelHeight = 10;
+	GW_setBound(redContainer, labelX, labelY, labelWidth, labelHeight);
+	GW_setBound(blueContainer, labelX, labelY + 15, labelWidth, labelHeight);
+// imagenumber;
+	String inumberName1 = Realize(Object_Create("血数字"));
+	String inumberName2 = Realize(Object_Create("血精数字"));
+	iNumber1 = Realize(GIN_makeGImageNumber(inumberName1, number));
+	iNumber2 = Realize(GIN_makeGImageNumber(inumberName2, number));
+	free inumberName1;
+	free inumberName2;
+
+	iNumber1.isBackgroundPainted = FALSE;
+	iNumber1.isBorderPainted = FALSE;
+	iNumber1.mageNumber = 50512;
+	iNumber1.numberRes = number;
+	iNumber1.isShowSign = FALSE;
+	iNumber1.plusStartIndex = 60;
+	iNumber1.subStartIndex = 75;
+	
+	iNumber2.isBackgroundPainted = FALSE;
+	iNumber2.isBorderPainted = FALSE;
+	iNumber2.mageNumber = -413;
+	iNumber2.numberRes = number;
+	iNumber2.isShowSign = FALSE;
+	iNumber2.plusStartIndex = 60;
+	iNumber2.subStartIndex = 75;
+	
+// 设置相关属性
+	labelIcon1.isBackgroundPainted = FALSE;
+	labelIcon1.isBorderPainted = FALSE;
+	labelIcon2.isBackgroundPainted = FALSE;
+	labelIcon2.isBorderPainted = FALSE;
+	GW_setBound(labelIcon1, 0, 0, 9, 7);
+	GW_setBound(labelIcon2, 0, 0, 9, 7);
+	GW_setBound(redLabel, 7, 1, 60, 6);
+	GW_setBound(blueLabel, 7, 1, 60, 6);
+	GW_setBound(iNumber1, 70, 0, 50, 10);
+	GW_setBound(iNumber2, 70, 0, 50, 10);
+	
+	
+	GC_addChildWidget(redContainer, redLabel, 0);
+	GC_addChildWidget(redContainer, labelIcon1, 0);
+	GC_addChildWidget(redContainer, iNumber1, 0);
+	
+	GC_addChildWidget(blueContainer, blueLabel, 0);
+	GC_addChildWidget(blueContainer, labelIcon2, 0);
+	GC_addChildWidget(blueContainer, iNumber2, 0);
+	
+	GC_addChildWidget(contUp, redContainer, 0);
+	GC_addChildWidget(contUp, blueContainer, 0);
+// 释放字符串资源
+	free blueContainerName;
+	free redContainerName;
+	free labelIconName1;
+	free labelIconName2;
+	free redLabelName;
+	free blueLabelName;
+////////////////////////////////////////////////////////////////////////////////////////////
+// 经验条
+	String expContainerName = Realize(Object_Create("经验条"));
+	expContainer = Realize(GC_makeGContainer(expContainerName));
+	
+	String expIconName = Realize(Object_Create("经验map"));
+	expIcon = Realize(GI_makeGIcon(expIconName, NULL, src, 43, 0, 0));
+	free expIconName;
+	
+	String expNumberName = Realize(Object_Create("经验num"));
+	expNumber = Realize(GIN_makeGImageNumber(expNumberName, number));
+	free expNumberName;
+
+	expNumber.isBackgroundPainted = FALSE;
+	expNumber.isBorderPainted = FALSE;
+	expNumber.mageNumber = 99998;
+	expNumber.numberRes = number;
+	expNumber.isShowSign = FALSE;
+	expNumber.plusStartIndex = 60;
+	expNumber.subStartIndex = 75;
+	
+	GW_setBound(expContainer, labelX, labelY + 30, 120, 18);
+	GW_setBound(expIcon, 0, 0, 18, 18);
+	GW_setBound(expNumber, 18, 4, 100, 10);
+	GC_addChildWidget(expContainer, expIcon, 0);
+	GC_addChildWidget(expContainer, expNumber, 0);
+///////////////////////////////////////////////////////////////////////////////////////////
+	String windowName = Realize(Object_Create("window"));
+	window = Realize(GWnd_makeGWindow(windowName, titlebar, statusbar, container, btn1, btn2));
+	
+	GC_addChildWidget(window, expContainer, 0);
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(cuName));
+
+// 属性文本显示
+	atrrLabelList = new GLabel[9];
+
+	for (int i=0; i<9; i++)
+	{
+		atrrLabelList[i] = Realize(GL_makeGLabel(NULL, deriveAtrrKey[i], 0, -1));
+		Gui_GL_SetCaptionInfo(atrrLabelList[i], FALSE, LAYOUT_TYPE_IHLEFT, LAYOUT_TYPE_IVMIDDLE);
+		GW_setBound(atrrLabelList[i], 125, 5 + 20*i, 100, 20);
+		GC_addChildWidget(contDown, atrrLabelList[i], 0);
+	}
+///////////////////////////////////////////////////////////////////////////////////////////
+// 创建 力智敏体
+	String attrTitleName = Realize(Object_Create("100级:剩余0点"));
+	attrTitle = Realize(GL_makeGLabel(attrTitleName, attrTitleName, NULL, -1));
+	Gui_GL_SetCaptionInfo(attrTitle, FALSE, LAYOUT_TYPE_IHCENTER, LAYOUT_TYPE_IVMIDDLE);
+	
+	attrTitle.borderColor = 0xc0c0c0;
+	attrTitle.isBorderPainted = TRUE;
+	attrTitle.borderLeft = 1;
+	attrTitle.borderRight = 1;
+	attrTitle.borderTop = 1;
+	attrTitle.borderBottom = 1;
+	attrTitle.isSelectionPainted = TRUE;
+	attrTitle.foregroundColor = 0xffffff;
+	
+	free attrTitleName;
+	
+	String container1Name = Realize(Object_Create("力:"));
+	String liValue = Realize(Object_Create("9999"));
+//	container1 = Realize(GC_makeGContainer(containerName));
+	container1 = GSL_makeGSlideBar(src, container1Name, liValue);
+	
+	String container2Name = Realize(Object_Create("智:"));
+//	container2 = Realize(GC_makeGContainer(containerName));
+	container2 = GSL_makeGSlideBar(src, container2Name, liValue);
+	
+
+	String container3Name = Realize(Object_Create("敏:"));
+//	container3 = Realize(GC_makeGContainer(containerName));
+	container3 = GSL_makeGSlideBar(src, container3Name, liValue);
+
+	String container4Name = Realize(Object_Create("体:"));
+//	container4 = Realize(GC_makeGContainer(containerName));
+	container4 = GSL_makeGSlideBar(src, container4Name, liValue);
+	
+	free liValue;
+
+	free container4Name;
+	free container3Name;
+	free container2Name;
+	free container1Name;
+
+	free cuName;
+	free windowName;
+	free captionText;
+	free titlebarName;
+	free containerName;
+	free btn2Text;
+	free btn1Text;
+
+//  将 力智敏体添加进窗口客户区容器中
+	GC_addChildWidget(contDown, attrTitle, 0);
+	GC_addChildWidget(contDown, container1, 0);
+	GC_addChildWidget(contDown, container2, 0);
+	GC_addChildWidget(contDown, container3, 0);
+	GC_addChildWidget(contDown, container4, 0);
+	
+	GC_addChildWidget(container, contUp, 0);
+	GC_addChildWidget(container, contDown, 0);
+	
+//	containerX = 0;
+//	containerY = 25;
+	containerWidth = 240;
+	containerHeight = 260;
+	GW_setBound(container, 0, 30, containerWidth, containerHeight);
+//  设置力智敏体的位置
+	container1Width = 102;
+	container1Height = 20;
+	GW_setBound(contUp, 0, 0, 240, 60);
+	GW_setBound(contDown, 0, 60, 240, 200);
+	GW_setBound(containerLabel, 0, 0, 240, 200); // 四角
+	GC_addChildWidget(contDown, containerLabel, 0);
+	GW_setBound(attrTitle, 5, 5, container1Width, container1Height);
+	GW_setBound(container1, 5, 25, container1Width, container1Height);
+	GW_setBound(container2, 5, 45, container1Width, container1Height);
+	GW_setBound(container3, 5, 65, container1Width, container1Height);
+	GW_setBound(container4, 5, 85, container1Width, container1Height);
+/////////////////
+	GW_setBound(window, 0, 0, 240, 320);
+	GW_setBound(titlebar, 0, 0, 240, 30);
+	GW_setBound(statusbar, 80, 290, 80, 30);
+
+	int iconHeight = ImageSet_GetFrameHeight(src, 0);
+	int iconWidth = ImageSet_GetFrameWidth(src, 0);
+
+	GW_setBound(btn1, 0, 290, 80, 30);
+	GW_setBound(btn2, 160, 290, 80, 30);
+	
+	GC_addChildWidget(vmCU, window, 0);
+
+// 测试scrollbar
+	GC_addChildWidget(contDown, testScrollBar, 0);
+	
+	testScrollBar.barH = 6;
+	testScrollBar.btnH = 19;
+
+	testScrollBar.incBtnRectX = 213;
+	testScrollBar.incBtnRectY = 0;
+	testScrollBar.incBtnRectW = 27;
+	testScrollBar.incBtnRectH = 19;
+	
+	testScrollBar.markerRectX = 216;
+	testScrollBar.markerRectY = 19;
+	testScrollBar.markerRectW = 21;
+	testScrollBar.markerRectH = 40;
+	
+	testScrollBar.decBtnRectX = 213;
+	testScrollBar.decBtnRectY = 180;
+	testScrollBar.decBtnRectW = 27;
+	testScrollBar.decBtnRectH = 19;
+	
+/*	testScrollBar.incrementRectX = 170;
+	testScrollBar.incrementRectY = 0;
+	testScrollBar.incrementRectW = 18;
+	testScrollBar.incrementRectH = 14;
+
+	testScrollBar.decrementRectX = 170;
+	testScrollBar.decrementRectY = 186;
+	testScrollBar.decrementRectW = 18;
+	testScrollBar.decrementRectH = 14;*/
+// 测试Label用
+/*	GC_addChildWidget(vmCU, testLabel, 0); */
+
+//	力智敏体 container的边框效果
+	container4.borderColor = 0xc0c0c0;
+	container4.isBackgroundPainted = FALSE;
+	container4.isBorderPainted = TRUE;
+	container4.borderLeft = 1;
+	container4.borderTop = 1;
+	container4.borderRight = 1;
+	container4.borderBottom = 1;
+	container4.isSelectionPainted = TRUE;
+	container4.foregroundColor = 0xffffff;
+	
+	
+	container3.borderColor = 0xc0c0c0;
+	container3.isBackgroundPainted = FALSE;
+	container3.isBorderPainted = TRUE;
+	container3.borderLeft = 1;
+	container3.borderTop = 1;
+	container3.borderRight = 1;
+	container3.borderBottom = 1;
+	container3.isSelectionPainted = TRUE;
+	container3.foregroundColor = 0xffffff;
+	
+	container2.borderColor = 0xc0c0c0;
+	container2.isBackgroundPainted = FALSE;
+	container2.isBorderPainted = TRUE;
+	container2.borderLeft = 1;
+	container2.borderTop = 1;
+	container2.borderRight = 1;
+	container2.borderBottom = 1;
+	container2.isSelectionPainted = TRUE;
+	container2.foregroundColor = 0xffffff;
+	
+	container1.borderColor = 0xc0c0c0;
+	container1.isBackgroundPainted = FALSE;
+	container1.isBorderPainted = TRUE;
+	container1.borderLeft = 1;
+	container1.borderTop = 1;
+	container1.borderRight = 1;
+	container1.borderBottom = 1;
+	container1.isSelectionPainted = TRUE;
+	container1.foregroundColor = 0xffffff;
+// ////
+	container.borderColor = 0xED621E;
+	container.backgroundColor = 0xF79044;
+	container.isBackgroundPainted = TRUE;
+	container.isBorderPainted = TRUE;
+	container.borderLeft = 2;
+	container.borderTop = 2;
+	container.borderRight = 2;
+	container.borderBottom = 2;
+	
+	statusbar.borderColor = 0xED621E;
+	statusbar.backgroundColor = 0xF79044;
+	statusbar.isBackgroundPainted = FALSE;
+	statusbar.isBorderPainted = TRUE;
+	statusbar.borderLeft = 2;
+	statusbar.borderTop = 2;
+	statusbar.borderRight = 2;
+	statusbar.borderBottom = 2;
+//	statusbar.func_paint = 0;
+
+	window.borderColor = 0xF79044;
+	window.backgroundColor = 0xED621E;
+	window.isBackgroundPainted = TRUE;
+	window.isBorderPainted = TRUE;
+	window.borderLeft = 3;
+	window.borderTop = 3;
+	window.borderRight = 3;
+	window.borderBottom = 3;
+	window.insetLeft = 0;
+	window.insetTop = 0;
+	window.insetRight = 0;
+	window.insetBottom = 0;
+	
+	titlebar.borderColor = 0xF79044;
+	titlebar.backgroundColor = 0xED621E;
+	titlebar.isBackgroundPainted = FALSE;
+	titlebar.isBorderPainted = TRUE;
+	titlebar.borderLeft = 3;
+	titlebar.borderTop = 3;
+	titlebar.borderRight = 3;
+	titlebar.borderBottom = 3;
+//	titlebar.func_paint = 0;
+
+	btn1.borderColor = 0xff0000;
+	btn1.backgroundColor = 0x00ff00;
+	btn1.isBackgroundPainted = TRUE;
+	btn1.isBorderPainted = TRUE;
+	btn1.borderLeft = 2;
+	btn1.borderTop = 2;
+	btn1.borderRight = 2;
+	btn1.borderBottom = 2;
+	btn1.foregroundColor = 0xff0000;
+	btn1.selectionColor = 0xffffff;
+	btn1.isSelectionPainted = TRUE;
+	
+	btn2.borderColor = 0xff0000;
+	btn2.backgroundColor = 0x00ff00;
+	btn2.isBackgroundPainted = TRUE;
+	btn2.isBorderPainted = TRUE;
+	btn2.borderLeft = 2;
+	btn2.borderTop = 2;
+	btn2.borderRight = 2;
+	btn2.borderBottom = 2;
+	btn2.foregroundColor = 0xff0000;
+	btn2.selectionColor = 0xffffff;
+	btn2.isSelectionPainted = TRUE;
+
+	GW_requestFocus(btn1);
+	
+	GW_setRelativeDownWidget(container1, container2);
+//	GW_setRelativeUpWidget(container2, container1);
+	GW_setRelativeDownWidget(container2, container3);
+//	GW_setRelativeUpWidget(container3, container2);
+	GW_setRelativeDownWidget(container3, container4);
+	GW_setRelativeDownWidget(container4, btn1);
+//	GW_setRelativeUpWidget(btn1, container4);
+	GW_setRelativeRightWidget(btn1, btn2);
+	GW_setRelativeLeftWidget(btn1, btn2);
+	
+	btn1.btn_clicked = btn1_clicked;
+	btn2.btn_clicked = btn2_clicked;
+}
+
+
+FUNCTION event() {
+}
+
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	free btn1;
+	free btn2;
+	
+	free labelIcon1;
+	free labelIcon2;
+	// 红蓝血条
+	free redLabel;
+	free blueLabel;
+	
+	free titlebar;	// 标题栏
+	free statusbar;	// 状态栏
+	free container;
+
+//  上部和下部的两个容器
+	free contUp;
+	free contDown;
+	free window;
+	free vmCU;
+	free src;
+	free number;
+	
+	free attrTitle;
+	free container1;	// 力
+	free container2;	// 智
+	free container3;	// 敏
+	free container4;	// 体
+	
+	free redContainer;	// 血条
+	free blueContainer;	// 精条
+	free expContainer;	// 经验条
+	free expIcon;
+	free expNumber;
+	
+	free iNumber1;
+	free iNumber2;
+	free deriveAtrrKey;        //衍生属性字符串
+	free atrrLabelList;
+}
+
+FUNCTION processPacket()
+{
+
+}
+
+FUNCTION event()
+{
+}
+
+FUNCTION btn1_clicked(GButton this)
+{
+	if(eventType == EVENT_TYPE_KEYRELEASED)
+	{
+		if(keyCode == KEY_CODE_OKAY || keyCode == KEY_CODE_LEFT_SOFT)
+		{
+			window.backgroundColor = 0xf0f0f0;
+			return TRUE;
+		}
+	}
+	
+	return FALSE;
+
+	container.backgroundColor = 0xf0f0f0;
+}
+
+FUNCTION btn2_clicked(GButton this)
+{
+	if(eventType == EVENT_TYPE_KEYRELEASED)
+	{
+		if(keyCode == KEY_CODE_OKAY || keyCode == KEY_CODE_LEFT_SOFT)
+		{
+			window.backgroundColor = 0x0f0f0f;
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+
+	container.backgroundColor = 0x0f0f0f;
+}

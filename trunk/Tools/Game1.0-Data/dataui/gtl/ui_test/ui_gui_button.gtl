@@ -1,0 +1,130 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_bag";
+DESCRIPTION "背包界面"; 
+
+#include "../core/gui/guiInclude.h"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GButton demoButton1;
+	GButton demoButton2;
+
+	// 保存屏幕宽高 
+	int screenHeight;
+	int screenWidth;
+
+	ImageSet buttonSrc;
+}
+
+FUNCTION init()
+{
+	// 初始化基本数据
+	buttonSrc = Realize(ImageSet_Create("ui_res240.pip", TRUE));
+	screenHeight = GetScreenHeight();
+	screenWidth = GetScreenWidth();
+	
+	// 创建canvasUnit以及一个window.
+	create_canvasUnit();
+	
+	// 创建button
+	Create_button1();
+	Create_button2();
+	
+	GW_requestFocus(demoButton1);
+	
+	GW_setRelativeDownWidget(demoButton1, demoButton2);
+	GW_setRelativeDownWidget(demoButton2, demoButton1);
+	GW_setRelativeRightWidget(demoButton1, demoButton2);
+	GW_setRelativeRightWidget(demoButton2, demoButton1);
+}
+
+
+/////////////// common function //////////////////////
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	OBJECT_FREE(vmCU);
+	OBJECT_FREE(demoButton1);
+	OBJECT_FREE(demoButton2);
+//	free buttonSrc;
+}
+
+FUNCTION processPacket()
+{
+}
+
+FUNCTION event()
+{
+}
+
+/////////////// create function //////////////////////
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(NULL, cuName));
+	free cuName;
+	
+	GW_setBound(vmCU, 0, 0, screenWidth, screenHeight);
+	vmCU.isBackgroundPainted = TRUE;
+}
+
+FUNCTION Create_button1()
+{
+	String buttonName = Realize(Object_Create("testButton1"));
+	demoButton1 = Realize(GBtn_makeGButton(NULL, buttonName, buttonName, NULL, -1,0));
+	free buttonName;
+	GBtn_setRes(demoButton1,buttonSrc, 10, 11);
+	GC_addChildWidget(vmCU, demoButton1, 0);
+	GW_setBound(demoButton1, (screenWidth - demoButton1.GB_BKG_WIDTH) / 2, (screenHeight - demoButton1.GB_BKG_HEIGHT) / 2, demoButton1.GB_BKG_WIDTH, demoButton1.GB_BKG_HEIGHT);
+	demoButton1.btn_clicked = button_Clicked1;
+	
+	demoButton1.userData = 1;
+}
+
+FUNCTION Create_button2()
+{
+	String buttonName = Realize(Object_Create("testButton2"));
+	String buttonCaption = Realize(Object_Create("button"));
+	demoButton2 = Realize(GBtn_makeGButton(NULL, buttonName, buttonCaption, 0, -1,0));
+	free buttonName;
+	free buttonCaption;
+
+	GC_addChildWidget(vmCU, demoButton2, 0);
+	GW_setBound(demoButton2, (screenWidth - demoButton2.w) / 2, demoButton1.y + demoButton1.GB_BKG_HEIGHT + 3, demoButton2.w, demoButton2.h);
+	demoButton2.btn_clicked = button_Clicked2;
+	demoButton2.userData = 2;
+}
+
+FUNCTION button_Clicked1(GButton this)
+{
+	vmCU.backgroundColor = 0xFF0000ff;
+	
+	//Gui_GW_destroyGWidget(demoButton2);
+	//free demoButton2;
+	int a = OpenUI("ui_gui_listbox");
+	
+	return TRUE;
+}
+
+FUNCTION button_Clicked2(GButton this)
+{
+	vmCU.backgroundColor = 0xFF4d3400;
+	int a = OpenUI("ui_gui_gridbox");
+	
+	return TRUE;
+}

@@ -1,0 +1,1217 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_attribute";
+DESCRIPTION "gui测试界面"; 
+
+#include "../core/common/commondef.h"
+#include "../core/gui/guicommon.gtl"
+#include "../core/gui/gbutton.gtl"
+#include "../core/gui/gcontainer.gtl"
+#include "../core/gui/gvmcanvasunit.gtl"
+#include "../core/gui/gwindow.gtl"
+#include "../core/gui/glabel.gtl"
+#include "../core/gui/gscrollbar.gtl"
+#include "../core/gui/gslider.gtl"
+#include "../core/gui/ggameicon.gtl"
+#include "../core/gui/gimagenumber.gtl"
+#include "../core/gui/gicon.gtl"
+
+
+DATA
+{
+	GVMCanvasUnit vmCU;
+	GWindow attrWindow;
+	
+	GContainer rolContainer;  
+	GContainer attrContainer1;
+	GContainer attrContainer2;
+	
+	GLabel redLabel;    		//生命
+	GLabel blueLabel;   		//法力
+	GIcon redIcon;      		//血条前的图标
+	GIcon blueIcon;
+	GImageNumber redNumber; 
+	GImageNumber blueNumber;
+	
+	GLabel gradeLabel;			//等级
+	GIcon  expGIcon;			//经验图标
+	GImageNumber expNumber;		//经验值
+	
+	GButton forceDecButton;		//力button
+	GButton forceIncButton;
+	GImageNumber forceImageNumber;
+	GIcon forceMiuIcon;
+	GIcon forcePluIcon;
+	
+	GButton wisdomDecButton;	//智button
+	GButton wisdomIncButton;
+	GImageNumber wisdomImageNumber;
+	GIcon wisdomMiuIcon;
+	GIcon wisdomPluIcon;
+	
+	GButton strengthDecButton;	//体button
+	GButton strengthIncButton;
+	GImageNumber strengthImageNumber;
+	GIcon strengthMiuIcon;
+	GIcon strengthPluIcon;
+	
+	GButton agileDecButton;		 //敏button
+	GButton agileIncButton;
+	GImageNumber agileImageNumber;
+	GIcon agileMiuIcon;
+	GIcon agilePluIcon;
+	
+	GLabel statusLabel;
+ 	GContainer pointsContainer;  //剩余点数
+ 	GLabel pointsLabel;  
+ 	GImageNumber pointsImageNumber;    
+ 	
+	GSlider forceSLider;		// 力
+	GSlider wisdomSLider;		// 智
+	GSlider agileSLider;		// 敏
+	GSlider strengthSLider;		// 体
+	
+	GIcon iceIcon;
+	GIcon fireIcon;
+	GIcon windIcon;
+	GIcon poisonIcon;
+	GIcon electricityIcon;
+	
+	GLabel forceLabel;
+	GLabel wisdomLabel;
+	GLabel agileLabel;
+	GLabel strengthLabel;
+	
+	String captionName;
+	String[] deriveAtrrKey;        //属性字符串
+	GLabel[] atrrLabelList;
+	GLabel[] iconLabelList;
+	GImageNumber eleNumber;
+	ImageSet numberRes;
+	ImageSet ui240Res;
+	ImageSet uiRes;
+	GGameIcon gameIcon;
+	
+	int maxPoints;
+}
+
+FUNCTION init()
+{
+	//加载需要的图片资源
+	ui240Res = Realize(ImageSet_Create("ui_res240.pip", TRUE));
+    numberRes = Realize(ImageSet_Create("number240.pip", TRUE));
+    uiRes = Realize(ImageSet_Create("ui_res.pip", TRUE));	
+    
+    // 创建canvasUnit以及一个window.
+    create_canvasUnit();
+	////////////////////////////////////////////////////////////////////////
+	
+	//创建生命和法力label，设置其属性
+	create_readAndBlue();
+	////////////////////////////////////////////////////////////////////////
+	
+	//创建等级label
+	create_gradeLabel();
+	////////////////////////////////////////////////////////////////////////
+
+	//创建等级经验数字和图标
+	create_exp();	
+	////////////////////////////////////////////////////////////////////////
+	
+	// 创建剩余点数容器
+	create_pointsContainer();
+	////////////////////////////////////////////////////////////////////////
+		
+	//创建属性
+	create_attr();
+	////////////////////////////////////////////////////////////////////////
+	
+	//创建力智体敏点数SLider，处理按键事件
+	create_attrSlider();
+	////////////////////////////////////////////////////////////////////////
+	
+	//创建力智体敏SLider中的子控件           
+	
+	create_forceSlider();		  	//力
+		
+	create_wisdomSlider();			//智
+	
+	create_strengthSlider();		//体
+		
+	create_agileSlider();			//敏
+	
+	////////////////////////////////////////////////////////////////////////
+	
+	//创建角色元素
+	create_elementIcon();
+	////////////////////////////////////////////////////////////////////////
+	
+	//处理属性点数按键事件
+	maxPoints = pointsImageNumber.imageNumber;					//设置剩余最大点数
+	forceSLider.func_handleKey = forceHandleKey;
+	wisdomSLider.func_handleKey = wisdomHandleKey;
+	agileSLider.func_handleKey = agileHandleKey;
+	strengthSLider.func_handleKey = strengthHandleKey;
+	GW_requestFocus(forceSLider);
+	
+	GW_setRelativeDownWidget(forceSLider, wisdomSLider);					//切换焦点
+	GW_setRelativeDownWidget(wisdomSLider, strengthSLider);
+	GW_setRelativeDownWidget(strengthSLider, agileSLider);
+	GW_setRelativeDownWidget(agileSLider, forceSLider);
+	////////////////////////////////////////////////////////////////////////	
+	
+	//创建status文字
+	String statusLabelName = Realize(Object_Create("statusLabelName"));
+	String statusCaptionName = Realize(Object_Create("按#键翻页"));
+	statusLabel = Realize(GL_makeGLabel(statusLabelName, statusCaptionName, NULL, -1));
+	statusLabel.is3D = TRUE;
+	statusLabel.hAlignment = LAYOUT_ALIGN_HCENTER;
+	statusLabel.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	
+	free statusLabelName;
+	free statusCaptionName;
+	GC_addChildWidget(attrWindow.statusBar, statusLabel, 0);
+	GW_setBound(statusLabel, 90, 0, 60, 23);
+	////////////////////////////////////////////////////////////////////////
+
+	//导入角色动画
+	String gameIconName = Realize(Object_Create("GameIcon"));
+/*	Object gameSprite = Realize(GetRoleProcessor());
+	Object[] animatesetList = Realize(Gui_Gamesprite_GetAnimateSetList(gameSprite));
+	gameIcon = Realize(GGI_makeGGameIcon(gameIconName, animatesetList));
+	free gameSprite;
+	free animatesetList;
+	*/
+	GIcon gI = Realize(GI_makeGIcon(gameIconName, 0, 0, -1, 0, 0, 0));
+	free gameIconName;
+	GC_addChildWidget(attrWindow, gI, 0);	
+	GW_setBound(gI, 45, 53, 30, 80);
+	
+	//设置边框
+	////////////////////////////////////////////////////////////////////////
+}
+
+FUNCTION event() {
+}
+
+FUNCTION create_canvasUnit()
+{
+	String cuName = Realize(Object_Create("Canvas_Unit"));    // 创建一个canvasUnit
+	vmCU = Realize(GVMCU_MakeGVMCU(cuName));
+	
+    String windowName = Realize(Object_Create("attributeWindow"));
+       
+	captionName = Realize(Object_Create("真悟空[神]")); 
+    
+    //创建整体的window 
+	attrWindow = Realize(GWnd_makeGWindow(windowName, captionName, ui240Res, 10, 11));
+	free cuName;
+	free windowName;
+	
+	
+	//处理window确定返回#事件
+	attrWindow.func_handleKey = windowButtonHandleKey;
+	
+	GWnd_setBound(attrWindow, 0, 0, 240, 320);
+	GW_setBound(vmCU, 0, 0, 240, 320);
+	
+	GC_addChildWidget(vmCU, attrWindow, 0);
+	
+	//创建两个container
+	String rolContainerName = Realize(Object_Create("rolContainerName")); 
+	rolContainer = Realize(GC_makeGContainer(rolContainerName));
+	
+	String attrContainerName1 = Realize(Object_Create("attrContainerName1")); 
+	String attrContainerName2 = Realize(Object_Create("attrContainerName2"));
+	attrContainer1 = Realize(GC_makeGContainer(attrContainerName1));                //#翻页时的两个container
+	attrContainer2 = Realize(GC_makeGContainer(attrContainerName2));
+	
+	free rolContainerName;
+	free attrContainerName1;
+	free attrContainerName2;
+	GC_addChildWidget(attrWindow, rolContainer, 0);
+	GC_addChildWidget(attrWindow, attrContainer2, 0);
+	GC_addChildWidget(attrWindow, attrContainer1, 0);
+	//GC_addChildWidget(vmCU, rolContainer, 0);
+	//GC_addChildWidget(vmCU, attrContainer, 0);
+	
+	GW_setBound(rolContainer, 1, 20, 238, 120);
+	GW_setBound(attrContainer1, 1, 140, 238, 162);
+	GW_setBound(attrContainer2, 1, 140, 238, 162);
+	rolContainer.backgroundColor = 0xf5e2a8;
+	rolContainer.isBackgroundPainted = TRUE;
+	attrContainer1.backgroundColor = 0xe9daaf;
+	attrContainer1.isBackgroundPainted = TRUE;
+	attrContainer2.backgroundColor = 0xe9daaf;
+	attrContainer2.isBackgroundPainted = TRUE;
+	
+	//GW_setBorderSize(rolContainer,4,2,4,2);
+	//GW_setBorderSize(attrContainer,4,2,4,2);
+	//attrContainer.borderColor = 0xFED86D;
+	//attrContainer.isBorderPainted = TRUE;
+	
+	attrWindow.statusBar.backgroundColor = 0xad4619;
+	attrWindow.statusBar.isBackgroundPainted = TRUE;
+	attrWindow.contentArea.backgroundColor = 0xad4619;
+	attrWindow.contentArea.isBackgroundPainted = TRUE;
+	attrWindow.titleBar.backgroundColor = 0xF19045;
+	attrWindow.titleBar.isBackgroundPainted = TRUE;
+}
+
+FUNCTION create_exp()
+{	
+	//创建经验图标
+
+	String expGIconName = Realize(Object_Create("expGIconName"));
+	expGIcon = Realize(GI_makeGIcon(expGIconName, NULL, ui240Res, 43, NULL, 0, 0));
+	
+	GC_addChildWidget(rolContainer, expGIcon, 0);
+	GW_setBound(expGIcon, 107, 33, 18, 18);
+	
+	free expGIconName;
+	////////////////////////////////////////////////////////////////////////
+	
+	//创建经验数字
+	String expNumberName = Realize(Object_Create("expNumberName"));
+	expNumber = Realize(GIN_makeGImageNumber(expNumberName, numberRes, 150));
+	free expNumberName;
+	
+	expNumber.isBackgroundPainted = FALSE;
+	expNumber.isBorderPainted = FALSE;
+	expNumber.imageNumber = 26;
+//	expNumber.numberRes = numberRes;
+	expNumber.isShowSign = FALSE;
+	expNumber.plusStartIndex = 150;
+	expNumber.subStartIndex = 159;
+	
+	GC_addChildWidget(rolContainer, expNumber, 0);
+	GW_setBound(expNumber, 130, 33, 18, 9);
+}
+
+//创建等级数字
+FUNCTION create_gradeLabel()
+{
+	String gradeLabelName =  Realize(Object_Create("gradeLabelName"));
+	String gradeCaption = Realize(Object_Create("12级"));
+	gradeLabel = Realize(GL_makeGLabel(gradeLabelName, gradeCaption, NULL, -1));
+	gradeLabel.is3D = TRUE;
+	gradeLabel.hAlignment = LAYOUT_ALIGN_HLEFT;
+	gradeLabel.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	
+	//gradeLabel.backgroundColor = 0x0000FF;
+	//gradeLabel.isBackgroundPainted = TRUE;	
+	GC_addChildWidget(rolContainer, gradeLabel, 0);
+	GW_setBound(gradeLabel, 2, 8, 35, 20);
+	
+	free gradeCaption;
+	free gradeLabelName;
+}
+
+//创建发力和生命label	
+FUNCTION create_readAndBlue()
+{
+	String redLabelName = Realize(Object_Create("red"));
+	redLabel = Realize(GL_makeGLabel(redLabelName, NULL, NULL, -1));
+	String blueLabelName = Realize(Object_Create("blue"));
+	blueLabel = Realize(GL_makeGLabel(blueLabelName, NULL, NULL, -1));
+	
+	free redLabelName;
+	free blueLabelName;
+	
+	redLabel.backgroundColor = 0xff0000;
+	redLabel.isBackgroundPainted = TRUE;
+	redLabel.isBorderPainted = TRUE;
+	redLabel.borderLeft = 1;
+	redLabel.borderTop = 1;
+	redLabel.borderRight = 1;
+	redLabel.borderBottom = 1;
+	
+		
+	blueLabel.backgroundColor = 0x0000ff;
+	blueLabel.isBackgroundPainted = TRUE;
+	blueLabel.isBorderPainted = TRUE;
+	blueLabel.borderLeft = 1;
+	blueLabel.borderTop = 1;
+	blueLabel.borderRight = 1;
+	blueLabel.borderBottom = 1;
+	
+	
+	GC_addChildWidget(rolContainer, redLabel, 0);
+	GC_addChildWidget(rolContainer, blueLabel, 0);
+	
+	GW_setBound(redLabel, 115, 8, 60, 6);
+	GW_setBound(blueLabel, 115, 22, 60, 6);
+	
+	//生命和法力前的Icon
+	String iconName = Realize(Object_Create("headIcon"));
+	redIcon = Realize(GI_makeGIcon(iconName, NULL, ui240Res, 22, NULL, 0, 0));
+	blueIcon = Realize(GI_makeGIcon(iconName, NULL, ui240Res, 22, NULL, 0, 0));
+	
+	free iconName;
+	
+	GC_addChildWidget(rolContainer, redIcon, 0);
+	GC_addChildWidget(rolContainer, blueIcon, 0);
+	
+	GW_setBound(redIcon, 107, 7, 8, 7);
+	GW_setBound(blueIcon, 107, 21, 8, 7);
+	
+	//创建生命和法力的数字
+	String redNumberName = Realize(Object_Create("redNumberName"));
+	String blueNumberName = Realize(Object_Create("blueNumberName"));
+	redNumber = Realize(GIN_makeGImageNumber(redNumberName, numberRes, 120));
+	blueNumber = Realize(GIN_makeGImageNumber(blueNumberName, numberRes, 120));
+	free redNumberName;
+	free blueNumberName;
+	
+	redNumber.isBackgroundPainted = FALSE;
+	redNumber.isBorderPainted = FALSE;
+	redNumber.imageNumber = 88;
+	//redNumber.numberRes = numberRes;
+	redNumber.isShowSign = FALSE;
+	redNumber.plusStartIndex = 120;
+	redNumber.subStartIndex = 132;
+	
+	blueNumber.isBackgroundPainted = FALSE;
+	blueNumber.isBorderPainted = FALSE;
+	blueNumber.imageNumber = 52;
+//	blueNumber.numberRes = numberRes;
+	blueNumber.isShowSign = FALSE;
+	blueNumber.plusStartIndex = 120;
+	blueNumber.subStartIndex = 132;
+	
+	GC_addChildWidget(rolContainer, redNumber, 0);
+	GC_addChildWidget(rolContainer, blueNumber, 0);
+	GW_setBound(redNumber, 178, 7, 40, 7);
+	GW_setBound(blueNumber, 178, 21, 40, 7);
+}
+
+//创建剩余点数容器
+FUNCTION create_pointsContainer()
+{
+	String pointsContainerName = Realize(Object_Create("pointsContainer")); 
+	pointsContainer = Realize(GC_makeGContainer(pointsContainerName));
+	String pointsTitleName = Realize(Object_Create("剩余")); 
+	String pointsLabelName = Realize(Object_Create("pointsLabel"));
+	pointsLabel = Realize(GL_makeGLabel(pointsLabelName, pointsTitleName, NULL, -1));
+	pointsLabel.is3D = TRUE;
+	pointsLabel.hAlignment = LAYOUT_ALIGN_HCENTER;
+	pointsLabel.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	String pointsImageNumberName = Realize(Object_Create("pointsImageNumber"));
+	pointsImageNumber = Realize(GIN_makeGImageNumber(pointsImageNumberName, numberRes, 150));
+	
+	free pointsContainerName;
+	free pointsTitleName;
+	free pointsLabelName;
+	free pointsImageNumberName;
+	
+	pointsImageNumber.isBackgroundPainted = FALSE;
+	pointsImageNumber.isBorderPainted = FALSE;
+	pointsImageNumber.imageNumber = 52;
+	//pointsImageNumber.numberRes = numberRes;
+	pointsImageNumber.isShowSign = FALSE;
+	pointsImageNumber.plusStartIndex = 150;
+	pointsImageNumber.subStartIndex = 159;
+	
+	pointsContainer.backgroundColor = 0xffcb99;
+	pointsContainer.isBackgroundPainted = TRUE;
+	
+	GC_addChildWidget(rolContainer, pointsContainer, 0);
+	GC_addChildWidget(pointsContainer, pointsLabel, 0);
+	GC_addChildWidget(pointsContainer, pointsImageNumber, 0);
+	
+	GW_setBound(pointsContainer, 103, 56, 30, 60);
+	GW_setBound(pointsLabel, 0, 6, 30, 30);
+	GW_setBound(pointsImageNumber, 5, 36, 18, 9);
+}
+
+//创建属性值分配slider
+FUNCTION create_attrSlider()
+{
+	String forceSLiderName = Realize(Object_Create("forceContainer"));
+	forceSLider = Realize(GSL_makeGSlider(forceSLiderName, LAYOUT_ORIENT_HORIZON, LAYOUT_ALIGN_VMIDDLE, 4, 500, 0));	// 力
+	String wisdomSLiderName = Realize(Object_Create("wisdomContainer"));
+	wisdomSLider = Realize(GSL_makeGSlider(wisdomSLiderName, LAYOUT_ORIENT_HORIZON, LAYOUT_ALIGN_VMIDDLE, 4, 500, 0));  // 智
+	String agileSLiderName = Realize(Object_Create("agileContainer"));
+	agileSLider = Realize(GSL_makeGSlider(agileSLiderName, LAYOUT_ORIENT_HORIZON, LAYOUT_ALIGN_VMIDDLE, 4, 500, 0));     //敏
+	String strengthSLiderName = Realize(Object_Create("strengthContainer"));
+	strengthSLider = Realize(GSL_makeGSlider(strengthSLiderName, LAYOUT_ORIENT_HORIZON, LAYOUT_ALIGN_VMIDDLE, 4, 500, 0));  //体
+
+	free forceSLiderName;
+	free wisdomSLiderName;
+	free agileSLiderName;
+	free strengthSLiderName;
+	
+	forceSLider.backgroundColor = 0xffcb99;
+	forceSLider.isBackgroundPainted = TRUE;
+	
+	wisdomSLider.backgroundColor = 0xffcb99;
+	wisdomSLider.isBackgroundPainted = TRUE;
+	
+	agileSLider.backgroundColor = 0xffcb99;
+	agileSLider.isBackgroundPainted = TRUE;
+	
+	strengthSLider.backgroundColor = 0xffcb99;
+	strengthSLider.isBackgroundPainted = TRUE;
+	
+	GC_addChildWidget(rolContainer, forceSLider, 0);
+	GC_addChildWidget(rolContainer, wisdomSLider,0);
+	GC_addChildWidget(rolContainer, agileSLider, 0);
+	GC_addChildWidget(rolContainer, strengthSLider, 0);
+	
+	GW_setBound(forceSLider, 135, 56, 95, 15);
+	GW_setBound(wisdomSLider, 135, 71, 95, 15);	
+	GW_setBound(strengthSLider, 135, 86, 95, 15);
+	GW_setBound(agileSLider, 135, 101, 95, 15);
+}
+
+//处理人物属性
+FUNCTION create_attr()
+{
+	/*String att = ""+
+	"攻击:23-24\n"+ //0
+	"护甲:250\n"+ //1
+	"物减:25%\n"+ //2  
+	"命中:98%\n"+ //3  
+	"闪避:10%\n"+ //4  
+	"物暴:7%\n"+ //5  
+	"法防:1\n"+ //6
+	"法攻:0\n"+ //7
+	"法闪:0%\n";//8*/
+	
+	atrrLabelList = new GLabel[9];
+	iconLabelList = new GLabel[9];
+	int i;
+	int yLabel;
+	int j = 0;
+	int xLabel = 20;
+	String attr1 = Realize(Object_Create("攻击:23-24"));
+	atrrLabelList[0] = Realize(GL_makeGLabel(NULL, attr1, 0, -1));
+	String attr2 = Realize(Object_Create("护甲:250"));
+	atrrLabelList[1] = Realize(GL_makeGLabel(NULL, attr2, 0, -1));
+	String attr3 = Realize(Object_Create("物减:25%"));
+	atrrLabelList[2] = Realize(GL_makeGLabel(NULL, attr3, 0, -1));
+	String attr4 = Realize(Object_Create("命中:98%"));
+	atrrLabelList[3] = Realize(GL_makeGLabel(NULL, attr4, 0, -1));
+	String attr5 = Realize(Object_Create("闪避:10%"));
+	atrrLabelList[4] = Realize(GL_makeGLabel(NULL, attr5, 0, -1));
+	String attr6 = Realize(Object_Create("物暴:7%"));
+	atrrLabelList[5] = Realize(GL_makeGLabel(NULL, attr6, 0, -1));
+	String attr7 = Realize(Object_Create("法防:1"));
+	atrrLabelList[6] = Realize(GL_makeGLabel(NULL, attr7, 0, -1));
+	String attr8 = Realize(Object_Create("法攻:0"));
+	atrrLabelList[7] = Realize(GL_makeGLabel(NULL, attr8, 0, -1));
+	String attr9 = Realize(Object_Create("法闪:0"));
+	atrrLabelList[8] = Realize(GL_makeGLabel(NULL, attr9, 0, -1));
+	
+	free attr1;
+	free attr2;
+	free attr3;
+	free attr4;
+	free attr5;
+	free attr6;
+	free attr7;
+	free attr8;
+	free attr9;
+
+	for(i = 0;i < 9;i++)      
+	{
+		yLabel = 3 + 20*i;
+		iconLabelList[i] = Realize(GL_makeGLabel(NULL, NULL, 0, -1));
+		atrrLabelList[i].is3D = TRUE;
+		atrrLabelList[i].hAlignment = LAYOUT_ALIGN_HCENTER;
+		atrrLabelList[i].vAlignment = LAYOUT_ALIGN_VMIDDLE;
+		if((yLabel < 152) && (xLabel == 20))
+		{
+			GW_setBound(atrrLabelList[i], xLabel + 12, yLabel, 100, 20);
+			GW_setBound(iconLabelList[i], xLabel, yLabel + 3, 11, 11);
+			GC_addChildWidget(attrContainer1, atrrLabelList[i], 0);
+			GC_addChildWidget(attrContainer1, iconLabelList[i], 0);
+			iconLabelList[i].backgroundColor = 0xffcd9c;
+			iconLabelList[i].isBackgroundPainted = TRUE;
+
+			if(yLabel >= 140)												//如果超出attrContainer范围换行
+			{
+				yLabel = 0;
+				xLabel = 125;
+			}
+		}
+		else
+		{
+			GW_setBound(atrrLabelList[i], xLabel + 12, 3 + 20*j, 100, 20);
+			GW_setBound(iconLabelList[i], xLabel, 6 + 20*j, 11, 11);
+			GC_addChildWidget(attrContainer1, atrrLabelList[i], 0);
+			GC_addChildWidget(attrContainer1, iconLabelList[i], 0);
+			iconLabelList[i].backgroundColor = 0xffcd9c;
+			iconLabelList[i].isBackgroundPainted = TRUE;
+			j++;
+		}
+	}	
+}
+
+FUNCTION poundClicked()
+{
+	if(attrContainer1.isVisible == TRUE)
+	{
+		attrContainer1.isVisible = FALSE;
+		attrContainer2.isVisible = TRUE;
+	}
+	else if(attrContainer1.isVisible == FALSE)
+	{
+		attrContainer1.isVisible = TRUE;
+		attrContainer2.isVisible = FALSE;
+	}
+	return TRUE;
+}
+//确定返回点击事件
+FUNCTION windowButtonHandleKey(GSlider this, int eventType, int keyCode, int modifierCode)
+ {
+ 	boolean eventComsumed = FALSE;
+ 	
+ 	switch(eventType)
+ 	{
+ 		case EVENT_TYPE_KEYPRESSED:
+ 			break;
+		case EVENT_TYPE_KEYRELEASED:
+			// 定义okay和数字5键触发点击事件.
+			switch(keyCode)
+			{
+				case KEY_CODE_LEFT_SOFT:
+					//return ExitGame();
+					break;
+				case KEY_CODE_RIGHT_SOFT:
+					CloseUI();
+					break;
+				case KEY_CODE_POUND:
+					return poundClicked();
+					break; 
+				//case KEY_CODE_OKAY:
+				//case KEY_CODE_NUM5:
+				//	eventComsumed = GBtn_clickedFuncImpl(this);
+				//	break;
+				default:
+					break;
+			}
+			break;
+		default:
+			break;
+ 	}
+ 	
+ 	return eventComsumed;
+ }
+//力
+FUNCTION create_forceSlider()
+{
+	String forceLabelName = Realize(Object_Create("forceLabel"));    	
+	String forceLabelCaption = Realize(Object_Create("力"));
+	forceLabel = Realize(GL_makeGLabel(forceLabelName, forceLabelCaption, NULL, -1));
+	forceLabel.is3D = TRUE;
+	forceLabel.hAlignment = LAYOUT_ALIGN_HCENTER;
+	forceLabel.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	
+	String forceImageNumberName = Realize(Object_Create("forceImageNumber"));
+	forceImageNumber = Realize(GIN_makeGImageNumber(forceImageNumberName, numberRes, 120));
+	
+	forceImageNumber.isBackgroundPainted = FALSE;
+	forceImageNumber.isBorderPainted = FALSE;
+	forceImageNumber.imageNumber = 52;
+	//forceImageNumber.numberRes = numberRes;
+	forceImageNumber.isShowSign = FALSE;
+	forceImageNumber.plusStartIndex = 120;
+	forceImageNumber.subStartIndex = 129;
+	
+	String forceDecButtonName = Realize(Object_Create("forceDecButton"));
+	forceDecButton = Realize(GBtn_makeGButton(NULL, forceDecButtonName, NULL, ui240Res, 28));
+	String forceIncButtonName = Realize(Object_Create("forceIncButton"));
+	forceIncButton = Realize(GBtn_makeGButton(NULL, forceIncButtonName, NULL, ui240Res, 29));
+	String forceMiuIconName = Realize(Object_Create("forceMiuIcon"));
+	forceMiuIcon = Realize(GI_makeGIcon(forceMiuIconName, NULL, uiRes, 20, NULL, 0, 0));
+	String forcePluIconName = Realize(Object_Create("forcePluIcon"));
+	forcePluIcon = Realize(GI_makeGIcon(forcePluIconName, NULL, uiRes, 21, NULL, 0, 0));	
+	
+	free forceLabelName;
+	free forceLabelCaption;
+	free forceDecButtonName;
+	free forceImageNumberName;
+	free forceIncButtonName;
+	free forceMiuIconName;
+	free forcePluIconName;
+	
+	//forceLabel.backgroundColor = 0x0000FF;
+	//forceLabel.isBackgroundPainted = TRUE;
+	
+	GC_addChildWidget(forceSLider, forceLabel, 0);
+	GC_addChildWidget(forceSLider, forceDecButton, 0);
+	GC_addChildWidget(forceSLider, forceMiuIcon, 0);
+	GC_addChildWidget(forceSLider, forceImageNumber, 0);
+	GC_addChildWidget(forceSLider, forcePluIcon, 0);   
+	GC_addChildWidget(forceSLider, forceIncButton, 0);
+	
+	GW_setBound(forceLabel, 0, 0, 13, 15);
+	GW_setBound(forceDecButton, 0, 0, 8, 12);
+	GW_setBound(forceImageNumber, 0, 0, 18, 12);
+	GW_setBound(forceIncButton, 0, 0, 8, 12);
+	GW_setBound(forceMiuIcon, 0, 0, 13, 13);
+	GW_setBound(forcePluIcon, 0, 0, 13, 13);
+	
+}
+
+//智
+FUNCTION create_wisdomSlider()
+{
+	String wisdomLabelName = Realize(Object_Create("wisdomLabel"));		
+	String wisdomLabelCaption = Realize(Object_Create("智"));
+	wisdomLabel = Realize(GL_makeGLabel(wisdomLabelName, wisdomLabelCaption, NULL, -1));
+	wisdomLabel.is3D = TRUE;
+	wisdomLabel.hAlignment = LAYOUT_ALIGN_HCENTER;
+	wisdomLabel.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	
+	String wisdomImageNumberName = Realize(Object_Create("wisdomImageNumber"));
+	wisdomImageNumber = Realize(GIN_makeGImageNumber(wisdomImageNumberName, numberRes, 120));
+	 
+	wisdomImageNumber.isBackgroundPainted = FALSE;
+	wisdomImageNumber.isBorderPainted = FALSE;
+	wisdomImageNumber.imageNumber = 52;
+	//wisdomImageNumber.numberRes = numberRes;
+	wisdomImageNumber.isShowSign = FALSE;
+	wisdomImageNumber.plusStartIndex = 120;
+	wisdomImageNumber.subStartIndex = 129;
+	
+	String wisdomDecButtonName = Realize(Object_Create("wisdomDecButton"));
+	wisdomDecButton = Realize(GBtn_makeGButton(NULL, wisdomDecButtonName, NULL, ui240Res, 28));
+	String wisdomIncButtonName = Realize(Object_Create("wisdomIncButton"));
+	wisdomIncButton = Realize(GBtn_makeGButton(NULL, wisdomIncButtonName, NULL, ui240Res, 29));
+	String wisdomMiuIconName = Realize(Object_Create("wisdomMiuIcon"));
+	wisdomMiuIcon = Realize(GI_makeGIcon(wisdomMiuIconName, NULL, uiRes, 20, NULL, 0, 0));
+	String wisdomPluIconName = Realize(Object_Create("wisdomPluIcon"));
+	wisdomPluIcon = Realize(GI_makeGIcon(wisdomPluIconName, NULL, uiRes, 21, NULL, 0, 0));	
+	
+	free wisdomDecButtonName;
+	free wisdomIncButtonName;
+	free wisdomMiuIconName;
+	free wisdomImageNumberName;
+	free wisdomPluIconName;
+	free wisdomLabelName;
+	free wisdomLabelCaption;
+	
+	GC_addChildWidget(wisdomSLider, wisdomLabel, 0);
+	GC_addChildWidget(wisdomSLider, wisdomDecButton, 0);
+	GC_addChildWidget(wisdomSLider, wisdomMiuIcon, 0); 
+	GC_addChildWidget(wisdomSLider, wisdomImageNumber, 0); 
+	GC_addChildWidget(wisdomSLider, wisdomPluIcon, 0);
+	GC_addChildWidget(wisdomSLider, wisdomIncButton, 0);
+
+	GW_setBound(wisdomLabel, 0, 0, 13, 15);
+	GW_setBound(wisdomDecButton, 0, 0, 8, 12);
+	GW_setBound(wisdomImageNumber, 0, 0, 18, 12);
+	GW_setBound(wisdomIncButton, 0, 0, 8, 12);
+	GW_setBound(wisdomMiuIcon, 0, 0, 13, 13);
+	GW_setBound(wisdomPluIcon, 0, 0, 13, 13);
+}
+
+//敏
+FUNCTION create_agileSlider()
+{
+	String agileLabelName = Realize(Object_Create("agileLabel"));		
+	String agileLabelCaption = Realize(Object_Create("敏"));
+	agileLabel = Realize(GL_makeGLabel(agileLabelName, agileLabelCaption, NULL, -1));
+	agileLabel.is3D = TRUE;
+	agileLabel.hAlignment = LAYOUT_ALIGN_HCENTER;
+	agileLabel.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	
+	String agileImageNumberName = Realize(Object_Create("agileImageNumber"));
+	agileImageNumber = Realize(GIN_makeGImageNumber(agileImageNumberName, numberRes, 120));
+		
+	agileImageNumber.isBackgroundPainted = FALSE;
+	agileImageNumber.isBorderPainted = FALSE;
+	agileImageNumber.imageNumber = 52;
+	//agileImageNumber.numberRes = numberRes;
+	agileImageNumber.isShowSign = FALSE;
+	agileImageNumber.plusStartIndex = 120;
+	agileImageNumber.subStartIndex = 129;
+	
+	String agileDecButtonName = Realize(Object_Create("agileDecButton"));
+	agileDecButton = Realize(GBtn_makeGButton(NULL, agileDecButtonName, NULL, ui240Res, 28));
+	String agileIncButtonName = Realize(Object_Create("agileIncButton"));
+	agileIncButton = Realize(GBtn_makeGButton(NULL, agileIncButtonName, NULL, ui240Res, 29));
+	String agileMiuIconName = Realize(Object_Create("agileMiuIcon"));
+	agileMiuIcon = Realize(GI_makeGIcon(agileMiuIconName, NULL, uiRes, 20, NULL, 0, 0));
+	String agilePluIconName = Realize(Object_Create("agilePluIcon"));
+	agilePluIcon = Realize(GI_makeGIcon(agilePluIconName, NULL, uiRes, 21, NULL, 0, 0));	
+	
+	free agileDecButtonName;
+	free agileIncButtonName;
+	free agileMiuIconName;
+	free agileImageNumberName;
+	free agilePluIconName;
+	free agileLabelName;
+	free agileLabelCaption;
+	
+	GC_addChildWidget(agileSLider, agileLabel, 0);
+	GC_addChildWidget(agileSLider, agileDecButton, 0);
+	GC_addChildWidget(agileSLider, agileMiuIcon, 0);
+	GC_addChildWidget(agileSLider, agileImageNumber, 0);	
+	GC_addChildWidget(agileSLider, agilePluIcon, 0);
+	GC_addChildWidget(agileSLider, agileIncButton, 0);
+	
+	GW_setBound(agileLabel, 0, 0, 13, 15);
+	GW_setBound(agileDecButton, 0, 0, 8, 12);
+	GW_setBound(agileImageNumber, 0, 0, 18, 12);
+	GW_setBound(agileIncButton, 0, 0, 8, 12);
+	GW_setBound(agileMiuIcon, 0, 0, 13, 13);
+	GW_setBound(agilePluIcon, 0, 0, 13, 13);
+}
+
+//体
+FUNCTION create_strengthSlider()
+{
+	String strengthLabelName = Realize(Object_Create("agileLabel"));		
+	String strengthLabelCaption = Realize(Object_Create("体"));
+	strengthLabel = Realize(GL_makeGLabel(strengthLabelName, strengthLabelCaption, NULL, -1));
+	strengthLabel.is3D = TRUE;
+	strengthLabel.hAlignment = LAYOUT_ALIGN_HCENTER;
+	strengthLabel.vAlignment = LAYOUT_ALIGN_VMIDDLE;
+	
+	String strengthImageNumberName = Realize(Object_Create("strengthImageNumber"));
+	strengthImageNumber = Realize(GIN_makeGImageNumber(strengthImageNumberName, numberRes, 120));
+		
+	strengthImageNumber.isBackgroundPainted = FALSE;
+	strengthImageNumber.isBorderPainted = FALSE;
+	strengthImageNumber.imageNumber = 52;
+	//strengthImageNumber.numberRes = numberRes;
+	strengthImageNumber.isShowSign = FALSE;
+	strengthImageNumber.plusStartIndex = 120;
+	strengthImageNumber.subStartIndex = 129;
+	
+	String strengthDecButtonName = Realize(Object_Create("strengthDecButton"));
+	strengthDecButton = Realize(GBtn_makeGButton(NULL, strengthDecButtonName, NULL, ui240Res, 28));
+	String strengthIncButtonName = Realize(Object_Create("strengthIncButton"));
+	strengthIncButton = Realize(GBtn_makeGButton(NULL, strengthIncButtonName, NULL, ui240Res, 29));
+	String strengthMiuIconName = Realize(Object_Create("strengtheMiuIcon"));
+	strengthMiuIcon = Realize(GI_makeGIcon(strengthMiuIconName, NULL, uiRes, 20, NULL, 0, 0));
+	String strengthPluIconName = Realize(Object_Create("strengthPluIcon"));
+	strengthPluIcon = Realize(GI_makeGIcon(strengthPluIconName, NULL, uiRes, 21, NULL, 0, 0));	
+	
+	free strengthDecButtonName;
+	free strengthIncButtonName;
+	free strengthMiuIconName;
+	free strengthImageNumberName;
+	free strengthPluIconName;
+	free strengthLabelName;
+	free strengthLabelCaption;
+	
+	
+	
+	GC_addChildWidget(strengthSLider, strengthLabel, 0);
+	GC_addChildWidget(strengthSLider, strengthDecButton, 0);
+	GC_addChildWidget(strengthSLider, strengthMiuIcon, 0);   
+	GC_addChildWidget(strengthSLider, strengthImageNumber, 0);
+	GC_addChildWidget(strengthSLider, strengthPluIcon, 0);
+	GC_addChildWidget(strengthSLider, strengthIncButton, 0);
+	
+	GW_setBound(strengthLabel, 0, 0, 13, 15);
+	GW_setBound(strengthDecButton, 0, 0, 8, 12);
+	GW_setBound(strengthImageNumber, 0, 0, 18, 12);
+	GW_setBound(strengthIncButton, 0, 0, 8, 12);
+	GW_setBound(strengthMiuIcon, 0, 0, 13, 13);
+	GW_setBound(strengthPluIcon, 0, 0, 13, 13);	
+}
+
+//创建元素图标
+FUNCTION create_elementIcon()
+{
+	ImageSet imageElementIcon = Realize(ImageSet_Create("ability240.pip", TRUE));	
+	String iceIconName = Realize(Object_Create("iceIcon"));
+	iceIcon = Realize(GI_makeGIcon(iceIconName, NULL, imageElementIcon, 32, NULL, 0, 0));
+	String windIconName = Realize(Object_Create("windIcon"));
+	windIcon = Realize(GI_makeGIcon(windIconName, NULL, imageElementIcon, 28, NULL, 0, 0));
+	String fireIconName = Realize(Object_Create("fireIcon"));
+	fireIcon = Realize(GI_makeGIcon(fireIconName, NULL, imageElementIcon, 26, NULL, 0, 0));
+	String poisonIconName = Realize(Object_Create("poisonIcon"));
+	poisonIcon = Realize(GI_makeGIcon(poisonIconName, NULL, imageElementIcon, 29, NULL, 0, 0));
+	String electricityIconName = Realize(Object_Create("electricityIcon"));
+	electricityIcon = Realize(GI_makeGIcon(electricityIconName, NULL, imageElementIcon, 31, NULL, 0, 0));
+	
+	GC_addChildWidget(rolContainer, iceIcon, 0);
+	GC_addChildWidget(rolContainer, windIcon, 0);
+	GC_addChildWidget(rolContainer, fireIcon, 0);   
+	GC_addChildWidget(rolContainer, poisonIcon, 0);
+	GC_addChildWidget(rolContainer, electricityIcon, 0);
+	
+	//创建元素攻击抗性值
+	int i;
+	eleNumber = new GImageNumber[10];
+	for(i = 0; i < 10; i++)
+	{
+		String tmpNumberName = Realize(Object_Create("imagenumber_" + i));
+		eleNumber[i] = Realize(GIN_makeGImageNumber(tmpNumberName, numberRes, 120));
+		free tmpNumberName;
+		
+		GC_addChildWidget(rolContainer, eleNumber[i], 0);
+		
+		eleNumber[i].imageNumber = 129;
+		eleNumber[i].isShowSign = FALSE;  
+		eleNumber[i].plusStartIndex = 120;
+		eleNumber[i].subStartIndex = 129;
+	}
+	
+	free imageElementIcon;
+	free iceIconName;
+	free windIconName;
+	free fireIconName;
+	free poisonIconName;
+	free electricityIconName;
+	
+	GW_setBound(eleNumber[0], 44, 4, 18, 7);
+	GW_setBound(windIcon, 45, 10, 18, 18);
+	GW_setBound(eleNumber[1], 44, 27, 18, 7);
+	
+	GW_setBound(eleNumber[2], 11, 42, 18, 7);
+	GW_setBound(fireIcon, 12, 48, 18, 18);
+	GW_setBound(eleNumber[3], 11, 63, 18, 7);
+	
+	GW_setBound(eleNumber[4], 79, 42, 18, 7);
+	GW_setBound(iceIcon, 80, 48, 18, 18);
+	GW_setBound(eleNumber[5], 79, 63, 18, 7);
+	
+	GW_setBound(eleNumber[6], 20, 76, 18, 7);
+	GW_setBound(poisonIcon, 21, 82, 18, 18);
+	GW_setBound(eleNumber[7], 20, 99, 18, 7);
+	
+	GW_setBound(eleNumber[8], 70, 76, 18, 7);
+	GW_setBound(electricityIcon, 71, 82, 18, 18);
+	GW_setBound(eleNumber[9], 70, 99, 18, 7);
+}
+
+//处理力加减事件
+FUNCTION forceDecBtnClicked(GButton this)
+{	
+	if(forceImageNumber.imageNumber > forceSLider.minValue && pointsImageNumber.imageNumber < maxPoints)
+	{
+		forceImageNumber.imageNumber--;
+		pointsImageNumber.imageNumber++;
+		forceImageNumber.absX = -1;
+		forceImageNumber.absY = -1;
+	}	
+	return TRUE;
+}
+
+FUNCTION forceIncBtnClicked(GButton this)
+{
+	if(forceImageNumber.imageNumber < forceSLider.maxValue && pointsImageNumber.imageNumber > 0)
+	{
+		forceImageNumber.imageNumber++;
+		pointsImageNumber.imageNumber--;
+		forceImageNumber.absX = -1;
+		forceImageNumber.absY = -1;
+	}	
+	return TRUE;
+}
+
+//处理智加减事件
+FUNCTION wistomDecBtnClicked(GButton this)
+{
+	if(wisdomImageNumber.imageNumber > wisdomSLider.minValue && pointsImageNumber.imageNumber < maxPoints)
+	{
+		wisdomImageNumber.imageNumber--;
+		pointsImageNumber.imageNumber++;
+		wisdomImageNumber.absX = -1;
+		wisdomImageNumber.absY = -1;
+	}	
+	return TRUE;
+}
+
+FUNCTION wistomIncBtnClicked(GButton this)
+{
+	if(wisdomImageNumber.imageNumber < wisdomSLider.maxValue && pointsImageNumber.imageNumber > 0)
+	{
+		wisdomImageNumber.imageNumber++;
+		pointsImageNumber.imageNumber--;
+		wisdomImageNumber.absX = -1;
+		wisdomImageNumber.absY = -1;
+	}	
+	return TRUE;
+}
+
+//处理体加减事件
+FUNCTION strengthDecBtnClicked(GButton this)
+{
+	if(strengthImageNumber.imageNumber > strengthSLider.minValue && pointsImageNumber.imageNumber < maxPoints)
+	{
+		strengthImageNumber.imageNumber--;
+		pointsImageNumber.imageNumber++;
+		strengthImageNumber.absX = -1;
+		strengthImageNumber.absY = -1;
+	}	
+	return TRUE;
+}
+
+FUNCTION strengthIncBtnClicked(GButton this)
+{
+	if(strengthImageNumber.imageNumber < strengthSLider.maxValue && pointsImageNumber.imageNumber > 0)
+	{
+		strengthImageNumber.imageNumber++;
+		pointsImageNumber.imageNumber--;
+		strengthImageNumber.absX = -1;
+		strengthImageNumber.absY = -1;
+	}	
+	return TRUE;
+}
+
+//处理敏加减事件
+FUNCTION agileDecBtnClicked(GButton this)
+{
+	if(agileImageNumber.imageNumber > agileSLider.minValue && pointsImageNumber.imageNumber < maxPoints)
+	{
+		agileImageNumber.imageNumber--;
+		pointsImageNumber.imageNumber++;
+		agileImageNumber.absX = -1;
+		agileImageNumber.absY = -1;
+	}	
+	return TRUE;
+}
+
+FUNCTION agileIncBtnClicked(GButton this)
+{
+	if(agileImageNumber.imageNumber < agileSLider.maxValue && pointsImageNumber.imageNumber > 0)
+	{
+		agileImageNumber.imageNumber++;
+		pointsImageNumber.imageNumber--;
+		agileImageNumber.absX = -1;
+		agileImageNumber.absY = -1;
+	}	
+	return TRUE;
+}
+
+FUNCTION forceHandleKey(GSlider this, int eventType, int keyCode, int modifierCode)
+ {
+ 	boolean eventComsumed = FALSE;
+ 	
+ 	switch(eventType)
+ 	{
+ 		case EVENT_TYPE_KEYPRESSED:
+ 			break;
+		case EVENT_TYPE_KEYRELEASED:
+			// 定义okay和数字5键触发点击事件.
+			switch(keyCode)
+			{
+				case KEY_CODE_LEFT:
+					return forceDecBtnClicked(forceDecButton);
+					break;
+				case KEY_CODE_RIGHT:
+					return forceIncBtnClicked(forceIncButton);
+					break;
+				
+				//case KEY_CODE_OKAY:
+				//case KEY_CODE_NUM5:
+				//	eventComsumed = GBtn_clickedFuncImpl(this);
+				//	break;
+				default:
+					break;
+			}
+			break;
+		default:
+			break;
+ 	}
+ 	
+ 	return eventComsumed;
+ }
+
+FUNCTION wisdomHandleKey(GSlider this, int eventType, int keyCode, int modifierCode)
+{
+ 	boolean eventComsumed = FALSE;
+ 	
+ 	switch(eventType)
+ 	{
+ 		case EVENT_TYPE_KEYPRESSED:
+ 			break;
+		case EVENT_TYPE_KEYRELEASED:
+			// 定义okay和数字5键触发点击事件.
+			switch(keyCode)
+			{
+				case KEY_CODE_LEFT:
+					return wistomDecBtnClicked(wisdomDecButton);
+					break;
+				case KEY_CODE_RIGHT:
+					return wistomIncBtnClicked(wisdomIncButton);
+					break;
+				
+				//case KEY_CODE_OKAY:
+				//case KEY_CODE_NUM5:
+				//	eventComsumed = GBtn_clickedFuncImpl(this);
+				//	break;
+				default:
+					break;
+			}
+			break;
+		default:
+			break;
+ 	}
+ 	return eventComsumed;
+ }
+ 
+ FUNCTION strengthHandleKey(GSlider this, int eventType, int keyCode, int modifierCode)
+ {
+ 	boolean eventComsumed = FALSE;
+ 	
+ 	switch(eventType)
+ 	{
+ 		case EVENT_TYPE_KEYPRESSED:
+ 			break;
+		case EVENT_TYPE_KEYRELEASED:
+			// 定义okay和数字5键触发点击事件.
+			switch(keyCode)
+			{
+				case KEY_CODE_LEFT:
+					return strengthDecBtnClicked(strengthDecButton);
+					break;
+				case KEY_CODE_RIGHT:
+					return strengthIncBtnClicked(strengthIncButton);
+					break;
+				
+				//case KEY_CODE_OKAY:
+				//case KEY_CODE_NUM5:
+				//	eventComsumed = GBtn_clickedFuncImpl(this);
+				//	break;
+				default:
+					break;
+			}
+			break;
+		default:
+			break;
+ 	}
+ 	
+ 	return eventComsumed;
+ }
+ 
+ FUNCTION agileHandleKey(GSlider this, int eventType, int keyCode, int modifierCode)
+ {
+ 	boolean eventComsumed = FALSE;
+ 	
+ 	switch(eventType)
+ 	{
+ 		case EVENT_TYPE_KEYPRESSED:
+ 			break;
+		case EVENT_TYPE_KEYRELEASED:
+			// 定义okay和数字5键触发点击事件.
+			switch(keyCode)
+			{
+				case KEY_CODE_LEFT:
+					return agileDecBtnClicked(agileDecButton);
+					break;
+				case KEY_CODE_RIGHT:
+					return agileIncBtnClicked(agileIncButton);
+					break;
+				
+				//case KEY_CODE_OKAY:
+				//case KEY_CODE_NUM5:
+				//	eventComsumed = GBtn_clickedFuncImpl(this);
+				//	break;
+				default:
+					break;
+			}
+			break;
+		default:
+			break;
+ 	}
+ 	
+ 	return eventComsumed;
+ }
+ 
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	free vmCU;
+	free attrWindow;
+	
+	free rolContainer;  
+	free attrContainer1;
+	free attrContainer2;
+	
+	free redLabel;    		//生命
+	free blueLabel;   		//法力
+	free redIcon;      		//血条前的图标
+	free blueIcon;
+	free redNumber; 
+	free blueNumber;
+	
+	free gradeLabel;			//等级
+	free expGIcon;				//经验图标
+	free expNumber;				//经验值
+	
+	free forceDecButton;		//力button
+	free forceIncButton;
+	free forceImageNumber;
+	free forceMiuIcon;
+	free forcePluIcon;
+	
+	free wisdomDecButton;		//智button
+	free wisdomIncButton;
+	free wisdomImageNumber;
+	free wisdomMiuIcon;
+	free wisdomPluIcon;
+	
+	free strengthDecButton;		//体button
+	free strengthIncButton;
+	free strengthImageNumber;
+	free strengthMiuIcon;
+	free strengthPluIcon;
+	
+	free agileDecButton;	 	//敏button
+	free agileIncButton;
+	free agileImageNumber;
+	free agileMiuIcon;
+	free agilePluIcon;
+	
+	free statusLabel;
+ 	free pointsContainer;  		//剩余点数
+ 	free pointsLabel;  
+ 	free pointsImageNumber;    
+ 	
+	free forceSLider;			// 力
+	free wisdomSLider;			// 智
+	free agileSLider;			// 敏
+	free strengthSLider;		// 体
+	
+	free iceIcon;
+	free fireIcon;
+	free windIcon;
+	free poisonIcon;
+	free electricityIcon;
+	
+	free forceLabel;
+	free wisdomLabel;
+	free agileLabel;
+	free strengthLabel;
+	
+	free captionName;
+	free deriveAtrrKey;        //属性字符串
+	free atrrLabelList;
+	free iconLabelList;
+	free eleNumber;
+	free numberRes;
+	free ui240Res;
+	free uiRes;
+   	
+	free gameIcon;
+}
+
+FUNCTION processPacket()
+{
+
+}
+
+FUNCTION event()
+{
+}

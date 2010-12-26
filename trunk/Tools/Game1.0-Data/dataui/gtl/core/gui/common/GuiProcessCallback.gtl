@@ -1,0 +1,258 @@
+/**
+ * All Rights Reserved (C) PearlInPalm Co., Ltd
+ * 
+ * @file 	GuiProcessCallBack.gtl
+ * @description 处理UI脚本控件中的通用函数(Cycle, CycleUI, Paint, Destroy, ProcessPacket)的回调.
+ * @author David.Wan
+ * @date   2010-09
+ */
+
+#include "./GuiCommonDef.h"
+#include "../../common/CommonDef.h"
+#include "../control/GWidget.h"
+#include "../event/GEvent.gtl"
+
+/**
+ * GVMCallee定义了VM调用控件的vm函数时的封装体.
+ */ 
+STRUCT GVMCallee
+{
+	int vm_func;		// 函数地址.
+	GWidget widget;	    // 控件对象.
+}
+
+/**
+ * 返回的对象无需做realize, 用完后调用GVMCallee_freeGVMCallee释放资源.
+ */
+FUNCTION GVMCallee_makeGVMCallee(int[] calleeInfo)
+{
+	GVMCallee callee = Realize(new GVMCallee);
+	callee.vm_func = calleeInfo[0];
+	callee.widget  = Realize(calleeInfo[1]);
+	
+	return callee;
+}
+
+/**
+ * 释放GVMCallee.
+ */
+FUNCTION GVMCallee_destroyGVMCallee(GVMCallee this)
+{
+	OBJECT_FREE(this.widget);
+	OBJECT_FREE(this);}
+/**********************************************/
+
+/**
+ * 负责处理脚本中收集到的控件函数指针栈, 对于cycleUI则分发收集到的控件事件.
+ * @param type 收集到的控件函数类型(Cycle, CycleUI, ProcessPacket, Paint)
+ */
+FUNCTION CALLBACK gui_processCommonFunc(int type)
+{
+	if(type != UIVM_TYPE_CYCLEUI)
+	{
+		int[] calleeInfo = Gui_GUI_LoadVMCallee(type);
+		while(calleeInfo != NULL){
+			int vm_func = calleeInfo[0];
+			if (vm_func > 0) {
+				GWidget widget = calleeInfo[1];
+				@vm_func(widget);
+			}
+//			GVMCallee callee =  GVMCallee_makeGVMCallee(calleeInfo);
+//			int vm_func = callee.vm_func;
+//			if(vm_func > 0) {
+//				@vm_func(callee.widget);
+//			}
+//			GVMCallee_destroyGVMCallee(callee);
+//			free calleeInfo;
+			calleeInfo = Gui_GUI_LoadVMCallee(type);
+		}
+	}
+	else{
+		gui_processCycleUICallBack();
+	}
+}
+/**********************************************/
+
+/**
+ * 负责处理cycleUI中事件分发的回调函数.
+ */
+FUNCTION CALLBACK gui_processCycleUICallBack()
+{
+	boolean eventConsumed = FALSE;
+	int[] eventDataInfo = Realize(Gui_GUI_LoadVMEvent());
+	while(eventDataInfo != NULL){
+		GEvent eventData = GEvent_makeGEvent(eventDataInfo);
+		switch(eventData.eventType){
+		// 处理按键事件.
+		case EVENT_TYPE_KEYPRESSED:
+		case EVENT_TYPE_KEYRELEASED:
+		{
+			GKeyEvent keyEvent = eventData;
+			eventConsumed = gui_handleKeyImpl(keyEvent);
+			break;
+		}
+			
+		// 处理触摸事件.
+		case EVENT_TYPE_TOUCHPRESSED:
+		case EVENT_TYPE_TOUCHRELEASED:
+		case EVENT_TYPE_TOUCHDRAGED:
+		case EVENT_TYPE_TOUCHMOVED:
+		{
+			GTouchEvent touchEvent = eventData;
+			eventConsumed = gui_handleTouchImpl(touchEvent);
+			break;
+		}
+		
+		// 处理焦点事件.
+		case EVENT_TYPE_FOCUSGAINED:
+		case EVENT_TYPE_FOCUSLOST:
+		{
+			GFocusEvent focusEvent = eventData;
+			eventConsumed = gui_handleFocusImpl(focusEvent);
+			break;
+		}
+			
+		// 处理action事件.
+		case EVENT_TYPE_ACTIONPERFORMED:
+		{
+			GActionEvent actionEvent = eventData;
+			eventConsumed = gui_handleActionImpl(actionEvent);
+			break;
+		}
+		
+		default:
+			break;		
+		}
+		GEvent_destroyGEvent(eventData);
+		OBJECT_FREE(eventDataInfo);
+		eventDataInfo = Realize(Gui_GUI_LoadVMEvent());
+	}
+	OBJECT_FREE(eventDataInfo);
+}
+
+/**
+ * 处理action事件.
+ */
+FUNCTION gui_handleActionImpl(GActionEvent actionEvent)
+{
+	GWidget eventSrc = actionEvent.eventSrc;
+	int funcHandleAction = eventSrc.func_handleAction;
+	if(funcHandleAction > 0) {
+		return @funcHandleAction(eventSrc, actionEvent.eventType, actionEvent.actionId);
+	}
+	
+	return FALSE;
+}
+
+/**
+ * 处理focus事件.
+ */ 
+FUNCTION gui_handleFocusImpl(GFocusEvent focusEvent)
+{
+	GWidget eventSrc = focusEvent.eventSrc;
+	int funcHandleFocus = eventSrc.func_handleFocus;
+	if(funcHandleFocus > 0) {
+		return @funcHandleFocus(eventSrc, focusEvent.eventType);
+	}
+	
+	return FALSE;
+}
+
+/**
+ * 处理touch事件.
+ */
+FUNCTION gui_handleTouchImpl(GTouchEvent touchEvent)
+{
+	boolean eventConsumed = FALSE;
+	
+	GWidget eventSrc = touchEvent.eventSrc;
+	int funcHandleTouch = eventSrc.func_handleTouch;
+	if(funcHandleTouch > 0) {
+		eventConsumed = @funcHandleTouch(eventSrc, touchEvent.eventType, touchEvent.x, touchEvent.y);
+	}
+	
+	// 如果事件的来源控件没有处理完事件, 则传递给父控件来处理, 直至被父控件处理或者
+	// 所有父控件都没有处理为止.
+	if(eventConsumed == FALSE)
+	{
+		GWidget parent = Realize(Gui_GW_GetParentWidget(eventSrc));
+		while(parent != NULL && eventConsumed == FALSE)
+		{
+			int funcParentHandleTouch = parent.func_handleTouch;
+			if(funcParentHandleTouch > 0){
+				eventConsumed = @funcParentHandleTouch(parent, touchEvent.eventType, touchEvent.x, touchEvent.y);
+			}
+			GWidget temp = Gui_GW_GetParentWidget(parent);
+			OBJECT_SET(parent, temp);
+		}
+		OBJECT_FREE(parent);
+	}
+	return eventConsumed;
+}
+
+/**
+ * 处理按键事件.
+ */
+FUNCTION gui_handleKeyImpl(GKeyEvent keyEvent)
+{
+	boolean eventConsumed = FALSE;
+	
+	GWidget eventSrc = keyEvent.eventSrc;
+	int funcHandleKey = eventSrc.func_handleKey;
+	if(funcHandleKey > 0)
+	{
+		eventConsumed = @funcHandleKey(eventSrc, keyEvent.eventType, keyEvent.keyCode, keyEvent.modifierKeyCode);
+	}
+	
+	// 如果事件的来源控件没有处理完事件, 则传递给父控件来处理, 直至被父控件处理或者
+	// 所有父控件都没有处理为止.
+	if(eventConsumed == FALSE)
+	{
+		GWidget parent = Realize(Gui_GW_GetParentWidget(eventSrc));
+		while(parent != NULL && eventConsumed == FALSE)
+		{
+			int funcParentHandleKey = parent.func_handleKey;
+			if(funcParentHandleKey > 0)
+			{
+				eventConsumed = @funcParentHandleKey(parent, keyEvent.eventType, keyEvent.keyCode, keyEvent.modifierKeyCode);
+			}
+			
+			GWidget temp = Gui_GW_GetParentWidget(parent);
+			OBJECT_SET(parent, temp);
+		}
+		OBJECT_FREE(parent);
+	}
+	
+	// 如果还是没有处理, 默认认为是按键的上下左右焦点切换.
+	if(eventConsumed == FALSE)
+	{
+		if(keyEvent.eventType == EVENT_TYPE_KEYPRESSED)
+		{
+			GWidget nextFocusedWidget = NULL;
+			switch(keyEvent.keyCode)
+			{
+			case UP_PRESSED:
+				nextFocusedWidget = eventSrc.upWidget;
+				break;
+			case DOWN_PRESSED:
+				nextFocusedWidget = eventSrc.downWidget;
+				break;
+			case LEFT_PRESSED:
+				nextFocusedWidget = eventSrc.leftWidget;
+				break;
+			case RIGHT_PRESSED:
+				nextFocusedWidget = eventSrc.rightWidget;
+				break;
+			default:
+				break;
+			}
+			
+			if(nextFocusedWidget != NULL)
+			{
+				Gui_GW_RequestFocus(nextFocusedWidget);
+				eventConsumed = TRUE;
+			}
+		} // End if.
+	}
+	return eventConsumed;
+}

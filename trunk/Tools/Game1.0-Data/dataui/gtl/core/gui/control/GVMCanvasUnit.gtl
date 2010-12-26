@@ -1,0 +1,59 @@
+#include "./GVMCanvasUnit.h"
+#include "./GContainer.gtl"
+#include "./GVMCanvasUnit.h"
+
+/**
+ * 创建GVMCU.
+ * 
+ * NOTE: 创建完后必须将其大小设置为需要的大小，否则不能显示，因为默认情况其大小为0
+ *			调用GW_setBound进行设置
+ */
+FUNCTION GVMCU_MakeGVMCU(GVMCanvasUnit this, String widgetName)
+{
+	GVMCanvasUnit canvasUnit = NULL;
+	if(IsNotNull(this)){
+		canvasUnit = Realize(Gui_GVMCU_MakeGVMCU(this, widgetName));
+	}
+	else{
+		canvasUnit = Realize(Gui_GVMCU_MakeGVMCU(new GVMCanvasUnit, widgetName));
+	}
+	
+	//GVMCU_initGVMCU(canvasUnit);
+	canvasUnit.func_paint = GW_paint;
+	canvasUnit.func_destroy = GW_destroy;
+	
+	GVMCanvasUnit ret = Object_Create(canvasUnit);
+	free canvasUnit;
+	return ret;
+}
+
+/**
+ * 获取GVMCanvasUnit中当前焦点控件.
+ * @param this	要获取焦点控件的GVMCanvasUnit指针地址.
+ *
+ * @return		该GVMCanvasUnit中当前获得焦点的控件，没有控件获得焦点，则返回NULL.
+ */
+FUNCTION GVMCU_getFocusedWidget(GVMCanvasUnit this)
+{
+	return Gui_GVMCU_GetFocusedWidget(this);
+}
+
+//FUNCTION GVMCU_destroy(GVMCanvasUnit this)
+//{
+//	if(IsNull(this) == FALSE){
+//		GC_destroy(this);
+//	}
+//}
+
+ //------------------------ protected --------------------------------------------
+
+/**
+ * 初始化GVMCanvasUnit, 每次创建GVMCanvasUnit控件时必须调用此方法,相当于调用了
+ * 基类的构造方法.
+ * @param this 要初始化的GVMCanvasUnit指针地址.
+ */
+//FUNCTION GVMCU_initGVMCU(GVMCanvasUnit this) 
+//{
+//	GC_initGContainer(this);
+//	this.func_destroy = GVMCU_destroy;
+//}

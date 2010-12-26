@@ -1,0 +1,143 @@
+#include "./GGrid.h"
+
+//	公共接口
+//	public:
+
+/**
+ * 创建GGrid.
+ *
+ * @param backColors	grid的边框背景颜色的数组
+ * @param image			grid图片资源
+ * @param frameIndex	grid图片资源的索引
+ * @return的对象是Realize过的.
+ * NOTE:	当传入的图片资源不为空时,控件会根据图片大小设置默认的宽和高,否则默认宽高都为0.
+ */
+FUNCTION GG_makeGGrid(GGrid this, String widgetName, ImageSet image, int frameIndex)
+{
+	GGrid ggd = NULL;
+	if(IsNotNull(this)){
+		ggd = Realize(Gui_GI_MakeGIcon(this, widgetName));
+	}
+	else{
+		ggd = Realize(Gui_GI_MakeGIcon(new GGrid, widgetName));
+	}
+
+	//added by zxf
+	if(IsNotNull(image))
+	{
+		ggd.w = ImageSet_GetFrameWidth(image, frameIndex);
+		ggd.h = ImageSet_GetFrameHeight(image, frameIndex);
+		ggd.image = Realize(image);
+		ggd.index = frameIndex;
+	}
+	//GG_initGGrid(ggd);
+	ggd.func_paint = GG_paint_default;
+	ggd.numberPaintFunc = GG_paint;
+	ggd.func_destroy = GG_destroy;
+	ggd.isBorderPainted = FALSE;
+	
+	GGrid ret = Object_Create(ggd);
+	free ggd;
+	
+	return ret;
+}
+
+FUNCTION GG_setImageInfo(GGrid this, ImageSet image, int frameIndex)
+{
+	OBJECT_SET(this.image, image);
+	this.index = frameIndex;
+}
+
+/*销毁ggrid的数字信息*/
+//added by zxf
+FUNCTION GG_destroyNumber(GGrid this){
+	OBJECT_FREE(this.numberRes);
+	OBJECT_FREE(this.number);
+}
+
+/**
+ * 销毁GGrid.
+ */
+FUNCTION GG_destroy(GGrid this)
+{
+	OBJECT_FREE(this.numberRes);
+	OBJECT_FREE(this.number);
+
+	OBJECT_FREE(this.image);
+	OBJECT_FREE(this.leftWidget);
+	OBJECT_FREE(this.rightWidget);
+	OBJECT_FREE(this.upWidget);
+	OBJECT_FREE(this.downWidget);
+	OBJECT_FREE(this.observer);
+	OBJECT_FREE(this);
+}
+
+ /**
+ * 设置GGrid的数量信息.
+ *
+ * @param numberSrc		存放数字的图片资源
+ * @param numberIndex	数字所在组的起始索引
+ * @param number		数量字符串
+ * @param isNumberPaint	数量字符串是否绘制
+ */
+FUNCTION GG_setNumberInfo(GGrid this, ImageSet numberSrc, int numberIndex, String number, boolean isNumberPaint)
+{
+	OBJECT_SET(this.numberRes, numberSrc);
+	OBJECT_SET(this.number, number);
+	this.numberIndex = numberIndex;
+	this.isNumberPaint = isNumberPaint;
+	if (this.isNumberPaint) {
+		if (this.func_paint != this.numberPaintFunc){
+			this.func_paint = this.numberPaintFunc;
+			Gui_GW_SetVisible(this, TRUE);
+		}
+	} else if (this.func_paint != GG_paint_default) {
+		this.func_paint = GG_paint_default;
+		Gui_GW_SetVisible(this, TRUE);
+	}
+}
+
+FUNCTION GG_paint_default(GGrid this)
+{
+	Gui_GW_PaintWidget(this);
+}
+
+/**
+ * GGrid自身的特有绘制函数.
+ *
+ * NOTE:	默认数量ImageSet绘制在右下方，如果有特殊的绘制要求可以重写这个绘制方法
+ */
+FUNCTION GG_paint(GGrid this)
+{
+	Gui_GW_PaintWidget(this);
+	if (this.isNumberPaint == TRUE && IsNotNull(this.number))
+	{
+		Object g = Realize(GetSystemGraphics());
+		int[] oldClip = Realize(GetClip(g));
+		int[] _widgetClip = Gui_GW_GetWidgetClipArea(this);
+		int numberX = this.absX + this.w - this.borderRight - this.insetRight;
+		int numberY = this.absY + this.h - this.borderBottom - this.insetBottom;
+		SetClip(g, _widgetClip[0], _widgetClip[1], _widgetClip[2], _widgetClip[3]);
+		if(IsNotNull(this.numberRes) && IsNotNull(this.number))
+		{
+			DrawImageNumber(g, this.numberRes, this.numberIndex, this.number, numberX, numberY, TRANS_NONE, G_BOTTOMRIGHT);			
+		}
+		SetClip(g, oldClip[0], oldClip[1], oldClip[2], oldClip[3]);
+		OBJECT_FREE(oldClip);
+		OBJECT_FREE(_widgetClip);
+		OBJECT_FREE(g);
+	}
+}
+
+//	私有接口
+//	protected:
+
+/**
+ * 初始化GGrid.
+ */
+//FUNCTION GG_initGGrid(GGrid this)
+//{
+//	this.func_paint = GG_paint;
+//	this.func_destroy = GG_destroy;
+//	this.isBorderPainted = FALSE;
+//}

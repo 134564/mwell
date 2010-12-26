@@ -1,0 +1,91 @@
+#include ".\GTextArea.h"
+#include ".\GWidget.gtl"
+
+ //------------------------ public --------------------------------------------
+/**
+ * 创建GTextArea.
+ *
+ * @param widgetName	控件名（用于客户端调试用）
+ *
+ * NOTE:	1. 设置GTextArea的文本内容之前需要先设置GTextArea的宽高.
+ *			         此处设置的高度为最大高度，当文本少于最大高度时会自动减小此高度为文本高度.
+ */
+ FUNCTION GTA_makeGTextArea(GTextArea this, String widgetName)
+ {
+	GTextArea widget = NULL;
+	if(IsNotNull(this)){
+		widget = Realize(Gui_GTA_MakeGTextArea(this, widgetName));
+	}
+	else{
+		widget = Realize(Gui_GTA_MakeGTextArea(new GTextArea, widgetName));
+	}
+	
+//	GTA_initGTextArea(widget);
+	widget.func_paint = GW_paint;
+	widget.func_destroy = GW_destroy;
+	
+	GTextArea ret = Object_Create(widget);
+	free widget;
+	return ret;
+ }
+ 
+ /**
+ * 设置TextArea的文本内容.
+ *
+ * @param this	要设置文本的GTexeArea
+ * @param text	文本内容
+ *
+ * NOTE:	1. 调用之前需要先设置GTextArea的宽高(同时必须设置GTextArea的最大高度maxH变量)。 
+ *				设置完文本后的GTextArea的高度为自适应后的高度
+ */
+ FUNCTION GTA_setText(GTextArea this, String text)
+ {
+ 	Gui_GTA_setText(this, text);
+ }
+ 
+// FUNCTION GTA_destroy(GTextArea this)
+// {
+// 	if(IsNotNull(this)){
+// 		// 调用基类的析构函蔵.
+// 		GW_destroy(this);
+// 	}
+// }
+ 
+ FUNCTION GTA_pageDown(GTextArea this){
+ 	this.currentPage++;
+ 	if (this.currentPage >= this.totalPages){
+ 		this.currentPage = this.totalPages;
+ 		this.currentLine = this.totalLines - this.showLines;
+ 	} else {
+ 		this.currentLine += this.showLines;
+ 	}
+ }
+  
+ FUNCTION GTA_pageUp(GTextArea this){
+ 	this.currentPage--;
+ 	if (this.currentPage <= this.totalPages){
+ 		this.currentPage = 0;
+ 		this.currentLine = 0;
+ 	} else {
+ 		this.currentLine -= this.showLines;
+ 	}
+ }
+  
+ /**
+ * 重置TextArea的文本内容.
+ *
+ * @param this	需要重新设置文本换行宽度的GTexeArea
+ */
+ FUNCTION GTA_reset(GTextArea this)
+ {
+ 	Gui_GTA_reset(this);
+ }
+ //------------------------ protected --------------------------------------------
+/**
+ * 初始化GIcon.
+ */
+// FUNCTION GTA_initGTextArea(GTextArea this)
+// {
+// 	GW_initGWidget(this);
+// 	this.func_destroy = GTA_destroy;
+// }

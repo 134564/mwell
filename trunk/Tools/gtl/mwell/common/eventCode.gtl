@@ -1,0 +1,185 @@
+#define EVENT_TETST  0x0001
+
+//	touch_press
+#define EVENT_TOUCH_PRESS 0x0002
+//	touch_realse
+#define EVENT_TOUCH_RELEASED 0x0003
+//	touch drag
+#define EVENT_TOUCH_DRAGGED  0x0004
+
+// 同步血量  
+#define EVENT_CHANGED_HP   			0x0010
+// 同步蓝量  
+#define EVENT_CHANGED_MP   			0x0011
+// 同步生命上限  
+#define EVENT_CHANGED_MAX_HP   		0x0012
+// 同步法力上限  
+#define EVENT_CHANGED_MAX_MP   		0x0013
+// 同步金钱  
+#define EVENT_CHANGED_ADD_MONEY   	0x0014
+// 同步元宝  
+#define EVENT_CHANGED_INGOT   		0x0015
+// 同步移动速度  
+#define EVENT_CHANGED_SPEED   		0x0016
+// 同步经验  
+#define EVENT_CHANGED_EXP   		0x0018
+// 同步等级  
+#define EVENT_CHANGED_LEVEL   		0x0019
+// 同步升级所需经验  
+#define EVENT_CHANGED_LEVEL_EXP   	0x001A
+// 同步背包格数  
+#define EVENT_CHANGED_BAG_SIZE   	0x001B
+// 同步声望  
+#define EVENT_CHANGED_CREDIT   		0x001C
+// 同步氏族  
+#define EVENT_CHANGED_RACE    		0x001D
+// 同步功勋  
+#define EVENT_CHANGED_EXPLOIT    	0x001E
+// 同步职务  
+#define EVENT_CHANGED_DUTY    		0x001F
+// 同步力量  
+#define EVENT_CHANGED_STR    		0x0020
+// 同步敏捷  
+#define EVENT_CHANGED_AGI   		0x0021
+// 同步体力  
+#define EVENT_CHANGED_VIT    		0x0022
+// 同步智力  
+#define EVENT_CHANGED_INTE    		0x0023
+// 同步物理攻击力  
+#define EVENT_CHANGED_PPOWER    	0x0024
+// 同步法术攻击力  
+#define EVENT_CHANGED_MPOWER    	0x0025
+// 同步物理防御力  
+#define EVENT_CHANGED_PDEFENCE    	0x0026
+// 同步法术防御力  
+#define EVENT_CHANGED_MDEFENCE    	0x0027
+// 同步物理命中等级  
+#define EVENT_CHANGED_PHIT    		0x0028
+// 同步法术命中等级 
+#define EVENT_CHANGED_MHIT    		0x0029
+// 同步物理闪躲等级  
+#define EVENT_CHANGED_PFLEE   		0x002A
+// 同步法术闪躲等级  
+#define EVENT_CHANGED_MFLEE    		0x002B
+// 同步物理暴击等级  
+#define EVENT_CHANGED_PCRI    		0x002C
+// 同步法术爆击等级  
+#define EVENT_CHANGED_MCRI     		0x002D
+// 同步物理免爆等级  
+#define EVENT_CHANGED_PUNCRI    	0x002E
+// 同步法术免爆等级  
+#define EVENT_CHANGED_MUNCRI     	0x002F
+//通知金钱变化
+#define EVENT_NOTIFY_ADD_MONEY		0x0039
+//通知金钱变化
+#define EVENT_NOTIFY_EXP			0x003A
+//通知等级升级经验变化
+#define EVENT_NOTIFY_LEVEL_EXP		0x003B
+
+
+
+/** 同步物理攻击力下限 */
+#define  EVENT_CHANGED_PPOWERDOWN		0x0030
+/** 同步法术攻击力下限 */
+#define  EVENT_CHANGED_MPOWERDOWN		0x0031
+/** 同步生命恢复力 */
+#define  EVENT_CHANGED_HPRESTORE        0x0032
+/** 同步法术恢复力 */
+#define  EVENT_CHANGED_MPRESTORE        0x0033
+/**同步剩余属性点数*/
+#define  EVENT_CHANGED_RESTPOINT        0x0034
+/** 同步基础力量 */
+#define  EVENT_CHANGED_STR_POINT        0x0035
+/** 同步基础敏捷 */
+#define  EVENT_CHANGED_AGI_POINT        0x0036
+/** 同步基础体力 */
+#define  EVENT_CHANGED_VIT_POINT        0x0037
+/** 同步基础智力 */
+#define  EVENT_CHANGED_INTE_POINT       0x0038
+
+
+
+#define EVENT_CHANGED_EQUIP             0x003C
+#define EVENT_CHANGED_DOWNEQUIP         0x003D
+
+
+
+// String类型常量定义
+// 同步称号  
+#define EVENT_CHANGED_TITLE  		0x0030 
+// 同步势力  
+#define EVENT_CHANGED_TONG  		0x0031 
+
+
+
+//背包包格数据同步
+#define EVENT_CHANGED_BAGGRIDS		0x0040
+#define EVENT_CHANGED_NOTIFY_BAGGRIDS   0x0041
+// 系统通知
+#define EVENT_NOTIFY_LEVEL              0x0042
+#define	EVENT_NOTIFY_HP					0x0043
+#define EVENT_NOTIFY_MP					0x0044
+#define	EVENT_NOTIFY_MAX_HP  	        0x0045
+#define	EVENT_NOTIFY_MAX_MP				0x0046
+#define	EVENT_NOTIFY_INGOT				0x0047
+#define	EVENT_NOTIFY_SPEED				0x0049
+#define	EVENT_NOTIFY_HPRECOVER			0x004A
+#define	EVENT_NOTIFY_MPRECOVER			0x004B
+#define	EVENT_NOTIFY_BAG_SIZE			0x004C
+#define	EVENT_NOTIFY_CREDIT				0x004D
+#define	EVENT_NOTIFY_RACE				0x004E
+#define	EVENT_NOTIFY_EXPLOIT			0x004F
+#define	EVENT_NOTIFY_DUTY				0x0050
+#define	EVENT_NOTIFY_STR				0x0051
+#define	EVENT_NOTIFY_AGI				0x0052
+#define	EVENT_NOTIFY_VIT				0x0053
+#define	EVENT_NOTIFY_INTE				0x0054
+#define	EVENT_NOTIFY_PPOWER				0x0055
+#define	EVENT_NOTIFY_MPOWER				0x0056
+#define	EVENT_NOTIFY_PDEFENCE			0x0057
+#define	EVENT_NOTIFY_MDEFENCE			0x0058
+#define	EVENT_NOTIFY_PHIT				0x0059
+#define	EVENT_NOTIFY_MHIT				0x005A
+#define	EVENT_NOTIFY_PFLEE				0x005B
+#define	EVENT_NOTIFY_MFLEE				0x005C
+#define	EVENT_NOTIFY_PCRI				0x005D
+#define	EVENT_NOTIFY_MCRI				0x005E
+#define	EVENT_NOTIFY_PUNCRI				0x005F
+#define	EVENT_NOTIFY_MUNCRI				0x0060
+#define	EVENT_NOTIFY_PPOWERDOWN			0x0061
+#define	EVENT_NOTIFY_MPOWERDOWN			0x0062
+#define	EVENT_NOTIFY_HPRESTORE			0x0063
+#define	EVENT_NOTIFY_MPRESTORE			0x0064
+#define	EVENT_NOTIFY_RESTPOINT			0x0065
+
+
+
+
+
+
+
+
+
+/**聊天事件 added by zxf*/
+//预留20个事件 0x0085 - 0x00A5
+// 实际上是32个 : ) 
+#define EVENT_CHAT_FACE		0x0085//添加表情事件	
+#define EVENT_CHAT_FLOW		0x0086//新加入的聊天记录字体漂浮
+#define EVENT_SHOW_CHAT		0x0087//在发送信息界面，点击发送，需要在聊天记录界面同步数据，且显示最新聊天记录
+#define EVENT_QUICK_ANSWER_INSERT	0x0088//将快速回复信息加入到发送聊天信息界面
+#define EVENT_CHAT_SETTING			0X0089//接收到聊天设置事件
+#define EVENT_MENU_CLOSE			0x00A5
+#define EVENT_OWN_INCONSEQUENTIAL_MENU	0x00A6
+//从好友列表中取得好友
+#define EVENT_ADD_FRIEND  0x00A6 
+#define EVENT_GMENU_STOP_MOVING	0x00A7
+//队伍相关事件
+//事件 0x0100 - 0x01119
+#define EVENT_RECIEVE_INVITE  0x0100
+#define EVENT_ACCEPTE_INVITE  0x0101
+#define EVENT_REFUSE_INVITE  0x0102 
+///////////////////////////////////////////////////////////////////////////////	
+
+//GUI事件 0x111A - 121A
+/*GAutoCloseMessageBox*/
+#define EVENT_TIME_OUT		0X111A//窗口已到预定时间，即消失

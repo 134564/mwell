@@ -1,0 +1,77 @@
+#include "./GProgressBar.h"
+#include "./GWidget.gtl"
+
+/**
+ * 创建GWidget.
+ */
+ 
+FUNCTION GPB_makeProgressBar(GProgressBar this, String widgetName, ImageSet ImageFrame, ImageSet ImageProgress, int nFrameIndex, 
+					int progressIndex, int max, int min, int EGLayoutOrientation, int tipPaint)
+{	
+	GProgressBar widget = NULL;
+	if(IsNotNull(this)){
+		widget = Realize(Gui_GPB_MakeGProgressBar(this, widgetName, ImageFrame, 
+						  ImageProgress, nFrameIndex, progressIndex, max, min, EGLayoutOrientation, tipPaint));
+	}
+	else{
+		widget = Realize(Gui_GPB_MakeGProgressBar(new GProgressBar, widgetName, ImageFrame, 
+						  ImageProgress, nFrameIndex, progressIndex, max, min, EGLayoutOrientation, tipPaint));
+	}
+//	GPB_initProgressBar(widget);
+	widget.func_paint = GW_paint;
+	widget.func_destroy = GW_destroy;
+	
+	if(ImageFrame != NULL){
+		widget.nIconWidth = ImageSet_GetFrameWidth(ImageFrame, nFrameIndex);
+		widget.nIconHeight = ImageSet_GetFrameHeight(ImageFrame, nFrameIndex);
+	}
+	widget.nWidth = widget.nIconWidth + widget.borderLeft + widget.borderRight + widget.insetLeft + widget.insetRight;
+	widget.nHeight = widget.nIconHeight + widget.borderTop + widget.borderBottom + widget.insetTop + widget.insetBottom;
+	
+	GProgressBar ret = Object_Create(widget);
+	free widget;
+	return ret;
+}
+
+/**
+ * 初始化GProgressBar, 每次创建GProgressBar子控件时必须调用此方法,相当于调用了
+ * 基类的构造方法.
+ * @param this 要初始化的GProgressBar指针地址.
+ */
+//FUNCTION GPB_initProgressBar(GProgressBar this) 
+//{
+//	GW_initGWidget(this);
+//	this.func_destroy = GPB_destroy;
+//}
+//
+//FUNCTION GPB_destroy(GProgressBar this)
+//{
+//	if(IsNotNull(this)){
+//		// 调用基类的析构函数.
+//		GW_destroy(this);
+//	}
+//}
+
+FUNCTION GPB_setRange(GProgressBar this, int min, int max)
+{
+	if(NULL != this)
+	{
+		this.max = max;
+		this.min = min;
+	}
+}
+
+FUNCTION GPB_setCurrentProgressValue(GProgressBar this, int currentValue)
+{
+	if(NULL != this){
+		if(currentValue > this.max){
+			this.currentvalue = this.min;
+		}
+		else if(currentValue < this.min){
+			this.currentvalue = this.max;
+		}
+		else{
+			this.currentvalue = currentValue;
+		}
+	}
+}

@@ -1,0 +1,112 @@
+/**
+ * All Rights Reserved (C) PearlInPalm Co., Ltd
+ * 
+ * @file 	GEvent.gtl
+ * @description GEvent结构体方法的实现.
+ * @author David.Wan
+ * @date   2010-09
+ */
+ 
+ #include "./GEvent.h"
+ 
+ /**
+  * 返回的对象已做Realize, 释放请调用GEvent_destroyGEvent.
+  */
+ FUNCTION GEvent_makeGEvent(int[] eventInfo)
+ {
+ 	int eventType = eventInfo[0];
+ 	GWidget eventSrc = eventInfo[1];
+ 	
+ 	switch(eventInfo[0])
+ 	{
+ 		case EVENT_TYPE_KEYPRESSED:
+ 		case EVENT_TYPE_KEYRELEASED:
+ 			return GEvent_makeGKeyEvent(eventType, eventSrc, eventInfo[2], eventInfo[3]);
+ 		
+ 		case EVENT_TYPE_TOUCHPRESSED:
+ 		case EVENT_TYPE_TOUCHRELEASED:
+ 		case EVENT_TYPE_TOUCHDRAGED:
+ 			return GEvent_makeGKeyEvent(eventType, eventSrc, eventInfo[2], eventInfo[3]);
+ 		
+ 		case EVENT_TYPE_FOCUSGAINED:
+ 		case EVENT_TYPE_FOCUSLOST:
+ 			return GEvent_makeGFocusEvent(eventType, eventSrc);
+ 			
+ 		case EVENT_TYPE_ACTIONPERFORMED:
+ 			return GEvent_makeGActionEvent(eventType, eventSrc, eventInfo[2]);
+ 				
+ 		default:
+ 			return NULL;
+ 	}
+ }
+ 
+ FUNCTION GEvent_makeGKeyEvent(int eventType, GWidget eventSrc, int keyCode, int modifierCode)
+ {
+ 	GKeyEvent keyEvent = Realize(new GKeyEvent);
+ 	GEvent_initGEvent(keyEvent, eventType, eventSrc);
+ 	keyEvent.keyCode   = keyCode;
+ 	keyEvent.modifierKeyCode = modifierCode;
+ 	
+ 	return keyEvent;
+ }
+
+ FUNCTION GEvent_makeGTouchEvent(int eventType, GWidget eventSrc, int x, int y)
+ {
+ 	GTouchEvent touchEvent = Realize(new GTouchEvent);
+ 	GEvent_initGEvent(touchEvent, eventType, eventSrc);
+ 	touchEvent.x 		 = x;
+ 	touchEvent.y		 = y;
+ 	
+ 	return touchEvent;
+ } 
+ 
+ FUNCTION GEvent_makeGFocusEvent(int eventType, GWidget eventSrc)
+ {
+ 	GFocusEvent focusEvent = Realize(new GFocusEvent);
+ 	GEvent_initGEvent(focusEvent, eventType, eventSrc);
+ 	
+ 	return focusEvent;
+ }
+ 
+ FUNCTION GEvent_makeGActionEvent(int eventType, GWidget eventSrc, String actionId)
+ {
+ 	GActionEvent actionEvent = Realize(new GActionEvent);
+ 	GEvent_initGEvent(actionEvent, eventType, eventSrc);
+ 	actionEvent.actionId  = Realize(actionId);
+ 	
+ 	return actionEvent;
+ }
+
+ FUNCTION GEvent_initGEvent(GEvent this, int eventType, GWidget eventSrc)
+ {
+ 	this.eventType = eventType;
+ 	if(IsNotNull(this.eventSrc)){
+ 		OBJECT_FREE(this.eventSrc);
+ 	}
+ 	this.eventSrc  = Realize(eventSrc);
+ }
+ 
+ FUNCTION GEvent_destroyGEvent(GEvent this)
+ {
+ 	switch(this.eventType){
+ 		case EVENT_TYPE_ACTIONPERFORMED:
+ 			GActionEvent actionEvent = this;
+ 			OBJECT_FREE(actionEvent.actionId);
+ 		
+ 		case EVENT_TYPE_KEYPRESSED:
+ 		case EVENT_TYPE_KEYRELEASED:
+ 		case EVENT_TYPE_TOUCHPRESSED:
+ 		case EVENT_TYPE_TOUCHRELEASED:
+ 		case EVENT_TYPE_TOUCHDRAGED:
+ 		case EVENT_TYPE_FOCUSGAINED:
+ 		case EVENT_TYPE_FOCUSLOST:
+ 			OBJECT_FREE(this.eventSrc);
+ 			break;
+ 			
+ 		default:
+ 			break;
+ 	}
+ 	
+ 	OBJECT_FREE(this);
+ }
+

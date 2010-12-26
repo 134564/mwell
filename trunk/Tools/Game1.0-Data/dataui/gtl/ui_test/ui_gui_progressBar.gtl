@@ -1,0 +1,130 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_progressBar";
+DESCRIPTION "progressBar测试界面"; 
+
+#include "../core/gui/guiInclude.h"
+
+DATA
+{
+	GVMCanvasUnit vmCU;
+	GContainer container;
+	GProgressBar progressbar;	
+	ImageSet pro;
+	ImageSet proBar;
+}
+
+FUNCTION init()
+{
+	pro = Realize(ImageSet_Create("progress.pip", FALSE));
+	proBar = Realize(ImageSet_Create("progress_bar_240.png", FALSE));
+	// 创建canvasUnit以及一个container.
+	create_canvasUnit();
+	
+	// 创建一个label
+	test_progressbar();
+}
+
+//设置progressbar滚动的步长
+FUNCTION cycle()
+{
+	if(progressbar.currentvalue >= progressbar.min && progressbar.currentvalue <= progressbar.max)
+	{
+		progressbar.currentvalue += 2;
+	}
+	else
+	{
+		progressbar.currentvalue = 0;
+	}
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	free vmCU;
+	free container;
+	free progressbar;
+	free pro;
+	free proBar;
+}
+
+FUNCTION processPacket()
+{
+	return FALSE;
+}
+
+FUNCTION event()
+{
+}
+
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(NULL,cuName));
+	// 创建一个container.
+	String containerName = Realize(Object_Create("Container"));
+	container = Realize(GC_makeGContainer(NULL,containerName));
+	free cuName;
+	free containerName;
+	
+	GW_setBound(vmCU, 0, 0, 240, 320);
+	
+	//container.borderColor = 0xff0000;
+	//container.isBackgroundPainted = TRUE;
+	//container.isBorderPainted = TRUE;
+	//GW_setBorderSize(container, 2, 2, 2, 2);
+	//GW_setInsetSize(container, 2, 2, 2, 2);
+	
+	GW_setBound(container, 0, 0, 240, 320);
+	GC_addChildWidget(vmCU, container, 0);
+	
+	container.backgroundColor = 0xe9daaf;			//设置container的背景色
+	container.isBackgroundPainted = TRUE;
+	container.func_handleKey = click_handle;
+	Gui_GW_RequestFocus(container);
+}
+
+/*
+ *progressBar可以显示一个背景图片和一个进度条图片进度绘制的宽度和当前的进度值有关
+ *没有图片资源时用黄色填充滚动条
+ *在cycleImpl中设置progress的滚动情况
+ */
+FUNCTION test_progressbar()
+{
+	String progressbarName = Realize(Object_Create("progressbarName"));					//progressbar的名字
+	progressbar = Realize(GPB_makeProgressBar(NULL,progressbarName, pro, proBar, 1, 0, 100, 0, LAYOUT_ORIENT_HORIZON, 1));
+	
+	free progressbarName;																//释放分配的内存
+	
+	GC_addChildWidget(container, progressbar, 0);										//将progressbar加入container
+	GW_setBound(progressbar, 50, 50, 160, 20);											//设置progressbar的坐标宽高
+	progressbar.isBackgroundPainted = TRUE;	
+	progressbar.foregroundColor = 0xff0000;												//设置progressbar边框
+	
+	//GW_setBorderSize(progressbar, 2, 2, 2, 2);
+	//GW_setInsetSize(progressbar, 2, 2, 2, 2);
+}
+
+FUNCTION click_handle(GWidget this, int eventType, int keyCode, int modifierCode)
+{
+	boolean eventComsumed = FALSE;
+	
+	if (eventType == EVENT_TYPE_KEYRELEASED && keyCode == SOFT_LAST_PRESSED)
+	{
+		CloseUI();
+		int textboxToMain = OpenUI("ui_gui_main");
+		eventComsumed = TRUE;
+	}
+	return eventComsumed;
+}
+
