@@ -1,0 +1,167 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_line";
+DESCRIPTION "gui测试界面"; 
+
+#include "../core/gui/guiInclude.h"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GContainer container;
+
+	GButton btn1;
+	GButton btn2;
+	GButton btn3;
+	GButton btn4;
+	GButton btn5;
+	
+	boolean isDestroyed;
+}
+
+/////////////// common function //////////////////////
+FUNCTION init()
+{
+	// 创建canvasUnit以及一个container.
+	create_canvasUnit();
+	test_lineLayout();
+}
+
+FUNCTION event() {
+}
+
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	OBJECT_FREE(vmCU);
+	OBJECT_FREE(container);
+	OBJECT_FREE(btn1);
+	OBJECT_FREE(btn2);
+	OBJECT_FREE(btn3);
+	OBJECT_FREE(btn4);
+	OBJECT_FREE(btn5);
+}
+
+FUNCTION processPacket()
+{
+}
+
+//////////////// Event handling //////////////////////
+FUNCTION btn1_clicked(GButton this)
+{
+	vmCU.backgroundColor = 0xf0f0f0;
+	isDestroyed = TRUE;
+	
+	return TRUE;
+}
+
+FUNCTION lineToMainclicked(GButton this)
+{
+	container.backgroundColor = 0xFF0f0f0f;
+	CloseUI();
+	int lineToMain = OpenUI("ui_gui_main");
+	return TRUE;
+}
+
+/////////////// create function //////////////////////
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(NULL, cuName));
+	vmCU.isBackgroundPainted = TRUE;
+	vmCU.backgroundColor = 0xFF;
+	// 创建一个container.
+	String containerName = Realize(Object_Create("Container"));
+	container = Realize(GC_makeGContainer(NULL, containerName));
+	free cuName;
+	free containerName;
+	
+	GW_setBound(vmCU, 0, 0, 240, 320);
+	
+	vmCU.backgroundColor = 0x00FF00;
+	vmCU.isBackgroundPainted = TRUE;
+	vmCU.isBorderPainted = TRUE;
+	container.borderColor = 0xff0000;
+	container.backgroundColor = 0x000000FF;
+	container.isBackgroundPainted = TRUE;
+	container.isBorderPainted = TRUE;
+	GW_setBorderSize(container, 2, 2, 2, 2);
+	GW_setInsetSize(container, 2, 2, 2, 2);
+	GW_setBound(container, 20, 20, 200, 280);
+	
+	GC_addChildWidget(vmCU, container, 0);
+}
+
+FUNCTION create_btn()
+{
+	// 创建button.
+	String btn1Text = Realize(Object_Create("North"));
+	String btn2Text = Realize(Object_Create("South"));
+	String btn3Text = Realize(Object_Create("West"));
+	String btn4Text = Realize(Object_Create("East"));
+	String btn5Text = Realize(Object_Create("返回"));
+	
+	btn1 =  Realize(GBtn_makeGButton(NULL, btn1Text, btn1Text, 0, -1, 0));
+	btn2 =  Realize(GBtn_makeGButton(NULL, btn2Text, btn2Text, 0, -1, 0));
+	btn3 =  Realize(GBtn_makeGButton(NULL, btn3Text, btn3Text, 0, -1, 0));
+	btn4 =  Realize(GBtn_makeGButton(NULL, btn4Text, btn4Text, 0, -1, 0));
+	btn5 =  Realize(GBtn_makeGButton(NULL, btn5Text, btn5Text, 0, -1, 0));
+	
+	OBJECT_FREE(btn2Text);
+	OBJECT_FREE(btn1Text);
+	OBJECT_FREE(btn3Text);
+	OBJECT_FREE(btn4Text);
+	OBJECT_FREE(btn5Text);
+	
+	init_gbutton(btn1);
+	init_gbutton(btn2);
+	init_gbutton(btn3);
+	init_gbutton(btn4);
+	init_gbutton(btn5);
+}
+
+FUNCTION test_lineLayout()
+{
+	create_btn();
+	
+	// 垂直layout.
+	GC_setLineLayout(container, LAYOUT_ORIENT_VERTICAL, LAYOUT_ALIGN_HCENTER, 2);
+	// 水平layout.
+	//GC_setLineLayout(container, LAYOUT_ORIENT_HORIZON,  LAYOUT_ALIGN_VMIDDLE, 2);
+	GC_addChildWidget(container, btn1, 0);
+	GC_addChildWidget(container, btn2, 0);
+	GC_addChildWidget(container, btn3, 0);
+	GC_addChildWidget(container, btn4, 0);
+	GC_addChildWidget(container, btn5, 0);
+	//GC_pack(container);
+	GLayout_initRelativeFocus(container);
+	GW_requestFocus(btn3);
+	btn5.btn_clicked = lineToMainclicked;
+}
+
+//////////////////// Init function ////////////////////////
+FUNCTION init_gbutton(GButton btn)
+{
+	btn.borderColor = 0xffff0000;
+	btn.backgroundColor = 0xff006666;
+	btn.isBackgroundPainted = TRUE;
+	btn.isBorderPainted = TRUE;
+	btn.foregroundColor = 0xffff0000;
+	btn.selectionColor = 0xffffffff;
+	btn.isSelectionPainted = TRUE;
+	GW_setBorderSize(btn, 2, 2, 2, 2);
+}
+

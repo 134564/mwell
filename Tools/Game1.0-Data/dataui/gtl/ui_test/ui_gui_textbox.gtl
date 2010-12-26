@@ -1,0 +1,119 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_test";
+DESCRIPTION "gui测试界面"; 
+
+#include "../core/gui/guiInclude.h"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GWindow window;
+	GTextArea textArea;
+
+	int screenHeight;
+	int screenWidth;
+
+	ImageSet res;
+}
+
+FUNCTION init()
+{
+	res = Realize(ImageSet_Create("ui_res240.pip", TRUE));
+	screenHeight = GetScreenHeight();
+	screenWidth = GetScreenWidth();
+	// 创建canvasUnit以及一个container.
+	create_canvasUnit();
+	
+	// 创建一个窗口
+	create_Window();
+	
+	// 创建一个textbox
+	create_TextBox();
+}
+
+FUNCTION event() {
+}
+
+/////////////// common function //////////////////////
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	free vmCU;
+	free (window);
+	free res;
+	free textArea;
+}
+
+FUNCTION processPacket()
+{
+}
+/////////////// create function //////////////////////
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(NULL,cuName));
+	free cuName;
+	GW_setBound(vmCU, 0, 0, screenWidth, screenHeight);
+}
+
+FUNCTION create_Window()
+{
+	String windowName = Realize(Object_Create("window"));
+	String windowCaption = Realize(Object_Create("测试TextBox"));
+	window = Realize(GWnd_makeGWindow(NULL, windowName, windowCaption, res, 10, 11, NULL, NULL));
+	free windowName;
+	free windowCaption;
+	
+	GC_addChildWidget(vmCU, window, 0);
+	GWnd_setBound(window, 0, 0, screenWidth, screenHeight);
+	GW_requestFocus(window.leftButton);
+	window.leftButton.btn_clicked = leftbutton_Clicked;
+	window.rightButton.btn_clicked = rightbutton_Clicked;
+}
+
+FUNCTION leftbutton_Clicked(GButton this)
+{
+	return TRUE;
+}
+
+FUNCTION rightbutton_Clicked(GButton this)
+{
+	CloseUI();
+	int textboxToMain = OpenUI("ui_gui_main");
+	return TRUE;
+}
+
+FUNCTION create_TextBox()
+{
+	String mbName = Realize(Object_Create("TextBox"));
+	String mbText = Realize(Object_Create("提示信息。要不怎么测试她的额济纳来到\n我还想在测试\n其它的行为呢@！@#@、n\n事发地激发的书法家爱对方拉萨觉得佛啊死机发拉健康卡，弗兰克 山东省得分达到、发、@&#……￥*……*&@*&￥*……*@&*&*……#（*#（！*（"));
+	textArea = Realize(GTA_makeGTextArea(NULL, mbName));
+
+	free mbName;
+
+	GWnd_addChildWidget(window, textArea, 0);
+	int width = GWnd_getClientWidth(window);
+	int height = GWnd_getClientHeight(window);
+	GW_setBound(textArea, 0, 0, width, height);
+	textArea.maxH = height;
+	GTA_setText(textArea, mbText);
+	free mbText;
+	textArea.h = height;
+	textArea.isBackgroundPainted = TRUE;
+	textArea.backgroundColor = 0xff0000ff;
+	textArea.foregroundColor = 0xf0ff000f;
+}

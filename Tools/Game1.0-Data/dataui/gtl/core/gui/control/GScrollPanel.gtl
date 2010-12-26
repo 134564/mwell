@@ -1,0 +1,702 @@
+#include "./GScrollPanel.h"
+#include "./GContainer.gtl"
+#include "./GScrollBar.gtl"
+#include "./GIcon.gtl"
+
+ /**
+  * 创建SCrollPanel. 
+  *
+  * @param widgetName		控件名称（客户端调试用）
+  * @param isVBarPaint		垂直滚动条是否绘制
+  * @param isVArrowPaint	垂直方向箭头是否绘制
+  * @param isHBarPaint		水平滚动条是否绘制
+  * @param isHArrowPaint	水平方向箭头是否绘制
+  * 
+  * NOTE: 1.当释放SCrollPanel的内存的时候需要调用GSP_destroyGScrollPanel(GScrollPanel)方法。
+  *		 	 否则会有内存泄漏
+  *		
+  *		  2. 默认情况滚动条都是不绘制的，当用户向contentArea中添加子控件时（最好是容器控件），
+  *			会根据子控件的大小动态调整是否显示滚动条，并重新调整子控件的大小
+  * @see GSP_destroyGScrollPanel
+  */
+FUNCTION GSP_makeGScrollPanel(GScrollPanel this, String widgetName, boolean isVBarPaint, boolean isVArrowPaint, boolean isHBarPaint, boolean isHArrowPaint)
+{
+	// 创建一个SCrollPanel
+	GScrollPanel scrollPanel = NULL;
+	if(IsNotNull(this)){
+		scrollPanel = Realize(Gui_GC_MakeGContainer(this, widgetName));
+	}
+	else{
+		scrollPanel = Realize(Gui_GC_MakeGContainer(new GScrollPanel, widgetName));
+	}
+	
+	// 创建其content和两个ScrollBar.
+	
+	// pp 2010-07-28 资源到时候改成从vector中获取
+//	ImageSet tmpBarSrc = Realize(ImageSet_Create("ui_res320.pip"));
+	scrollPanel.isVArrowPaint = isVArrowPaint;
+	scrollPanel.isVScrollBarPaint = isVBarPaint;
+	scrollPanel.isHArrowPaint = isHArrowPaint;
+	scrollPanel.isHScrollBarPaint = isHBarPaint;
+
+	// 创建垂直ScrollBar.
+	String scrollbarName = Realize(Object_Create(widgetName + "_V_scrollbar"));
+	scrollPanel.vScrollBar = Realize(GSB_makeGScrollBar(NULL, scrollbarName, SCROLLBAR_IVERTICAL, SCROLLBAR_ISHOW_ALWAYS));
+	free (scrollbarName);
+	
+	// 设置scrollBar的属性
+	scrollPanel.vScrollBar.orientation = SCROLLBAR_IVERTICAL;
+	
+	// 创建上下导航箭头
+	String upArrowName = Realize(Object_Create(widgetName + "_upArrow"));
+	scrollPanel.upArrow = Realize(GBtn_makeGButton(NULL, upArrowName, "↑↑", 0, -1, 0));
+	scrollPanel.upArrow.borderLeft = 1;
+	scrollPanel.upArrow.borderRight = 1;
+	scrollPanel.upArrow.borderTop = 1;
+	scrollPanel.upArrow.borderBottom = 1;
+	scrollPanel.upArrow.selectionColor = 0xff0000;
+	scrollPanel.upArrow.isSelectionPainted = TRUE;
+	scrollPanel.upArrow.btn_clicked = GSP_TouchUpArrowButton;
+	free (upArrowName);
+	
+	String downArrowName = Realize(Object_Create(widgetName + "_downArrow"));
+	scrollPanel.downArrow = Realize(GBtn_makeGButton(NULL, downArrowName, "↓↓", 0, -1, 0));
+	scrollPanel.downArrow.borderLeft = 1;
+	scrollPanel.downArrow.borderRight = 1;
+	scrollPanel.downArrow.borderTop = 1;
+	scrollPanel.downArrow.borderBottom = 1;
+	scrollPanel.downArrow.selectionColor = 0xff0000;
+	scrollPanel.downArrow.isSelectionPainted = TRUE;
+	scrollPanel.downArrow.btn_clicked = GSP_TouchDownArrowButton;
+	free (downArrowName);
+
+	// 创建水平ScrollBar.
+	scrollbarName = Realize(Object_Create(widgetName + "_H_scrollbar"));
+	//TODO
+	scrollPanel.hScrollBar = Realize(GSB_makeGScrollBar(NULL, scrollbarName, SCROLLBAR_IHORIZONAL, SCROLLBAR_ISHOW_ALWAYS));
+	free scrollbarName;
+	
+	// 设置scrollBar的属性
+	//TODO
+	scrollPanel.hScrollBar.orientation = SCROLLBAR_IHORIZONAL;
+	
+	// 创建左右导航箭头
+	String leftArrowName = Realize(Object_Create(widgetName + "_leftArrow"));
+	scrollPanel.leftArrow = Realize(GBtn_makeGButton(NULL, leftArrowName, "←", 0, -1, 0));
+	scrollPanel.leftArrow.borderLeft = 1;
+	scrollPanel.leftArrow.borderRight = 1;
+	scrollPanel.leftArrow.borderTop = 1;
+	scrollPanel.leftArrow.borderBottom = 1;
+	scrollPanel.leftArrow.selectionColor = 0xff0000;
+	scrollPanel.leftArrow.isSelectionPainted = TRUE;
+	// 有待完善
+//	scrollPanel.leftArrow.btn_clicked = GSP_TouchLeftArrowButton;
+	free leftArrowName;
+	
+	String rightArrowName = Realize(Object_Create(widgetName + "_rightArrow"));
+	scrollPanel.rightArrow = Realize(GBtn_makeGButton(NULL, rightArrowName, "→", 0, -1, 0));
+	scrollPanel.rightArrow.borderLeft = 1;
+	scrollPanel.rightArrow.borderRight = 1;
+	scrollPanel.rightArrow.borderTop = 1;
+	scrollPanel.rightArrow.borderBottom = 1;
+	scrollPanel.rightArrow.selectionColor = 0xff0000;
+	scrollPanel.rightArrow.isSelectionPainted = TRUE;
+	scrollPanel.rightArrow.btn_clicked = GSP_TouchDownArrowButton;
+	free rightArrowName;
+ 
+	// 创建contentArea
+	String contentName = Realize(Object_Create("scroll_ContentArea"));
+	scrollPanel.contentArea = Realize(GC_makeGContainer(NULL, contentName));
+	OBJECT_FREE(contentName);
+	scrollPanel.contentArea.func_handleTouch = GSP_handlTouchImpl;
+	OBJECT_SET(scrollPanel.contentArea.observer, scrollPanel);
+
+	Gui_GC_AddChildWidget(scrollPanel, scrollPanel.contentArea, 0);
+	
+	Gui_GC_AddChildWidget(scrollPanel, scrollPanel.vScrollBar, 0);
+	//目的，在触摸事件中，需要当前传入点坐标和scrollbar的两个button的坐标进行比较
+	//所以需要通过scrollpanel导出scrollbar
+	// TODO
+	
+	OBJECT_SET(scrollPanel.vScrollBar.incBtn.observer, scrollPanel);
+	OBJECT_SET(scrollPanel.vScrollBar.decBtn.observer, scrollPanel);
+	OBJECT_SET(scrollPanel.vScrollBar.bar.observer, scrollPanel);
+
+	//TODO
+	Gui_GC_AddChildWidget(scrollPanel, scrollPanel.hScrollBar, 0);
+	//scrollPanel.hScrollBar.incBtn.observer = scrollPanel;
+	//scrollPanel.hScrollBar.decBtn.observer = scrollPanel;
+	//scrollPanel.hScrollBar.bar.observer = scrollPanel;
+	
+	Gui_GC_AddChildWidget(scrollPanel, scrollPanel.upArrow, 0);
+	OBJECT_SET(scrollPanel.upArrow.observer, scrollPanel);
+	
+	Gui_GC_AddChildWidget(scrollPanel, scrollPanel.downArrow, 0);
+	OBJECT_SET(scrollPanel.downArrow.observer, scrollPanel);
+	
+	Gui_GC_AddChildWidget(scrollPanel, scrollPanel.leftArrow, 0);
+	OBJECT_SET(scrollPanel.leftArrow.observer, scrollPanel);
+	
+	Gui_GC_AddChildWidget(scrollPanel, scrollPanel.rightArrow, 0);
+	OBJECT_SET(scrollPanel.rightArrow.observer, scrollPanel);
+
+	GSP_setArrowVisibility(scrollPanel, FALSE, FALSE);
+	GSP_setBarVisibility(scrollPanel, FALSE, FALSE);
+
+	//GSP_initGScrollPanel(scrollPanel);
+	scrollPanel.func_paint = GW_paint;
+	scrollPanel.func_cycle = GSP_cycle;
+	scrollPanel.func_destroy = GSP_destroy;
+	scrollPanel.gapCA2Bar = 2;
+	
+	
+	GScrollPanel ret = Object_Create(scrollPanel);
+	free scrollPanel;
+	
+	return ret;
+}
+
+/**
+ * 设置GScrollPanel的导航箭头图片资源.
+ *
+ * @param this			GScrollPanel控件
+ * @param direction		箭头方向参考
+ * 						BLAYOUT_LOC_NORTH // 北
+ * 						BLAYOUT_LOC_SOUTH // 南 
+ * 						BLAYOUT_LOC_WEST  // 西
+ * 						BLAYOUT_LOC_EAST  // 东
+ * @param image			要设置的图片资源
+ * @param index 		图片资源的索引
+ */
+FUNCTION GSP_setArrowImage(GScrollPanel this, int direction, ImageSet image, int index)
+{
+	if (BLAYOUT_LOC_NORTH == direction){
+		GButton btn = this.upArrow;
+	}else if (BLAYOUT_LOC_SOUTH == direction){
+		btn = this.downArrow;
+	}else if (BLAYOUT_LOC_WEST == direction){
+		btn = this.leftArrow;
+	}else if (BLAYOUT_LOC_EAST == direction){
+		btn = this.rightArrow;
+	}
+
+	int w = ImageSet_GetFrameWidth(image, index);
+	int h = ImageSet_GetFrameHeight(image, index);
+	Gui_GW_SetBound(btn, btn.x, btn.y, w, h);
+	free btn.image;
+	btn.image = Realize(image);
+	btn.index = index;
+	btn.isBorderPainted = FALSE;
+	Gui_GL_SetLabelText(btn, NULL);
+}
+
+ /**
+  * 初始化SCrollPanel. 
+  */
+//FUNCTION GSP_initGScrollPanel(GScrollPanel this)
+//{
+//	this.func_paint = GW_paint;
+//	this.func_cycle = GSP_cycle;
+//	this.func_destroy = GSP_destroy;
+//	this.gapCA2Bar = 2;
+//}
+ /**
+  * 外部设置UpArrow的图片资源. 
+  */
+FUNCTION GSP_setUpArrow(GScrollPanel this, ImageSet image, int imageIndex, int trans)
+{
+	this.upArrow.image = image;
+ 	this.upArrow.index = imageIndex;
+ 	this.upArrow.trans = trans;
+}
+ /**
+  * 外部设置DownArrow的图片资源. 
+  */
+FUNCTION GSP_setDownArrow(GScrollPanel this, ImageSet image, int imageIndex, int trans)
+{
+	this.downArrow.image = image;
+ 	this.downArrow.index = imageIndex;
+ 	this.downArrow.trans = trans;
+}
+ /**
+  * SCrollPanel的cycle方法，主要用来处理scrollpanel中滚动效果. 
+  */
+FUNCTION GSP_cycle(GScrollPanel this)
+{
+	if (this.isNeedScroll){
+		GWidget cu = Gui_GW_GetVMCU(this);
+		GWidget focusedWidget = Realize(Gui_GVMCU_GetFocusedWidget(cu));
+		cu = NULL;
+		// 没有焦点控件，直接返回
+		if (IsNull(focusedWidget)){
+			return;
+		}
+		
+		// 没有发生焦点切换直接返回
+		if (IsNull(this.focusedWidget)){
+			this.focusedWidget = focusedWidget;
+		} else {
+			if (this.focusedWidget.clientId != focusedWidget.clientId){
+				// 发生焦点切换时判断是否为scrollpanel的滚动区中的域控，做滚动处理
+				free (this.focusedWidget);
+				this.focusedWidget = focusedWidget;
+				
+				boolean isInScrollpanel = Gui_GC_IsInContainer(this, this.focusedWidget);
+				if (isInScrollpanel){
+					GSP_doScroll(this.focusedWidget);
+				}
+			} else {
+				free focusedWidget;
+			}
+		}
+	}
+}
+ /**
+  * scrollPanel获取焦点事件
+  * 
+  * NOTE：本方法办应用来处理listbox， 现在用来处理key事件。例如，如果用户点击keydown，那么焦点将移动至下一个控件
+  * 根据当前获取焦点的控件和scrollpanell的距离差来判断是否需要进行滚屏操作和scrollbar的滚动
+  */
+FUNCTION GSP_doScroll(GWidget this)
+{
+	int _yOffset = 0; 	
+	if (this.observer)
+	{
+		//if (this.absY == -1 || this.absX == -1)
+		//{
+		int []absPos = Gui_GW_getAbsPos(this);
+		free absPos;
+		//}
+		GScrollPanel tmpScrollPanel = this.observer;
+		if ( this.absY - tmpScrollPanel.contentArea.absY < 0 )
+		{
+			_yOffset = (tmpScrollPanel.contentArea.absY - this.absY) + tmpScrollPanel.vGap;
+			//PrintObject("cntY = " + tmpScrollPanel.contentArea.absY + "; this.absY = " + this.absY);
+		}
+		else if (this.absY + this.h - tmpScrollPanel.contentArea.absY > tmpScrollPanel.contentArea.h)
+		{
+			_yOffset = (tmpScrollPanel.contentArea.absY + tmpScrollPanel.contentArea.h - this.absY - this.h) - tmpScrollPanel.vGap;
+			//PrintObject("cntY = " + tmpScrollPanel.contentArea.absY + "; cntH = " + tmpScrollPanel.contentArea.h + "; this.absY = " + this.absY + "; this.h = " + this.h);
+		}
+		
+		if( _yOffset != 0)
+		{
+			//PrintObject("needscroll y = " + _yOffset);
+			tmpScrollPanel.scrollOffsetY += _yOffset;
+			//PrintObject("offset " + tmpScrollPanel.scrollOffsetY);
+			GSP_setContentOffset(tmpScrollPanel, 0, tmpScrollPanel.scrollOffsetY);
+		}
+		
+		// TODO:水平滚动判断
+	}
+}
+
+ /**
+  * 设置SCrollPanel本身和内部控件的大小和位置. 
+  */
+FUNCTION GSP_setBounds(GScrollPanel this, int x, int y, int width, int height)
+{
+	Gui_GW_SetBound(this, x, y, width, height);
+	int childAreaW = GC_getContentAreaWidth(this);
+	int childAreaH = GC_getContentAreaHeight(this);
+	
+	int scrollAreaX = 0;
+	int scrollAreaY = 0;
+	int scrollAreaW = childAreaW;
+	int scrollAreaH = childAreaH;
+
+	// TODO
+	if (this.isVScrollBarPaint && this.vScrollBar.isVisible){
+		scrollAreaW -= this.vScrollBar.w + this.gapCA2Bar;
+	}
+	
+	if (this.isVArrowPaint){
+		if (this.upArrow.isVisible || this.downArrow.isVisible){
+			scrollAreaY = this.upArrow.h;
+			scrollAreaH -= this.upArrow.h + this.downArrow.h;}
+//		if (this.downArrow.isVisible){
+//			scrollAreaH -= this.downArrow.h;}
+	}
+	
+	// todo: 添加水平scrollbar的相关设置
+	Gui_GW_SetBound(this.contentArea, scrollAreaX, scrollAreaY, scrollAreaW, scrollAreaH); 
+	// TODO
+	GSB_setBound(this.vScrollBar, scrollAreaX + scrollAreaW + this.gapCA2Bar, scrollAreaY, this.vScrollBar.w, scrollAreaH);
+	Gui_GW_SetBound(this.upArrow, scrollAreaX + (scrollAreaW - this.upArrow.w)/2, 0, this.upArrow.w, this.upArrow.h);
+	Gui_GW_SetBound(this.downArrow, scrollAreaX + (scrollAreaW - this.downArrow.w)/2, scrollAreaY + scrollAreaH, this.downArrow.w, this.downArrow.h);
+}
+
+ /**
+  * 设置SCrollPanel的滚动属性. 
+  * 
+  * @param _contentH 滚动控件的总的高度
+  * @param amount 当点中一次滚动箭头时的滚动单元（像素）.
+  */
+ 
+FUNCTION GSP_setScrollAmount(GScrollPanel this, int _contentH, int amount)
+{
+	if (this.vScrollBar)
+	{
+		//scrollpanel的container的总长度
+		this.vScrollBar.scrollItemsH = _contentH;
+		//scrollpanle的container的可滚动长度
+		this.vScrollBar.nNeedOffSetY = _contentH - this.contentArea.h;
+		//scrollpanel的containarea的滚动步长
+		this.vScrollBar.scrollUnite = amount;
+		this.vScrollBar.barscrollunit = amount;
+		//scrollbar.bar的总长度
+		int barAmount = this.vScrollBar.h - this.vScrollBar.incBtn.h - this.vScrollBar.decBtn.h - this.vScrollBar.borderBottom - this.vScrollBar.borderTop - this.vScrollBar.insetBottom -this.vScrollBar.insetTop;
+		
+		/*
+		*scrollbar.bar可滚动长度
+		*this.vScrollBar.scrollBarAmount = (scrollpanel的可滚动区域)*(scrollbar.bar的总长度)/(scrollpanel的总长度);
+		*/
+		this.vScrollBar.scrollBarAmount = this.vScrollBar.nNeedOffSetY*barAmount/this.vScrollBar.scrollItemsH;
+		/*
+		*scrollbar.bar的滚动步长
+		*scrollbar.bar的滚动步长 = scrollpanel.contaner的移动步长*scrollbar.bar的可移动区域/scrollpanel.contaner的可移动区域
+		*/
+		if (this.vScrollBar.nNeedOffSetY)
+		{
+			this.vScrollBar.barunit = amount*this.vScrollBar.scrollBarAmount/this.vScrollBar.nNeedOffSetY;
+		}
+
+		//滚动吧的长度
+		//this.vScrollBar.bar.h = (barAmount * (this.vScrollBar.h - this.contentArea.borderTop - this.contentArea.borderBottom - this.contentArea.insetTop - this.contentArea.insetBottom)) / _contentH;//滚动条长度
+		this.vScrollBar.bar.h = barAmount - this.vScrollBar.scrollBarAmount;
+	}
+}
+
+ /**
+  * 设置SCrollPanel的滚动区域. 
+  * 
+  * @param _content 要作为滚动区域的容器控件.
+  */
+FUNCTION GSP_setContentArea(GScrollPanel this, GContainer _content, boolean destroyOld)
+{
+	if (this.contentArea)
+	{
+		Gui_GW_SetBound(_content, this.contentArea.x, this.contentArea.y, this.contentArea.w, this.contentArea.h);
+		if (destroyOld) {
+			Gui_GW_destroyGWidget(this.contentArea);
+		} else {
+			Gui_GC_RemoveChildWidget(this, this.contentArea);
+		}
+		free this.contentArea;
+	}
+
+	this.contentArea = _content;
+	Gui_GC_AddChildWidget(this, _content, 0);
+}
+
+ /**
+  * 设置SCrollPanel的滚动区域大小. 
+  * 
+  * @param x 滚动区域相对scrollpanel中的x坐标.
+  * @param y 滚动区域相对scrollpanel中的y坐标.
+  * @param width 滚动区域的宽度.
+  * @param height 滚动区域的高度.
+  */
+FUNCTION GSP_setContentBound(GScrollPanel this, int x, int y, int width, int height)
+{
+	if (this.contentArea)
+	{
+		Gui_GW_SetBound(this.contentArea, x, y, width, height);
+
+		// 设置上导航箭头在 滚动区域正上方
+		this.upArrow.x = x + (width - this.upArrow.w)/2;
+		this.upArrow.y = y - this.upArrow.h;
+
+		// 设置下导航箭头在 滚动区域正下方
+		this.downArrow.x = x + (width - this.downArrow.w)/2;
+		this.downArrow.y = y + height;
+
+		// 设置滚动条位置 
+		// TODO
+		
+		GSB_setBound(this.vScrollBar, x + width, y, this.vScrollBar.w, height);
+		GSB_setBound(this.hScrollBar, x, y + height, width, this.hScrollBar.h);
+		
+	}
+}
+
+ /**
+  * 通过scrollpanel设置滚动区域中控件的偏移量和滚动把的便宜量. 
+  * 
+  * @param _content 要作为滚动区域的容器控件.
+  */
+FUNCTION GSP_setContentOffset(GScrollPanel this, int xOffset, int yOffset)
+{
+	Gui_GC_SetChildrenOffset(this.contentArea, xOffset, yOffset);
+	if (this.vScrollBar)
+	{
+		int maxScrollH = this.vScrollBar.scrollItemsH - this.contentArea.h;
+		if (yOffset <= 0 - maxScrollH)
+		{
+			if (this.isVArrowPaint && this.upArrow.isVisible != TRUE){
+				Gui_GW_SetVisible(this.upArrow, TRUE);
+			}
+			if (this.isVArrowPaint && this.downArrow.isVisible != FALSE){
+				Gui_GW_SetVisible(this.downArrow, FALSE);
+			}
+		}
+		else if (yOffset >= 0)
+		{
+			if (this.isVArrowPaint && this.upArrow.isVisible != FALSE){
+				Gui_GW_SetVisible(this.upArrow, FALSE);
+			}
+			if (this.isVArrowPaint && this.downArrow.isVisible != TRUE){
+				Gui_GW_SetVisible(this.downArrow, TRUE);
+			}
+		}
+		else
+		{
+			if (this.isVArrowPaint && this.upArrow.isVisible != TRUE){
+				Gui_GW_SetVisible(this.upArrow, TRUE);
+			}
+			if (this.isVArrowPaint && this.downArrow.isVisible != TRUE){
+				Gui_GW_SetVisible(this.downArrow, TRUE);
+			}
+		}
+		GSB_setScrollBarOffset(this.vScrollBar, xOffset, yOffset);
+	}
+}
+
+ /**
+  * 向scrollPanel的contentArea控件中添加滚动控件. 
+  * 
+  * NOTE：不能直接调用Gui_GC_AddChildWidget方法，需先调用一次此方法，如果返回值为TRUE，
+  *		需要重新做下pack操作，因为如果需要滚动条，滚动区域大小会变小
+  *
+  * 	 在本方法中，会根据添加控件的大小是否需要滚动条而返回一个boolean值
+  *		从而可能需要重新设置子控件的一些大小属性，比如宽度等
+  *    
+  *     目前只做了垂直滚动条部分，所以返回值为TRUE，表示需要垂直滚动条
+  *		返回值为FALSE，标志不需要滚动条
+  */
+FUNCTION GSP_isScrollBarNeeded(GScrollPanel this, int _scrollWidgetsH)
+{
+	if (this.contentArea.h < _scrollWidgetsH)
+	{
+		// TODO
+		GSP_setContentBound(this, 0, 0, this.contentArea.w - this.vScrollBar.w, this.contentArea.h);
+		GSP_setBarVisibility(this, FALSE, TRUE);
+		GSP_setArrowVisibility(this, FALSE,  TRUE);
+		this.isNeedScroll = TRUE;
+
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+ /**
+  * scrollPanel上导航键的touchpress相应
+  */
+FUNCTION GSP_TouchUpArrowButton(GButton this)
+{
+	GScrollPanel tmpscrollPanel = Realize(this.observer);
+	int temClick = GSB_UpButtonTouched(tmpscrollPanel.vScrollBar.decBtn);
+	free tmpscrollPanel;
+
+	return TRUE;
+}
+
+/**
+  * scrollPanel下导航键的touchpress相应
+  */
+FUNCTION GSP_TouchDownArrowButton(GButton this)
+{
+	GScrollPanel tmpscrollPanel = Realize(this.observer);
+	int temClick = GSB_DownButtonTouched(tmpscrollPanel.vScrollBar.incBtn);
+	free tmpscrollPanel;
+	
+	return TRUE;
+} 
+
+/**
+  * scrollPanel的container的touchpress相应
+  */
+FUNCTION GSP_handlTouchImpl(GContainer this, int eventType, int x, int y)
+{
+	GScrollPanel tmpScrollPanel = this.observer;
+	boolean eventConsumed = FALSE;
+	
+	if (tmpScrollPanel.isNeedScroll){
+		switch(eventType)
+	 	{
+	 		case EVENT_TYPE_TOUCHPRESSED:
+	 		{
+	 			eventConsumed = GSP_handleTouchPressed(this, eventType, x, y);
+	 			break;
+	 		}
+	 		case EVENT_TYPE_TOUCHDRAGED:
+	 		{
+	 			eventConsumed = GSP_handleTouchDraged(this, eventType, x, y);
+	 			break;
+	 		}
+	 		default:
+	 		break;
+	 	}
+	}
+
+	return eventConsumed;
+}
+
+/**
+  * scrollPanel的EVENT_TYPE_TOUCHPRESSED
+  */
+FUNCTION GSP_handleTouchPressed(GContainer this, int evenType, int x, int y)
+{
+	boolean eventConsume = FALSE;
+	GScrollPanel parent = this.observer;
+	if(NULL != parent)
+	{
+		// TODO
+		
+		int[] prePos = Gui_GUI_getCurrentTouchPos();
+		parent.vScrollBar.oldX = prePos[0];
+		parent.vScrollBar.oldY = prePos[1];
+		parent.vScrollBar.bTraOffSet = FALSE;
+		if(parent.vScrollBar.bar.absY == parent.vScrollBar.decBtn.absY + parent.vScrollBar.decBtn.h || parent.vScrollBar.bar.absY == parent.vScrollBar.decBtn.absY + parent.vScrollBar.decBtn.h + parent.vScrollBar.scrollBarAmount)
+		{
+			parent.vScrollBar.bTraOffSet = TRUE;
+		}
+		
+		parent.vScrollBar.nTraOffSet = parent.vScrollBar.bar.absY - parent.vScrollBar.decBtn.absY - parent.vScrollBar.decBtn.h;
+	}
+	return TRUE;
+}
+
+
+
+/**
+  * scrollPanel的EVENT_TYPE_TOUCHDRAGED
+  */
+FUNCTION GSP_handleTouchDraged(GContainer this, int evenType, int x, int y)
+{
+	// TODO
+	//return TRUE;
+	if(this.bMoved == TRUE)
+	{
+		return TRUE;
+	}
+	boolean eventConsume = FALSE;
+	GScrollPanel parent = this.observer;
+	int offSety = y - parent.vScrollBar.oldY;
+	{
+		parent.scrollOffsetY += offSety;
+		if(parent.scrollOffsetY < 0 - parent.vScrollBar.nNeedOffSetY)
+		{
+			parent.scrollOffsetY = 0 - parent.vScrollBar.nNeedOffSetY;
+		}else if(parent.scrollOffsetY > 0){
+			parent.scrollOffsetY = 0;
+		}
+		GSP_setContentOffset(parent, 0, parent.scrollOffsetY);
+	}
+	
+	return TRUE;
+}
+
+/**
+  * 设置箭头的显示状态
+  * 
+  * @param this		要设置箭头显示状态的scrollpanel
+  * @param hArrowVisible	水平方向上的箭头显示状态（TRUE:显示;FALSE：不显示）
+  * @param vArrowVisible	垂直方向上的箭头显示状态（TRUE:显示;FALSE：不显示）
+  */
+FUNCTION GSP_setArrowVisibility(GScrollPanel this, boolean hArrowVisible, boolean vArrowVisible)
+{
+	if (IsNotNull(this.leftArrow)){
+		this.leftArrow.isVisible = FALSE;}
+	if (IsNotNull(this.rightArrow)){
+		this.rightArrow.isVisible = hArrowVisible;}
+	if (IsNotNull(this.upArrow)){
+		this.upArrow.isVisible = vArrowVisible;
+		}
+	if (IsNotNull(this.downArrow)){
+		this.downArrow.isVisible = vArrowVisible;}
+}
+
+/**
+  * 设置滚动条的显示状态
+  * 
+  * @param this		要设置滚动条显示状态的scrollpanel
+  * @param hBarVisible	水平滚动条的显示状态（TRUE:显示;FALSE：不显示）
+  * @param vBarVisible	垂直滚动条的显示状态（TRUE:显示;FALSE：不显示）
+  */
+FUNCTION GSP_setBarVisibility(GScrollPanel this, boolean hBarVisible, boolean vBarVisible)
+{
+	if (IsNotNull(this.hScrollBar)){
+		this.hScrollBar.isVisible = hBarVisible;
+		this.hScrollBar.bar.isVisible = hBarVisible;
+		this.hScrollBar.decBtn.isVisible = hBarVisible;
+		this.hScrollBar.incBtn.isVisible = hBarVisible;
+	}
+	
+	if (IsNotNull(this.vScrollBar)){
+		this.vScrollBar.isVisible = vBarVisible;
+		this.vScrollBar.bar.isVisible = vBarVisible;
+		this.vScrollBar.decBtn.isVisible = vBarVisible;
+		this.vScrollBar.incBtn.isVisible = vBarVisible;
+	}
+}
+
+FUNCTION GSP_addWidget(GScrollPanel this, GWidget widget)
+{
+	if(NULL != this && NULL != widget)
+	{
+		Gui_GC_AddChildWidget(this.contentArea, widget, 0);
+	}
+}
+
+FUNCTION GSP_removeWidget(GScrollPanel this, GWidget widget, boolean destroy)
+{
+	if(NULL != this && NULL != widget)
+	{
+		if (destroy) {
+			Gui_GW_destroyGWidget(widget);
+		} else {
+			Gui_GC_RemoveChildWidget(this.contentArea, widget);
+		}
+	}
+}
+
+//FUNCTION GSP_getContentArea(GScrollPanel this)
+//{
+//	if(NULL != this)
+//	{
+//		if(NULL != this.contentArea)
+//		{
+//			return Realize(this.contentArea);
+//		}
+//		else
+//		{
+//			return NULL;
+//		}
+//	}
+//}
+
+ /**
+  * 销毁SCrollPanel. 
+  * 
+  * 先销毁ScrollPanel的成员变量，然后再销毁自身
+  */
+FUNCTION GSP_destroy(GScrollPanel this)
+{
+	OBJECT_FREE(this.contentArea);
+	OBJECT_FREE(this.vScrollBar);
+	OBJECT_FREE(this.hScrollBar);
+	OBJECT_FREE(this.upArrow);
+	OBJECT_FREE(this.downArrow);
+	OBJECT_FREE(this.leftArrow);
+	OBJECT_FREE(this.rightArrow);
+	OBJECT_FREE(this.focusedWidget);
+	
+	OBJECT_FREE(this.leftWidget);
+	OBJECT_FREE(this.rightWidget);
+	OBJECT_FREE(this.upWidget);
+	OBJECT_FREE(this.downWidget);
+	OBJECT_FREE(this.observer);
+	OBJECT_FREE(this);
+}

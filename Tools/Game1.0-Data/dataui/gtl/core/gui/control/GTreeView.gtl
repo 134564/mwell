@@ -1,0 +1,203 @@
+#include "./GTreeView.h"
+#include "./GContainer.gtl"
+#include "../layout/GLayoutData.gtl"
+
+ //------------------------ public --------------------------------------------
+/**
+ * 创建GTreeView.
+ *
+ * @param widgetName	控件名（用于客户端调试用）
+ * @param _trees		树结构数组（支持临时变量）
+ */
+ FUNCTION GTV_makeGTreeView(String widgetName, GTree[] _trees)
+ {
+ 	GTreeView tv = Realize(Gui_GC_MakeGContainer(new GTreeView, widgetName));
+ 	tv.count = Length(_trees);
+ 	tv.trees = Realize(Vector_Create());
+ 	for (int i=0; i<tv.count; i++){
+ 		Vector_Add(tv.trees, _trees[i]);
+ 	}
+ 	
+ 	GTV_initGTreeView(tv);
+ 	GTV_initTrees(tv);
+ 	
+ 	GTreeView ret = Object_Create(tv);
+	free tv;
+	return ret;
+ }
+ 
+ /**
+ * 初始化GTreeView.
+ */
+ FUNCTION GTV_initGTreeView(GTreeView this)
+ {
+ 	//GC_initGContainer(this);
+ 	Gui_GC_SetLineLayout(this, LAYOUT_ORIENT_VERTICAL, LAYOUT_ALIGN_HLEFT, 1);
+ 	this.func_handleKey = GTV_hanleKey;
+ 	this.func_paint = GW_paint;
+	this.func_destroy = GW_destroy;
+ }
+ 
+ /**
+ * 销毁GTreeView.
+ *
+ * NOTE: 		这种递归如果遇到TREE很深的话可能会有函数栈溢出的异常(需要改进)
+ */
+ FUNCTION GTV_destroy(GTreeView this)
+ {
+ 	if (IsNotNull(this))
+ 	{
+ 		Gui_GC_Clear(this, FALSE);
+ 		if(IsNotNull(this.trees)){
+ 			int len = Vector_Size(this.trees);
+ 			for(int i=0; i<len; i++){
+ 				GTree tmp = Realize(Vector_Get(this.trees, i));
+ 				GTV_deleteTree(tmp);
+ 				free tmp;
+ 			}
+ 			OBJECT_FREE(this.trees);
+ 		}
+		GW_destroy(this);
+ 	}
+ }
+ 
+ // 释放GTree		// 这种递归如果遇到TREE很深的话可能会有函数栈溢出的异常
+ FUNCTION GTV_deleteTree(GTree this){
+ 	if(IsNotNull(this.root)){
+ 		Gui_GW_destroyGWidget(this.root);
+ 	}
+ 	
+ 	if(IsNotNull(this.children)){
+ 		int len = Vector_Size(this.children);
+ 		for(int i=0; i<len; i++){
+ 			GTree tmp = Realize(Vector_Get(this.children, i));
+ 			GTV_deleteTree(tmp);
+ 			free tmp;
+ 		}
+ 		OBJECT_FREE(this.children);
+ 	}
+ }
+ 
+ /**
+ * 初始化GTreeView的树控件.
+ */
+ FUNCTION GTV_initTrees(GTreeView this)
+ {
+ 	_addTreeWidgets(this, this.trees, 0, this.indentation);
+ 	GLayout_initRelativeFocus(this);
+ }
+ 
+ FUNCTION GTV_hanleKey(GTreeView this, int eventType, int keyCode, int modifierCode)
+ {
+ 	if (EVENT_TYPE_KEYPRESSED == eventType && (KEY_NUM5_PRESSED == keyCode || FIRE_PRESSED == keyCode)){
+		GWidget cu = Realize(Gui_GW_GetVMCU(this));
+		GWidget focusedWidget = Realize(Gui_GVMCU_GetFocusedWidget(cu));
+		free cu;
+		
+//		if (Gui_GC_IsInContainer(this, focusedWidget) && IsNotNull(focusedWidget)){
+//			focusedWidget.
+//	 		GTV_update(this);
+//		 	Gui_GW_RequestFocus(focusedWidget);
+//		}
+	 	for (int i=0; i< this.count; i++)
+	 	{
+	 		GTree tmpTr = Realize(Vector_Get(this.trees, i));
+	 		boolean isExpand = _exchange_Expand(tmpTr, focusedWidget);
+	 		free tmpTr;
+	 		if (isExpand){
+	 			break;
+	 		}
+	 	}
+
+	 	if (isExpand){
+	 		GTV_update(this);
+		 	Gui_GW_RequestFocus(focusedWidget);
+	 	}
+	 	free focusedWidget;
+	 	
+	 	return TRUE;
+ 	}
+ 	
+ 	return FALSE;
+ }
+ 
+ /**
+  * 更新GTreeView控件
+  */
+ FUNCTION GTV_update(GTreeView this){
+ 	Gui_GC_SetChildrenOffset(this, 0, 0);
+	Gui_GC_Clear(this, FALSE);
+	_addTreeWidgets(this, this.trees, 0, this.indentation);
+ 	GLayout_initRelativeFocus(this);
+ }
+  
+ /**
+ * 当按下左软键时改变焦点控件的展合状态.
+ */
+ FUNCTION _exchange_Expand(GTree this, GWidget focusedWidget)
+ {
+ 	if (IsNotNull(this)){
+ 		if (focusedWidget.clientId == this.root.clientId){
+ 			if (this.isNeedExpand){
+ 				this.isNeedExpand = FALSE;
+ 			}else{
+ 				this.isNeedExpand = TRUE;
+ 			}
+ 			return TRUE;
+ 		}
+ 	}
+ 	
+ 	boolean isExpanded;
+ 	int childrenCount = 0;
+ 	if (IsNotNull(this.children)){
+ 		childrenCount = Vector_Size(this.children);
+ 	}
+ 	
+	for (int i=0; i< childrenCount; i++)
+ 	{
+ 		GTree tmpTr = Realize(Vector_Get(this.children, i));
+ 		if (IsNotNull(tmpTr.root)){
+	 		if (focusedWidget.clientId == tmpTr.root.clientId){
+	 			if (tmpTr.isNeedExpand){
+	 				tmpTr.isNeedExpand = FALSE;
+	 			}else{
+	 				tmpTr.isNeedExpand = TRUE;
+	 			}
+	 			isExpanded = TRUE;
+	 			break;
+	 		}
+	 		else{
+	 			isExpanded = _exchange_Expand(tmpTr, focusedWidget);
+	 			if (isExpanded){
+	 				break;
+	 			}
+	 		}
+ 		}
+ 	}
+ 	free tmpTr;
+ 	
+ 	return isExpanded;
+ }
+ 
+ /**
+ * 向GContainer中添加树控件.
+ */
+ FUNCTION _addTreeWidgets(GContainer this, Vector _trees, int leftInset, int indentation)
+ {
+ 	if (IsNotNull(_trees))
+ 	{
+ 		int len = Vector_Size(_trees);
+ 		for (int i=0; i<len; i++)
+ 		{
+ 			boolean isNeedExpand = FALSE;
+ 			GTree tmpTree = Realize(Vector_Get(_trees, i));
+ 			tmpTree.root.insetLeft = leftInset;
+ 			Gui_GC_AddChildWidget(this, tmpTree.root, 0);
+ 			isNeedExpand = tmpTree.isNeedExpand;
+ 			if (isNeedExpand && IsNotNull(tmpTree.children)){
+ 				_addTreeWidgets(this, tmpTree.children, leftInset + indentation, indentation);
+ 			}
+ 			free tmpTree;
+ 		}
+ 	}
+ }

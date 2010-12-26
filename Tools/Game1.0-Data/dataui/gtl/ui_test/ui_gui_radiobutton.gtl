@@ -1,0 +1,154 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_test_radiobutton";
+DESCRIPTION "gui radiobutton的测试脚本"; 
+
+/**
+ * 所有GUI相关包含在该头文件中.
+ */
+#include "../core/gui/guiInclude.h"
+
+DATA{
+	GVMCanvasUnit  vmCU;			/* 保存GVMCanvasUnit脚本结构数组 */
+	GRadioButton[] radiobtnArray;   /* 保存GRadioButton脚本结构数组   */
+	GButtonGroup   radioBtnGrp;		/* RadioBtn组脚本结构数组 */
+	GButton		   controlBtn;		/* 保存GButton脚本结构数组 */
+	GContainer   containerOne;
+}
+
+/** 
+ * 通用函数, 所有的UI脚本都必须实现init, event, cycle, cycleUI, 
+ * 以及processPacket和destroy函数.
+ */
+FUNCTION init()
+{
+	/* 创建以及初始化cu */
+	initCanvasUnit();
+	
+	/* 创建5个radioButton以及一个用于演示删除控件的button. */
+	initRadioBtns();
+}
+
+FUNCTION event()
+{
+}
+
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+//	/* 右软键关闭该脚本 */
+//	if(KeyPressed(SOFT_LAST_PRESSED, TRUE)){
+//		CloseUI();
+//		int radioButtonToMain = OpenUI("ui_gui_main");
+//	}
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	/**
+	 * 这里调用free来释放引用, 无需调用析构函数来显式析构, 因为
+	 * 处于CanvasUnit的托管下, 在该函数调用前会自动进行析构.
+	 */
+	free (radiobtnArray);
+	free (vmCU);
+	free (controlBtn);
+	free containerOne;
+	/**
+	 * 直接调用析构函数来删除radioButton所属的组,
+	 * 这里不能仅仅free, 必须调用析构来释放资源, 否则会引起内存泄漏.
+	 */
+	GBtnGrp_destroy(radioBtnGrp);
+	int t = 0;
+}
+
+FUNCTION processPacket()
+{
+}
+
+/**
+ * 初始化相关.
+ */
+FUNCTION initCanvasUnit()
+{
+	vmCU = Realize(GVMCU_MakeGVMCU(NULL, "Canvas_Unit"));
+	vmCU.isBackgroundPainted = TRUE;
+	vmCU.backgroundColor = 0xff0000FF;
+	GW_setBound(vmCU, 0, 0, 240, 320);
+	containerOne = Realize(GC_makeGContainer(NULL, "testContainer"));
+	GC_addChildWidget(vmCU, containerOne, 0);
+	
+	Gui_GW_SetBound(containerOne, 20, 20, 200, 280);
+	Gui_GW_RequestFocus(containerOne);
+	containerOne.func_handleKey = cu_handleKey;
+}
+
+FUNCTION initRadioBtns()
+{
+	radiobtnArray = new GRadioButton[5]; /* 创建5个radioButton */
+	radioBtnGrp =  Realize(GBtnGrp_makeGButtonGroup("radioBoxGrp"));
+	for(int i = 0; i < 5; i++)
+	{
+		radiobtnArray[i] = (GRB_makeRadioButton(NULL, "RadioBtn" + i, "rButton" + i));
+		GC_addChildWidget(containerOne, radiobtnArray[i], -1); /* 将radioButton添加为CU的子控件 */
+		radiobtnArray[i].x = 50;
+		radiobtnArray[i].y = i* 40;
+		GRB_setGroup(radiobtnArray[i], radioBtnGrp);
+		radiobtnArray[i].backgroundColor = 0xffff0000;
+		radiobtnArray[i].isBackgroundPainted = TRUE;
+		radiobtnArray[i].foregroundColor = 0xff00ff00;
+	
+		/* 设置第一个控件的状态为选中状态 */
+		if(i == 0){
+			
+			radiobtnArray[i].isSelected = TRUE;
+		}
+	}
+	
+	/* 创建一个button, 点击用于演示如何删除上面生成的5个radioButton */
+	controlBtn = Realize(GBtn_makeGButton(NULL, "demoButton", "删除", NULL, -1, 0));
+	controlBtn.x = 50;
+	controlBtn.y = 5* 40;
+	controlBtn.btn_clicked = btn_getRidOfSth;
+	controlBtn.backgroundColor = 0xffff0000;
+	controlBtn.isBackgroundPainted = TRUE;
+	controlBtn.foregroundColor = 0xff00ff00;
+	GC_addChildWidget(vmCU, controlBtn, -1);
+}
+
+/**
+ * 演示删除控件.
+ */
+FUNCTION btn_getRidOfSth(GButton this){
+	if(IsNotNull(this)){
+		if(IsNotNull(radiobtnArray)){
+			int length = Length(radiobtnArray);
+			for(int i = 0; i < length; i++){
+				GButton assKickBtn = Realize(Object_Create(radiobtnArray[i]));
+				Gui_GW_destroyGWidget(assKickBtn);
+				OBJECT_FREE(assKickBtn);
+				radiobtnArray[i] = NULL; /* 赋空释放一次控件脚本结构数组引用 */
+			}
+		}
+	}
+	
+	/* 必须返回一个bool型, 否则程序会崩溃 */
+	return TRUE;
+}
+
+FUNCTION cu_handleKey(GWidget this, int eventType, int keyCode, int modifierCode){
+	if (EVENT_TYPE_KEYRELEASED == eventType && SOFT_LAST_PRESSED == keyCode){
+		CloseUI();
+		int textboxToMain = OpenUI("ui_gui_main");
+		return TRUE;
+	}
+	
+	return FALSE;
+}

@@ -1,0 +1,268 @@
+/* All Rights Reserved (C) PearlInPalm Co., Ltd
+ * 
+ * @file 	GWidget.gtl
+ * @description 实现GWidget.
+ * @author David.Wan
+ * @date   2010-06
+ */
+#include "./GWidget.h"
+
+//	公共接口
+//	public:
+ 
+/**
+ * 构造函数.
+ * 该函数返回的实例已经进行了一次Realize, 使用时无需
+ * 进行Realize.
+ */ 
+FUNCTION GW_makeGWidget(GWidget this, String widgetName)
+{
+	GWidget widget = NULL;
+	if(IsNotNull(this)){
+		widget = Realize(Gui_GW_makeGWidget(this, widgetName));
+	}
+	else{
+		widget = Realize(Gui_GW_makeGWidget(new GWidget, widgetName));
+	}
+	//GW_initGWidget(widget);
+	this.func_paint = GW_paint;
+	this.func_destroy = GW_destroy;
+	
+	GWidget ret = Object_Create(widget);
+	free widget;
+	
+	return ret;
+}
+
+/**
+ * 使当前控件无效.
+ * 
+ * 控件无效后，绘制时会重新计算控件大小等操作
+ */
+FUNCTION GW_invalidate(GWidget this)
+{
+	Gui_GW_Invalidate(this);
+}
+
+/**
+ * 使当前控件有效.
+ */
+FUNCTION GW_validate(GWidget this)
+{
+	Gui_GW_Validate(this);
+}
+
+/**
+ * 设置当前控件的显示状态.
+ */
+FUNCTION GW_SetVisible(GWidget gWidget,boolean isVisible){
+	Gui_GW_SetVisible(gWidget, isVisible);
+}
+
+/**
+ * 请求成为容器控件中的顶层控件.
+ */
+FUNCTION GW_requestToTop(GWidget this)
+{
+	Gui_GW_RequestToTop(this);
+}
+
+/**
+ * 请求成为容器控件中的底层控件.
+ */
+FUNCTION GW_requestToBottom(GWidget this)
+{
+	Gui_GW_RequestToBottom(this);
+}
+
+/**
+ * 请求成为焦点.
+ * @param this 要请求成为焦点的控件.
+ */
+FUNCTION GW_requestFocus(GWidget this)
+{
+	Gui_GW_RequestFocus(this);
+}
+
+/**
+ * 判断当前控件是否获取焦点.
+ * @param this 要判断焦点的控件.
+ *
+ * @return	TRUE 是焦点控件，FALSE 非焦点控件
+ */
+ FUNCTION GW_isFocused(GWidget this)
+ {
+ 	return Gui_GW_IsFocused(this);
+ }
+ 
+ /**
+ * 获得当前控件所属的GVMCanvasUnit.
+ * @param this 要获取所属GVMCanvasUnit的控件.
+ *
+ * @return	找到则返回GVMCanvasUnit，否则返回null;
+ */
+ FUNCTION GW_getVMCU(GWidget this)
+ {
+ 	return Gui_GW_GetVMCU(this);
+ }
+ 
+/**
+ * 设置widget的bound.
+ * @param x bound的x坐标.
+ * @param y buund的y坐标.
+ * @param width  bound的宽度.
+ * @param height bound的高度.
+ */
+FUNCTION GW_setBound(GWidget this, int x, int y, int width, int height)
+{
+	Gui_GW_SetBound(this, x, y, width, height);
+}
+
+/**
+ * 绘制该控件, 默认情况下调用C++/Java代码进行绘制.
+ */
+FUNCTION GW_paint(GWidget this)
+{
+	Gui_GW_PaintWidget(this);
+}
+
+/**
+ * 设置该控件的borderSize.
+ */
+FUNCTION GW_setBorderSize(GWidget this, int borderLeft, int borderTop, int borderRight, int borderBottom)
+{
+	this.borderLeft = borderLeft;
+	this.borderTop = borderTop;
+	this.borderRight = borderRight;
+	this.borderBottom = borderBottom;
+}
+
+/**
+ * 设置该控件的InsetSize.
+ */
+FUNCTION GW_setInsetSize(GWidget this, int insetLeft, int insetTop, int insetRight, int insetBottom)
+{
+	this.insetLeft = insetLeft;
+	this.insetTop = insetTop;
+	this.insetRight = insetRight;
+	this.insetBottom = insetBottom;
+}
+
+/**
+ * 设置控件获取焦点后,按向下键焦点转移至的控件.
+ */
+FUNCTION GW_setRelativeDownWidget(GWidget this, GWidget downWidget)
+{
+	free this.downWidget;
+	this.downWidget = Realize(Object_Create(downWidget));
+	free downWidget.upWidget;
+	downWidget.upWidget = Realize(Object_Create(this));
+}
+
+/**
+ * 设置控件获取焦点后,按向上键焦点转移至的控件.
+ */
+FUNCTION GW_setRelativeUpWidget(GWidget this, GWidget upWidget)
+{
+	free this.upWidget;
+	this.upWidget = Realize(Object_Create(upWidget));
+	free upWidget.downWidget;
+	upWidget.downWidget = Realize(Object_Create(this));
+}
+
+/**
+ * 设置控件获取焦点后,按向左键焦点转移至的控件.
+ */
+FUNCTION GW_setRelativeLeftWidget(GWidget this, GWidget leftWidget)
+{
+	free this.leftWidget;
+	this.leftWidget = Realize(Object_Create(leftWidget));
+	free leftWidget.rightWidget;
+	leftWidget.rightWidget = Realize(Object_Create(this));
+}
+
+/**
+ * 设置控件获取焦点后,按向右键焦点转移至的控件.
+ */
+FUNCTION GW_setRelativeRightWidget(GWidget this, GWidget rightWidget)
+{	
+	free this.rightWidget;
+	this.rightWidget = Realize(Object_Create(rightWidget));
+	free rightWidget.leftWidget;
+	rightWidget.leftWidget = Realize(Object_Create(this));
+}
+
+/**
+ * 获取控件的绝对坐标.
+ *
+ * @return int[]: [0]=>x [1]=>y
+ */
+FUNCTION GW_getAbsPos(GWidget this)
+{
+	return Gui_GW_getAbsPos(this);
+}
+
+/**
+ * 获取控件的clip区域, 如果控件没有越出父控件所在的
+ * 范围, 则控件的clip区域即为其bound, 否则的话, 返回
+ * 的是控件的bound和父控件控件范围内的交集部分.
+ * @return int[]: [0]=>clip区域的绝对x坐标;
+ *				  [1]=>clip区域的绝对y坐标;
+ *				  [2]=>clip区域的宽度;
+ *				  [3]=>clip区域的高度;
+ */
+FUNCTION GW_getWidgetClipArea(GWidget this)
+{
+	return Gui_GW_GetWidgetClipArea(this);
+}
+
+/**
+ * 获取该控件的父控件.
+ * @return 该控件的父控件虚拟机地址.
+ */
+FUNCTION GW_getParent(GWidget this)
+{
+	return Gui_GW_GetParentWidget(this);
+}
+
+/**
+ * 销毁控件. 
+ * 为了省去查找多次重复释放导致崩溃，特释放完将指针置空，
+ * free 0 是不会有问题的;
+ */
+FUNCTION GW_destroy(GWidget this)
+{
+	/* 清空控件内部使用的资源 */
+	OBJECT_FREE(this.leftWidget);
+	OBJECT_FREE(this.rightWidget);
+	OBJECT_FREE(this.upWidget);
+	OBJECT_FREE(this.downWidget);
+	OBJECT_FREE(this.observer);
+	OBJECT_FREE(this.userData);
+	OBJECT_FREE(this);
+}
+
+/**
+ * 主动调用控件的析构函数.
+ */
+FUNCTION GW_callDestructor(GWidget this)
+{
+	if(this.func_destroy > 0){
+		int destructor = this.func_destroy;
+		@destructor(this);
+	}
+}
+
+//	私有接口
+//	protected:
+/**
+ * 初始化GWidget, 每次创建GWidget子控件时必须调用此方法,相当于调用了
+ * 基类的构造方法.
+ * @param this 要初始化的GWidget指针地址.
+ */
+FUNCTION GW_initGWidget(GWidget this) 
+{
+	/* 初始化绘制和销毁函数 */
+	this.func_paint = GW_paint;
+	this.func_destroy = GW_destroy;
+}

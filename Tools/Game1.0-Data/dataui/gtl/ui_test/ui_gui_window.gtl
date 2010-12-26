@@ -1,0 +1,175 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_test";
+DESCRIPTION "window测试界面"; 
+
+#include "../core/gui/guiInclude.h"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GWindow window;
+
+	GContainer testContainer;
+	
+	int screenHeight;
+	int screenWidth;
+	
+	int clientAreaW;
+	int clientAreaH;
+	
+	int []colors;
+	int colorIndex;
+
+	ImageSet res;
+	
+	GTxtField tf;
+	GLabel testTF;
+}
+
+FUNCTION init()
+{
+	res = Realize(ImageSet_Create("ui_res240.pip", TRUE));
+	screenHeight = GetScreenHeight();
+	screenWidth = GetScreenWidth();
+	// 创建canvasUnit以及一个container.
+	create_canvasUnit();
+	
+	// 测试窗口
+	create_Window();
+	
+	// 测试窗口功能
+//	test_Window();
+	
+	// 初始化颜色
+//	init_colors();
+
+	// 测试输入框
+	test_textfield();
+	
+	Gui_GW_RequestFocus(tf);
+	
+}
+
+FUNCTION test_textfield(){
+	tf = Realize(GTF_makeGTextField(new GTxtField, "test_textfield", TRUE));
+	GWnd_addChildWidget(window, tf, 0);
+	GW_setBorderSize(tf, 2, 2, 2, 2);
+	GTF_setBound(tf, 20, 20, 200, 60);
+	tf.isBorderPainted = TRUE;
+	tf.borderColor = 0xffffff00;
+	Gui_GTF_SetText(tf, "测试默认设置");
+	
+	String t = Realize(Object_Create("开始什么都没有"));
+	testTF = Realize(GL_makeGLabel(new GLabel, "test_tf", t));
+	free t;
+	GWnd_addChildWidget(window, testTF, 0);
+	testTF.isBackgroundPainted = TRUE;
+	testTF.backgroundColor = 0xffffff00;
+	testTF.textInsetColor = 0xffff0000;
+	testTF.hAlignment = LAYOUT_ALIGN_HLEFT;
+	Gui_GW_SetBound(testTF, 20, tf.y + tf.h + 20, 200, 20);
+	
+}
+
+
+/////////////// common function //////////////////////
+FUNCTION event(){}
+FUNCTION cycle(){}
+FUNCTION cycleUI(){}
+FUNCTION paint(){}
+FUNCTION processPacket(){return FALSE;}
+
+FUNCTION destroy()
+{
+	free vmCU;
+	free tf;
+}
+
+/////////////// create function //////////////////////
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(NULL, cuName));
+	free cuName;
+	Gui_GW_SetBound(vmCU, 0, 0, screenWidth, screenHeight);
+}
+
+FUNCTION create_Window()
+{
+	// 创建一个窗口
+	String windowName = Realize(Object_Create("window"));
+	String windowCaption = Realize(Object_Create("测试Window"));
+	window = Realize(GWnd_makeGWindow(NULL, windowName, windowCaption, NULL, -1, -1, "左软键", "右软件"));
+	free windowName;
+	free windowCaption;
+	
+	Gui_GC_AddChildWidget(vmCU, window, 0);
+	GWnd_setBound(window, 0, 0, screenWidth, screenHeight);
+	window.leftButton.btn_clicked = leftbutton_Clicked;
+	window.rightButton.btn_clicked = rightbutton_Clicked;
+	window.func_handleKey = wnd_handlekey;
+	GW_setRelativeRightWidget(window.leftButton, window.rightButton);
+}
+
+// 测试窗口的属性 只是在window的客户区中添加子控件
+FUNCTION test_Window()
+{
+	String containerName = Realize(Object_Create("testContainer"));
+	testContainer = Realize(GC_makeGContainer(NULL, containerName));
+	free containerName;
+	testContainer.isBackgroundPainted = TRUE;
+	testContainer.backgroundColor = 0x753d9a;
+	testContainer.isBorderPainted = TRUE;
+	testContainer.borderColor = 0xffffff;
+	GW_setBorderSize(testContainer, 2, 2, 2, 2);
+	
+	// 获取窗口的客户区大小
+	clientAreaW = GWnd_getClientWidth(window);
+	clientAreaH = GWnd_getClientHeight(window);
+	
+	Gui_GW_SetBound(testContainer, 0, 0, clientAreaW, clientAreaH);
+	
+	// 需调用window自身的子控件添加函数
+	GWnd_addChildWidget(window, testContainer, 0);
+}
+
+FUNCTION init_colors()
+{
+	colors = new int[]{0xffff0000, 0xff00ff00, 0xff0000ff};
+}
+
+FUNCTION leftbutton_Clicked(GButton this)
+{
+	// window 的左软键被按下时的处理事件
+/*	if (colorIndex > 2)
+		colorIndex = 0;
+		
+	testContainer.backgroundColor = colors[colorIndex];
+	colorIndex++;
+	
+	GW_requestFocus(this);*/
+	String text = Gui_GTF_GetText(tf);
+	Gui_GL_SetLabelText(testTF, text);
+	
+	return TRUE;
+}
+
+FUNCTION rightbutton_Clicked(GButton this)
+{
+	// window 的右软键被按下时的处理事件
+//	testContainer.backgroundColor = 0x00ffff;
+//	Gui_GW_RequestFocus(this);
+	Gui_GTF_ReleaseFocus(tf);
+	CloseUI();
+	
+	return TRUE;
+}
+
+FUNCTION wnd_handlekey(GWindow this){
+	Gui_GTF_ReleaseFocus(tf);
+	CloseUI();
+	return TRUE;
+}

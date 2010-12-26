@@ -1,0 +1,175 @@
+#include "./GTable.h"
+#include "./GScrollPanel.gtl"
+#include "./GLabel.gtl"
+#include "./GListBox.gtl"
+
+//	公共接口
+//	public:
+
+/**
+ * 创建GTable.创建后须设置其位置和尺寸，方可显示.
+ * @param widgetName	控件的名字
+ * @param tableHeadStr	控件的表头文字
+ * @param headAlign  	表头的对齐方式
+ * @param hasHead  		是否显示表头
+ * @param width			控件的宽度
+ * @param height		控件的高度
+ */
+FUNCTION GT_makeGTable(GTable this, String widgetName, String tableHeadStr, int headAlign, boolean hasHead, int width, int height)
+{
+	GTable gt = NULL;
+	if(IsNotNull(this)){
+		gt = Realize(Gui_GC_MakeGContainer(this, widgetName));
+	}
+	else{
+		gt = Realize(Gui_GC_MakeGContainer(new GTable, widgetName));
+	}
+	gt.isShowHead = hasHead;
+	if(hasHead){
+		String TableName = Realize(Object_Create("_tableTitle"));
+		gt.head = Realize(GL_makeGLabel(NULL, TableName, tableHeadStr));
+		gt.head.hAlignment = headAlign;
+		free TableName;
+	}
+	
+	String bodyName = Realize(Object_Create("Body_"));
+	gt.body = Realize(GLB_makeGListBox(NULL, bodyName, width, height, LAYOUT_ORIENT_VERTICAL,LAYOUT_ALIGN_VBOTTOM,FALSE,FALSE));
+	free bodyName;
+	
+	OBJECT_FREE(TableName);
+	
+	GT_initGTable(gt);
+	
+	GTable ret = Object_Create(gt);
+	free gt;
+	return ret;
+}
+/**
+ * 设置GTabel以及其子控件的大小和位置.
+ *
+ * NOTE:	如果只调用GW_setBound对table设置大小，则可能导致子控件显示不正常.
+ */
+FUNCTION GT_setBound(GTable this, int x, int y, int width, int height)
+{
+	Gui_GW_SetBound(this, x, y, width, height);
+	if(this.isShowHead == TRUE)
+	{
+		Gui_GW_SetBound(this.head, 0, 0, width, this.head.h);
+	}
+	int clientW = GT_getClientWidth(this);
+	int clientH = GT_getClientHeight(this);
+	if(this.isShowHead)
+	{
+		GLB_setBound(this.body, 0, this.head.h, clientW, clientH - this.head.h);
+	}else
+	{
+		GLB_setBound(this.body, 0, 0, clientW, clientH);
+	}
+	GSP_setBounds(this.body.scrollPanel, 0, 0, clientW, clientH);
+}
+/**
+ * 设置GTabel子控件的列数，必须设置。
+ */
+FUNCTION GT_setTable(GTable this, int col)
+{
+	this.colCnt = col;
+}
+/**
+ * 设置GTabel子控件各列所占的比例，基数是100，所以，您设置的这几个比例因子相加须为100.
+ */
+FUNCTION GT_setColRates(GTable this, int[] colRates)
+{
+	this.rates = colRates;
+}
+/**
+ * 添加子控件.
+ * @param this   		 容器控件.
+ * @param rowsWidget 	 要添加的行控件.
+ * @param colsWidget	 要添加到行控件上的列控件.
+ * @param alignment		 各列的对齐方式.
+ * @param tmpCaption	 各列元素显示的文本内容.
+ */
+FUNCTION GT_addChildWidget(GTable this, GContainer rowsWidget, GWidget[] colsWidget, int[] alignment, String[] tmpCaption)
+{
+		GLB_addItem(this.body, rowsWidget);
+		for(int j=0; j<this.colCnt; j++)
+		{
+			Gui_GC_AddChildWidget(rowsWidget, colsWidget[j], NULL);
+			int[] cellW;
+			int cellH;
+			cellW = new int[this.colCnt];
+			if(this.rates == NULL){
+				cellW[j] = GC_getContentAreaWidth(rowsWidget) /this.colCnt;
+			}else{
+				cellW[j] = GC_getContentAreaWidth(rowsWidget)*this.rates[j] /100;
+			}
+			cellH = GC_getContentAreaHeight(colsWidget[j]);
+			
+			//colsWidget[j].hAlignment = alignment[j];
+			
+			Gui_GW_SetBound(colsWidget[j], cellW[j] * j, 0, cellW[j], cellH);
+		}
+		Gui_GC_SetLineLayout(rowsWidget, LAYOUT_ORIENT_HORIZON, LAYOUT_ALIGN_HLEFT, 0);
+		Gui_GC_Pack(rowsWidget);
+		GLB_update(this.body);
+}
+
+ /**
+  * GTable 的获取GTable的客户区宽度的方法.
+  * @return 客户区的宽度.
+  *
+  * NOTE:	此方法前提条件是已经对table使用过GT_setBound()方法.
+  */
+FUNCTION GT_getClientWidth(GTable this)
+{
+	return (this.w - this.borderLeft - this.borderRight - this.insetLeft - this.insetRight);
+}
+
+ /**
+  * GTable 的获取GTable的客户区高度的方法.
+  * @return 客户区的高度.
+  *
+  * NOTE:	此方法前提条件是已经对table使用过GT_setBound()方法.
+  */
+FUNCTION GT_getClientHeight(GTable this)
+{
+	return (this.h - this.borderTop - this.borderBottom - this.insetTop - this.insetBottom);
+}
+/**
+ * 销毁GTabel.
+ */
+FUNCTION GT_destroy(GTable this)
+{
+	
+	OBJECT_FREE(this.head);
+	OBJECT_FREE(this.body);
+	if(IsNotNull(this)){
+		// 调用基类的析构函数.
+		GW_destroy(this);
+	}
+}
+
+//	私有接口
+//	protected:
+
+/**
+ * 初始化GTabel.
+ */
+FUNCTION GT_initGTable(GTable this)
+{
+	//GC_initGContainer(this);
+	
+	if (this.head)
+	{
+		Gui_GC_AddChildWidget(this, this.head, BLAYOUT_LOC_NORTH);
+	}
+	if (this.body)
+	{
+		Gui_GC_AddChildWidget(this, this.body, BLAYOUT_LOC_CENTER);
+	}
+
+	this.backgroundColor = 0x934000;
+	this.isBackgroundPainted = TRUE;
+	this.func_destroy = GT_destroy;
+	this.func_paint = GW_paint;
+}

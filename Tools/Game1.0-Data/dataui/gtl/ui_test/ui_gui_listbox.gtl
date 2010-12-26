@@ -1,0 +1,141 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_bag";
+DESCRIPTION "背包界面"; 
+
+#include "../core/gui/guiInclude.h"
+
+#define RES_UI_SCROOLBAR_TOP 													25
+#define RES_UI_SCROOLBAR_BOTTOM  												26
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GListBox listbox;
+	GButton[] button;
+
+	ImageSet res_ui;	
+	int screenHeight;
+	int screenWidth;
+}
+
+FUNCTION init(){
+	res_ui = Realize(ImageSet_Create("ui_res.pip", TRUE));
+	screenHeight = GetScreenHeight();
+	screenWidth = GetScreenWidth();
+	
+	create_canvasUnit();
+	
+	listbox = Realize(GLB_makeGListBox(NULL, "listbox", screenWidth, screenHeight,LAYOUT_ORIENT_VERTICAL,LAYOUT_ALIGN_VBOTTOM,FALSE,TRUE));
+//	ImageSet res = Realize(ImageSet_Create("ui_res"));
+	GSP_setArrowImage(listbox.scrollPanel, BLAYOUT_LOC_NORTH, res_ui, 24);
+//	free res;
+	GW_setBorderSize(listbox, 2, 2, 2, 2);
+	GC_addChildWidget(vmCU, listbox, 0);
+	GW_SetVisible(listbox.scrollPanel.vScrollBar, FALSE);
+	GW_SetVisible(listbox.scrollPanel.upArrow, FALSE);
+	GW_SetVisible(listbox.scrollPanel.downArrow, FALSE);
+	listbox.scrollPanel.vScrollBar.func_paint = paintCScrollBar;
+	listbox.backgroundColor = 0x00FFFF32;
+	listbox.isBackgroundPainted = TRUE;
+	listbox.isBorderPainted = TRUE;
+	listbox.borderColor = 0xFF3F322F;
+	
+	listbox.func_handleKey = GWnd_handlKey;
+	GLB_setBound(listbox, 0, 0, screenWidth, screenHeight);
+	
+	int size = 20;
+	button = new GButton[size];
+	for (int i = 0; i < size; i++)	{
+		button[i] = GBtn_makeGButton(NULL, "GButton", "ButtonText", NULL, -1, 0);
+		initBtn(button[i]);
+		GLB_addItem(listbox, button[i]);
+	}
+	GLB_update(listbox);
+	GW_requestFocus(button[0]);
+}
+
+FUNCTION destroy(){
+	free vmCU;
+	free button;
+}
+
+FUNCTION paintCScrollBar(GButton this){
+	Object g = Realize(GetSystemGraphics());
+	int[] oldClip = GetClip(g);	
+	int[] _widgetClip = GW_getWidgetClipArea(this);
+	SetClip(g, _widgetClip[0], _widgetClip[1], _widgetClip[2], _widgetClip[3]);	
+	int arrowH = 2;
+	ImageSet_DrawFrame2(res_ui, g, RES_UI_SCROOLBAR_TOP, _widgetClip[0], _widgetClip[1], TRANS_NONE, G_TOPLEFT);
+	DrawSpellCol(g, _widgetClip[0] + 1, _widgetClip[1] + 2, _widgetClip[3] - arrowH - arrowH, res_ui, RES_UI_SCROOLBAR_BOTTOM, TRANS_NONE);
+	ImageSet_DrawFrame2(res_ui, g, RES_UI_SCROOLBAR_TOP, _widgetClip[0], _widgetClip[1] + _widgetClip[3] - arrowH, TRANS_ROT180, G_TOPLEFT);
+	SetClip(g, oldClip[0], oldClip[1], oldClip[2], oldClip[3]);
+	free oldClip;
+	free _widgetClip;
+	free g;
+}
+
+FUNCTION create_canvasUnit(){
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(NULL,cuName));
+	free cuName;
+
+	GW_setBound(vmCU, 0, 0, screenWidth, screenHeight);
+	vmCU.isBackgroundPainted = TRUE;
+	vmCU.backgroundColor = 0xff007500;
+	vmCU.func_handleKey = cu_handleKey;
+}
+
+FUNCTION initBtn(GButton this){
+	GW_setBorderSize(this, 2, 2, 2, 2);
+	this.isBorderPainted = TRUE;
+	this.borderColor = 0x757575;
+	this.isSelectionPainted = TRUE;
+	this.selectionColor = 0xff0000;
+	this.isBackgroundPainted = TRUE;
+	this.backgroundColor = 0xffffff;
+}
+
+// 窗口的按键事件处理
+FUNCTION GWnd_handlKey(GWindow this, int eventType, int keyCode, int modifierCode){
+ 	boolean eventComsumed = FALSE;
+ 	switch(eventType){
+ 		case EVENT_TYPE_KEYPRESSED:
+ 			break;
+		case EVENT_TYPE_KEYRELEASED:
+			// 定义okay和数字5键触发点击事件.
+			switch(keyCode){
+				case SOFT_FIRST_PRESSED:
+					break;
+				case SOFT_LAST_PRESSED:
+					CloseUI();
+					eventComsumed = TRUE;
+					break;
+				default:
+					break;
+			}
+			break;
+		default:
+			break;
+ 	}
+ 	return eventComsumed;
+}
+
+FUNCTION cu_handleKey(GWidget this, int eventType, int keyCode, int modifierCode){
+	if (EVENT_TYPE_KEYPRESSED == eventType && SOFT_LAST_PRESSED == keyCode){
+		CloseUI();
+		return TRUE;
+	}
+	
+	return FALSE;
+}
+
+FUNCTION event() {}
+
+FUNCTION cycle(){}
+
+FUNCTION cycleUI(){}
+
+FUNCTION paint(){}
+
+FUNCTION processPacket(){}

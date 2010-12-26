@@ -1,0 +1,99 @@
+#include "./GRadioButton.h"
+#include "./GButton.gtl"
+
+/**
+ * 创建GRadioButton.
+ */
+FUNCTION GRB_makeRadioButton(GRadioButton this, String widgetName, String _caption)
+{
+	GRadioButton rbtn = NULL;
+	if(IsNotNull(this)){
+		rbtn = Realize(Gui_GRB_MakeGRadioButton(this, widgetName, _caption));
+	}
+	else{
+		rbtn = Realize(Gui_GRB_MakeGRadioButton(new GRadioButton, widgetName, _caption));
+	}
+	GRB_initRadioButton(rbtn);
+	
+	GRadioButton ret = Object_Create(rbtn);
+	free rbtn;
+	return ret;
+}
+
+/**
+ * 初始化GContainer, 每次创建GContainer子控件时必须调用此方法,相当于调用了
+ * 基类的构造方法.
+ * @param this 要初始化的GContainer指针地址.
+ */
+FUNCTION GRB_initRadioButton(GRadioButton this) 
+{
+	//GBtn_initGButton(btn);
+ 	//#if GB_ISSELECTION_PAINTED == TRUE
+ 	this.isSelectionPainted = TRUE;
+ 	//#else
+ 	this.isSelectionPainted = FALSE;
+ 	//#endif
+ 	
+ 	//#if GB_ISBACKGROUND_PAINTED == TRUE
+ 	this.isBackgroundPainted = TRUE;
+ 	//#else
+ 	this.isBackgroundPainted = FALSE;
+ 	//#endif
+ 	
+ 	this.selectionColor = 0xFFFF0000;
+	this.func_paint = GW_paint;
+ 	this.func_handleKey = GBtn_handleKey;
+ 	this.func_handleTouch = GBtn_handleTouch;
+ 	
+ 	this.btn_clicked = GRB_ClickFunImpl;	
+ 	this.func_destroy = GRB_destroy;
+}
+
+/**
+ * 设置radioButton所属的组.
+ */
+FUNCTION GRB_setGroup(GRadioButton this, GButtonGroup btnGrp)
+{
+	if(IsNull(btnGrp) == FALSE){
+		OBJECT_SET(this.btnGroup, btnGrp);
+		GBtnGrp_addElement(btnGrp, this);
+	}
+}
+
+/**
+ * 处理radiobutton的btn_clicked事件
+ */
+FUNCTION GRB_ClickFunImpl(GRadioButton this)
+{
+	GRB_toggleSwitch(this);
+	return TRUE;
+}
+
+/**
+ * 更改radioButton的选中状态.
+ */
+FUNCTION  GRB_toggleSwitch(GRadioButton this)
+{
+	boolean selected = (this.isSelected == FALSE);
+	if(selected == TRUE){
+		if(IsNull(this.btnGroup) == FALSE){
+			int size = GBtnGrp_getElementSize(this.btnGroup);
+			for(int i = 0; i < size; i++){
+				GRadioButton radioBtn = GBtnGrp_getElement(this.btnGroup, i);
+				radioBtn.isSelected = FALSE;
+				OBJECT_FREE(radioBtn);
+			}
+		}
+	}
+	this.isSelected = selected;
+}
+
+FUNCTION GRB_destroy(GRadioButton this)
+{
+		// 调用基类的析构方法.
+		if(IsNotNull(this.btnGroup)){
+			GBtnGrp_removeElement(this.btnGroup, this);
+			OBJECT_FREE(this.btnGroup);
+		}
+		GBtn_destroy(this);
+}

@@ -1,0 +1,563 @@
+VERSION 1;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_bag";
+DESCRIPTION "背包界面"; 
+
+#include "../core/common/general.gtl"
+#include "../core/gui/GContainer.gtl"
+#include "../core/gui/GWindow.gtl"
+#include "../core/gui/GVMCanvasUnit.gtl"
+#include "../core/gui/guicommon.gtl"
+#include "../core/gui/gicon.gtl"
+#include "../core/gui/glabel.gtl"
+#include "../core/gui/gbutton.gtl"
+#include "../core/gui/gscrollpanel.gtl"
+#include "../core/gui/ggridbox.gtl"
+#include "../core/gui/glistbox.gtl"
+#include "../core/gui/ggameicon.gtl"
+#include "../core/gui/ggrid.gtl"
+#include "../core/gui/xyGGrid.gtl"
+
+
+DATA
+{
+	GVMCanvasUnit vmCU;
+	GWindow window;
+	GLabel	labelEquip;
+	GLabel  labelObject;
+	GGrid[]    gridEquip;
+	GLabel[] labelProperty;
+	GGridBox gridbox;
+	XYGGrid[] items;
+	GContainer containerEquip;
+	XYGGrid  tempGrid;
+}
+
+FUNCTION init()
+{
+	create_CanvasUnit();
+	create_Equip();
+	create_property();
+	create_gridbox();
+}
+
+FUNCTION cycleImpl()
+{
+	
+}
+
+FUNCTION cycleUIImpl()
+{
+	
+}
+
+FUNCTION paintImpl()
+{
+	
+}
+
+FUNCTION processPacketImpl()
+{
+	return FALSE;
+}
+
+FUNCTION destroyImpl()
+{
+	free vmCU;
+	free window;
+	free gridEquip;
+	free labelProperty;
+	free gridbox;
+	free items;
+	free containerEquip;
+	
+}
+
+
+/*
+ *创建canvas
+ */
+FUNCTION create_CanvasUnit()
+{
+	String canvasunit_text = Realize(Object_Create("canvasunit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(canvasunit_text));	
+	
+	String windowName = Realize(Object_Create("bag"));
+	String caption = Realize(Object_Create("背包"));
+	window = Realize(GWnd_makeGWindow(windowName, caption, 0, -1, -1));
+	
+	//window.func_handleKey = GWnd_handlKey;
+	GW_setBorderSize(window.contentArea, 2, 2, 2, 2);
+	
+	GC_addChildWidget(vmCU, window, 0);
+	
+	GWnd_setBound(window, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+	GW_setBound(vmCU, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+	
+	window.contentArea.isBackgroundPainted = TRUE;
+	window.contentArea.backgroundColor = 0xED621E;
+	
+	window.statusBar.isBackgroundPainted = TRUE;
+	window.statusBar.backgroundColor = 0xF79044;
+	
+	window.titleBar.isBackgroundPainted = TRUE;
+	window.titleBar.backgroundColor = 0xED621E;
+	
+	window.leftButton.isBackgroundPainted = TRUE;
+	window.leftButton.backgroundColor = 0xED621E;
+	window.rightButton.isBackgroundPainted = TRUE;
+	window.rightButton.backgroundColor = 0xED621E;
+	
+	
+	//0xF79044
+	free canvasunit_text;
+	free windowName;
+	free caption;
+	
+}
+
+/*
+ *创建Equip
+ */
+ FUNCTION create_Equip()
+ {
+
+ 	String labelEquip_Text = Realize(Object_Create("labelEquip" + "label"));
+ 	labelEquip = Realize(GL_makeGLabel(labelEquip_Text, NULL));
+ 	GL_setProperty(labelEquip);
+ 	String labelObject_Text = Realize(Object_Create("labelObject" + "label"));
+ 	labelObject = Realize(GL_makeGLabel(labelObject_Text, NULL));
+ 	GL_setProperty(labelObject);
+ 	labelEquip.isBackgroundPainted = TRUE;
+ 	labelEquip.backgroundColor = 0x0000ff;
+ 	
+ 	labelObject.isBackgroundPainted = TRUE;
+ 	labelObject.backgroundColor = 0x00ff00;
+ 	
+ 	GC_addChildWidget(window.contentArea, labelEquip, 0);
+ 	GC_addChildWidget(window.contentArea, labelObject, 0);
+ 	window.contentArea.func_handleTouch = GC_handleTouchImpl;
+ 	String container_Equip =  Realize(Object_Create("Equip" + "Container"));
+ 	containerEquip = Realize(GC_makeGContainer(container_Equip));
+ 	
+ 	GC_addChildWidget(window.contentArea, containerEquip, 0);
+
+	
+ 	gridEquip = new GGrid[10];
+ 	
+ 	for(int i = 0; i < 10; i++)
+ 	{
+ 		String grid_text = Realize(Object_Create(IntToStr(i) + "gridEquip"));
+ 		gridEquip[i] = Realize(GG_makeGGrid(grid_text, NULL, NULL, 0));
+ 		GC_addChildWidget(containerEquip, gridEquip[i], 0);
+ 		init_equipGrid(gridEquip[i]);
+ 		free grid_text;
+ 	}
+ 	
+ 	GW_setBound(labelEquip, window.contentArea.x + 2,
+ 	  			window.titleBar.y + window.titleBar.h, 
+ 	  			window.contentArea.w - 8, 
+ 	  			4*gridEquip[0].h + labelEquip.borderBottom + labelEquip.borderTop + 1*4);
+ 	
+ 	GW_setBound(labelObject, 
+ 				labelEquip.x, 
+ 				labelEquip.y + labelEquip.h + 1, 
+ 				labelEquip.w, 
+ 				window.contentArea.h - labelEquip.h - 4 - 14);
+ 	
+ 	GW_setBound(containerEquip, 
+ 				labelEquip.x, 
+ 				labelEquip.y, 
+ 				6*gridEquip[0].w + gridEquip[0].w/2,
+ 				labelEquip.h);
+ 	
+ 	set_gridEquipBound();  	
+ 			
+ 	free labelEquip_Text;
+ 	free labelObject_Text;
+ 	free container_Equip;
+ 	
+ }
+ 
+ FUNCTION init_equipGrid(GGrid this)
+ {
+ 	
+ 	this.w = 20;
+ 	this.h = 20;
+ 	this.isBorderPainted = FALSE;
+ 	this.borderBottom = 0xff0000;
+ 	GW_setBorderSize(this, 1, 1, 1, 1);
+ }
+ 
+ FUNCTION set_gridEquipBound()
+ {
+ 	for(int i = 0; i < 4; i++)
+ 	{
+ 		GW_setBound(gridEquip[i], 
+ 				    labelEquip.x + gridEquip[0].w/2,
+ 					gridEquip[i].h*i + 2,
+ 					gridEquip[i].w,
+ 					gridEquip[i].h);
+ 	}
+ 	
+ 	for(int j = 4; j < 6; j++)
+ 	{
+ 		GW_setBound(gridEquip[j],
+ 					labelEquip.x + 2*gridEquip[0].w + 3*(j - 4)*gridEquip[0].w/2,
+ 					2,
+ 					gridEquip[j].w,
+ 					gridEquip[j].h);
+ 	}
+ 	
+ 	for(int k = 6; k < 10; k++)
+ 	{
+ 		GW_setBound(gridEquip[k],
+ 					gridEquip[5].x + 3*gridEquip[0].w/2, 
+ 					gridEquip[k].h*(k - 6) + 2,
+ 					gridEquip[k].w,
+ 					gridEquip[k].h);
+ 	}
+
+ }
+ 
+ /*
+ *创建property
+ */
+ FUNCTION create_property()
+ {
+ 	labelProperty = new GLabel[4];
+ 	for(int i = 0; i < 4; i++)
+ 	{
+ 		String labelEquip_Text = Realize(Object_Create(IntToStr(i) + "labelProperty"));
+ 		labelProperty[i] = Realize(GL_makeGLabel(labelEquip_Text, NULL));
+ 		GL_setProperty(labelProperty[i]);
+ 		GC_addChildWidget(window.contentArea, labelProperty[i], 0);
+ 		GW_setBound(labelProperty[i], 
+ 					gridEquip[6].x + 3*gridEquip[6].w/2, 
+ 					gridEquip[6 + i].y + gridEquip[0].h - 3, 
+ 					gridEquip[6].w*4,
+ 					gridEquip[6].h - 1);
+ 		GW_setBorderSize(labelProperty[i], 1, 1, 1, 1);
+ 		free labelEquip_Text;
+ 	}	
+ }
+ 
+ FUNCTION create_gridbox()
+ {
+ 	String bagName = Realize(Object_Create("bag"));
+	gridbox = Realize(GGB_makeGGridBox(bagName, 0, 0));
+	free bagName;
+	
+	GGB_setBound(gridbox, labelObject.x, labelObject.y, labelObject.w, labelObject.h);
+	GC_addChildWidget(window.contentArea, gridbox, 0);
+	
+	
+	init_Bag();
+ }
+ 
+ FUNCTION init_Bag()
+ {
+ 	items = new XYGGrid[100];
+	
+	for (int i=0; i<100; i++)
+	{
+		String itemsName = Realize(Object_Create("grid_" + i));
+		// 参数暂时设置为空
+		items[i] = Realize(GG_makeXYGGrid(itemsName, 0, 0, -1, 0, 0, 0));
+		//GG_setNumberInfo(items[i], numberResource, 120, i+1, TRUE);
+		
+		init_Grid(items[i]);
+		GGB_addGrid(gridbox, items[i]);
+		items[i].idn = i;
+		items[i].bDraged = TRUE;
+		items[i].icon_clicked = GGrid_touchPressed;
+		items[i].icon_released = GGrid_touchReleased;
+		items[i].func_handleTouch = handleTouchImpl;
+		
+		
+		free itemsName;
+	}
+	
+	GGB_update(gridbox);
+	GGB_initGridsRelativeFocusedWidget(gridbox);
+ }
+ 
+ FUNCTION init_Grid(GGrid this)
+{
+	this.isBorderPainted = TRUE;
+	this.borderColor = 0x757575;
+	this.backgroundColor = 0xffffff;
+	this.isBackgroundPainted = TRUE;
+	this.selectionColor = 0xff0000;
+	this.isSelectionPainted = TRUE;
+	this.w = 20;
+	this.h = 20;
+	GW_setBorderSize(this, 1, 1, 1, 1);
+}
+ 
+ FUNCTION GGrid_touchPressed(XYGGrid this)
+ {
+ 	boolean eventConsumed = TRUE;
+ 	if(NULL != this)
+ 	{
+ 		int[] prePos = Gui_GUI_getCurrentTouchPos();
+ 		//鼠标点击坐标
+ 		this.oldMouseX = prePos[0];
+ 		this.oldMouseY = prePos[1];
+ 		//控件原坐标
+ 		this.oldIconX = this.x;
+ 		this.oldIconY = this.y;
+ 		
+ 		this.nOffSetX = prePos[0] - this.absX;//鼠标距离控件X轴方向距离
+ 		this.nOffSetY = prePos[1] - this.absY;//鼠标距离控件Y轴方向距离
+ 		
+ 		if(this.bDraged)
+ 		{
+ 			this.bFirstDrag = TRUE;
+ 		}
+ 	}
+ 	return eventConsumed;
+ }
+ //grid
+ FUNCTION GGrid_touchReleased(XYGGrid this)//将临时的grid的内部信息赋值给equip区域的grid，销毁临时的grid
+ {
+ 	boolean eventConsumed = TRUE;
+ 	
+ 	if(NULL != this)
+ 	{
+ 		//if(this.bFirstDrag)//克隆this
+ 		if(NULL != tempGrid)
+ 		{
+ 			int[] prePos = Gui_GUI_getCurrentTouchPos();
+ 			int x = prePos[0];
+ 			int y = prePos[1];
+ 			if(x >= containerEquip.x && x <= containerEquip.x + containerEquip.w &&
+ 			   y >= containerEquip.y && y <= containerEquip.y + containerEquip.h)
+ 			   {
+ 			   		gridEquip[0].image = tempGrid.image;
+ 			   		gridEquip[0].index = tempGrid.index;
+ 			   		gridEquip[0].isBackgroundPainted = TRUE;
+ 			   		gridEquip[0].backgroundColor = 0xff0000;
+ 			   }
+ 			   else
+ 			   {
+ 			   		//this.isBackgroundPainted = TRUE;
+ 					//this.backgroundColor = 0xffffff;
+ 					items[tempGrid.idn].isBackgroundPainted = TRUE;
+ 					items[tempGrid.idn].backgroundColor = 0xffffff;
+ 			   }
+ 			   GC_removeChildWidget(window.contentArea, tempGrid);
+ 			   GG_destroyGGrid(tempGrid);
+ 		}
+ 	}
+ 	
+ 	return eventConsumed;
+ }
+ //window.contentarea
+ FUNCTION touchReleased()
+ {
+ 	boolean eventConsumed = TRUE;
+ 		if(NULL != tempGrid)
+ 		{
+			 		//if(tempGrid.bFirstDrag)//克隆this
+			 		
+			int[] prePos = Gui_GUI_getCurrentTouchPos();
+			int x = prePos[0];
+			int y = prePos[1];
+			if(x >= containerEquip.x && x <= containerEquip.x + containerEquip.w &&
+			   y >= containerEquip.y && y <= containerEquip.y + containerEquip.h)
+			   {
+			 		gridEquip[0].image = tempGrid.image;
+			   		gridEquip[0].index = tempGrid.index;
+			 		gridEquip[0].isBackgroundPainted = TRUE;
+			 		gridEquip[0].backgroundColor = 0xff0000;
+			 	}
+			 else
+ 			  {
+ 			   		items[tempGrid.idn].isBackgroundPainted = TRUE;
+ 					items[tempGrid.idn].backgroundColor = 0xffffff;
+ 			  }
+			 		
+ 		}
+ 		GC_removeChildWidget(window.contentArea, tempGrid);
+ 		GG_destroyGGrid(tempGrid);
+ 		//free tempGrid;
+ 		
+ 	return eventConsumed;
+ }
+ 
+ FUNCTION handleTouchDraged(XYGGrid this, int x, int y)
+ {
+ 	boolean eventConsumed = TRUE;
+ 	if(this.bDraged)//判断是否支持拖拽
+ 	{
+
+ 		if(this.bFirstDrag)//克隆this
+ 		{
+ 			String tempGrid_Text = Realize(Object_Create("tempGrid"));
+ 			tempGrid = Realize(GG_makeXYGGrid(tempGrid_Text, 0, 0, -1, 0, 0, 0));
+ 			free tempGrid_Text;
+ 			//GScrollPanel scrollpanel = gridbox.scrollPanel;
+ 			//GC_addChildWidget(scrollpanel.contentArea, tempGrid, 0);
+ 			GC_addChildWidget(window.contentArea, tempGrid, 0);
+ 			GW_setBound(tempGrid, this.oldIconX, this.oldIconY + labelEquip.h + window.titleBar.h + 4, this.w, this.h);
+ 			tempGrid.idn = this.idn;
+ 			this.bFirstDrag = FALSE;
+ 			this.bIsEmpty = TRUE;//物品是否被拖拽走
+ 			//克隆图片信息
+ 			tempGrid.image = this.image;
+ 			tempGrid.index = this.index;
+ 			if(NULL != this.image)//如果控件图片信息不为空，则清空客户端的图片信息
+ 			{
+ 				Gui_GI_SetGIconImage(this, FALSE);
+ 				
+ 			}
+ 			
+ 			if(this.bIsEmpty)
+ 			{
+ 				this.isBackgroundPainted = TRUE;
+ 				this.backgroundColor = 0x000000;
+ 			}
+
+ 			tempGrid.nOffSetX = this.nOffSetX;
+ 			tempGrid.nOffSetY = this.nOffSetY;
+ 			
+ 		}
+
+ 		int[] prePos = Gui_GUI_getPrevTouchPos();
+ 		this.offsetX = 0;
+ 		this.offsetY = 0;
+ 		int oldx = prePos[0];
+ 		int oldy = prePos[1];
+ 		int offX = x - oldx;
+ 		int offY = y - oldy;
+ 		if(offX <= 0 && offY <= 0)
+ 		{
+ 			tempGrid.x += offX;
+ 			tempGrid.y += offY;
+ 		}
+ 		else if(offX >=0 && offY <= 0)
+ 		{
+ 			tempGrid.x -= offX;
+ 			tempGrid.y += offY;
+ 		}
+ 		else if(offX <= 0 && offY >= 0)
+ 		{
+ 			tempGrid.x += offX;
+ 			tempGrid.y -= offY;
+ 		}
+ 		else
+ 		{
+ 			tempGrid.x -= offX;
+ 			tempGrid.y -= offY;
+ 		}
+ 		
+		tempGrid.absX = x - tempGrid.nOffSetX;
+ 		tempGrid.absY = y - tempGrid.nOffSetY;
+ 	}
+
+ 	return eventConsumed;
+ }
+ 
+ FUNCTION handleTouchImpl(XYGGrid this, int eventType, int x, int y)
+ {
+ 	boolean eventConsumed = TRUE;
+ 	eventConsumed = GI_handleTouch(this, eventType, x, y);
+ 	if(eventConsumed)
+ 	{
+ 		return eventConsumed;
+ 	}
+ 	else
+ 	{
+ 		eventConsumed = handleTouchDraged(this, x, y);
+ 		return eventConsumed;
+ 	}
+ 	
+ 	return FALSE;
+ }
+ 
+
+ FUNCTION GC_handleTouchImpl(GContainer this, int eventType, int x, int y)
+ {
+ 	boolean eventConsumed = TRUE;
+ 	switch(eventType)
+ 	{
+ 		case EVENT_TYPE_TOUCHPRESSED:
+ 			//eventConsumed = GI_clickedFuncImpl(this);
+ 			break;
+ 		case EVENT_TYPE_TOUCHRELEASED:
+ 			{
+ 				eventConsumed = touchReleased();
+ 			}
+ 			break;
+ 		default:
+ 			break;
+ 	}
+ 	return eventConsumed;
+ }
+ 
+
+ 
+FUNCTION GL_setProperty(GLabel this)
+{
+	this.borderColor = 0xF79044;
+	this.backgroundColor = 0xED621E;
+	this.isBackgroundPainted = TRUE;
+	this.isBorderPainted = TRUE;
+	this.borderLeft = 1;
+	this.borderTop = 1;
+	this.borderRight = 1;
+	this.borderBottom = 1;
+}
+
+/**
+ * GIcon clicked方法的具体实现.
+ * @return 是否处理了点击事件.
+ */
+FUNCTION GI_clickedFuncImpl(XYGGrid this)
+{
+	if(this.icon_clicked > 0)
+ 	{
+ 		int clicked_func = this.icon_clicked;
+ 		return @clicked_func(this);
+ 			
+ 		
+ 	}
+ 	
+ 	return FALSE;
+}
+
+/**
+ * GIcon clicked方法的具体实现.
+ * @return 是否处理了点击事件.
+ */
+FUNCTION GI_releasedFuncImpl(XYGGrid this)
+{
+	if(this.icon_released > 0)
+ 	{
+ 		int clicked_func = this.icon_released;
+ 		return @clicked_func(this);
+ 	}
+ 	
+ 	return FALSE;
+}
+ 
+  FUNCTION GI_handleTouch(XYGGrid this, int eventType, int x, int y)
+ {
+ 	boolean eventConsumed = FALSE;
+ 	
+ 	switch(eventType)
+ 	{
+ 		case EVENT_TYPE_TOUCHPRESSED:
+ 			eventConsumed = GI_clickedFuncImpl(this);
+ 			break;
+ 		case EVENT_TYPE_TOUCHRELEASED:
+ 			eventConsumed = GI_releasedFuncImpl(this);
+ 			break;
+ 		default:
+ 			break;
+ 	}
+ 	
+ 	return eventConsumed;
+ }

@@ -1,0 +1,203 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_test_2";
+DESCRIPTION "gui测试界面"; 
+
+#include "../core/gui/guiInclude.h"
+
+DATA 	
+{
+	GRadioButton[] d_GRadioButton;
+	GCheckBox	 d_GCheckBox;
+	GProgressBar d_GProgressBar;
+	GWindow		 d_window;
+	GVMCanvasUnit d_vmCU;
+	ImageSet d_Image;
+	ImageSet d_IconImage;
+	ImageSet d_ImageFrame;
+	ImageSet d_ImageProgress;
+	
+}
+
+FUNCTION init()
+{
+	
+	//---------------------------To create GCanvasUnit----------------------------
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	d_vmCU = Realize(GVMCU_MakeGVMCU(cuName));
+	//////////////////////////////////////////////////////////////////////////////
+
+	//---------------------------To create GWindow---------------------------------
+	String captionText = Realize(Object_Create("Image"));
+	d_Image = Realize(ImageSet_Create("ui_res240.pip", TRUE));
+	
+	d_IconImage = Realize(ImageSet_Create("ability.pip", TRUE));
+	String windowName = Realize(Object_Create("window"));
+	d_window = Realize(GWnd_makeGWindow(windowName, captionText, d_IconImage, 12, 11));
+	/////////////////////////////////////////////////////////////////////////////////							
+
+	
+	
+	//-----------------------------To create ProgressBar------------------------
+	d_ImageFrame = Realize(ImageSet_Create("progress.pip", FALSE));
+	d_ImageProgress = Realize(ImageSet_Create("progress_bar_240.png", FALSE));
+	String ProgressBar_FrameName = Realize(Object_Create("PB_FraemName"));//create widgetName
+	d_GProgressBar = GPB_makeProgressBar(ProgressBar_FrameName, d_ImageFrame, d_ImageProgress, 1, 0, 102, 0, 0, 1);// create progressbar control
+	//////////////////////////////////////////////////////////////////////////////
+	
+	
+	//----------------------------To create CheckBox------------------------------
+	String CheckBox_Name = Realize(Object_Create("GCheckBox_Name"));
+	//String CheckBox_Group = Realize(Object_Create("CB_GROUP"));
+	d_GCheckBox = GCBOX_makeGCheckBox(CheckBox_Name, CheckBox_Name, d_Image, 48, 0, 0);
+	d_GCheckBox.func_handleFocus = GCB_handleFocus;
+	//free CheckBox_Group;
+	//////////////////////////////////////////////////////////////////////////////
+	
+	//----------------------------To create RadioButton------------------------------
+	d_GRadioButton = new GRadioButton[5];
+	String RadioGourp_Name = Realize(Object_Create("RadioGroup"));
+	for(int i = 0; i < 5; i++)
+	{
+		String RadioButton_Name = Realize(Object_Create(IntToStr(i)));
+		d_GRadioButton[i] = GRB_makeRadioButton(RadioButton_Name, RadioButton_Name, 1, 0, d_Image, 48);
+		free RadioButton_Name;
+		GC_addChildWidget(d_window, d_GRadioButton[i], 0);
+		GW_setBound(d_GRadioButton[i], 0, 180 + i*25, 236, 20);
+		d_GRadioButton[i].func_handleFocus = GRB_handleFocus;
+		
+	}
+	
+	//d_GRadioButton = GRB_makeRadioButton(RadioButton_Name, RadioButton_Name, RadioGourp_Name, 0);
+	//////////////////////////////////////////////////////////////////////////////
+	
+	
+	GC_addChildWidget(d_window, d_GCheckBox, 0);
+	//GC_addChildWidget(d_window, d_GRadioButton, 0);
+	GC_addChildWidget(d_window, d_GProgressBar, 0);
+	GC_addChildWidget(d_vmCU, d_window, 0);
+	
+	GW_setBound(d_vmCU, 0, 0, 240, 320);
+	GWnd_setBound(d_window, 0, 0 ,240, 320);
+	//GW_setBound(d_GRadioButton, 0, 180, 236, 20);
+	GW_setBound(d_GCheckBox, 0, 150, 236, 20);
+	GW_setBound(d_GProgressBar, 50, 100, d_GProgressBar.nWidth, d_GProgressBar.nHeight);
+	
+	
+
+	free windowName;
+	free captionText;
+	free cuName;
+	free ProgressBar_FrameName;// free widgetName
+	free CheckBox_Name;
+	//free RadioButton_Name;
+	free RadioGourp_Name;
+	
+	GW_requestFocus(d_GCheckBox);
+	
+	/*GW_setRelativeDownWidget(d_GCheckBox, d_window.leftGIcon);
+	GW_setRelativeUpWidget(d_GCheckBox, d_window.leftGIcon);
+	GW_setRelativeDownWidget(d_window.leftGIcon, d_window.rightGIcon);
+	GW_setRelativeUpWidget(d_GCheckBox, d_window.rightGIcon);*/
+	
+	GW_setRelativeDownWidget(d_GCheckBox, d_GRadioButton[0]);
+	GW_setRelativeUpWidget(d_GCheckBox, d_GProgressBar);
+	GW_setRelativeDownWidget(d_GRadioButton[0], d_GRadioButton[1]);
+	GW_setRelativeDownWidget(d_GRadioButton[0], d_GCheckBox);
+	GW_setRelativeUpWidget(d_GRadioButton[1], d_GRadioButton[0]);
+	GW_setRelativeDownWidget(d_GRadioButton[1], d_GRadioButton[2]);
+	GW_setRelativeUpWidget(d_GRadioButton[2], d_GRadioButton[1]);
+	GW_setRelativeDownWidget(d_GRadioButton[2], d_GRadioButton[3]);
+	GW_setRelativeUpWidget(d_GRadioButton[3], d_GRadioButton[2]);
+	GW_setRelativeDownWidget(d_GRadioButton[3], d_GRadioButton[4]);
+	GW_setRelativeUpWidget(d_GRadioButton[4], d_GRadioButton[3]);
+	GW_setRelativeDownWidget(d_GRadioButton[4], d_window.leftButton);
+	GW_setRelativeUpWidget(d_window.leftButton, d_GRadioButton[4]);
+	GW_setRelativeDownWidget(d_window.leftButton, d_window.rightButton);
+	GW_setRelativeUpWidget(d_window.rightButton, d_window.leftButton);
+	GW_setRelativeDownWidget(d_window.rightButton, d_GProgressBar);
+	GW_setRelativeUpWidget(d_GProgressBar, d_window.rightButton);
+	GW_setRelativeDownWidget(d_GProgressBar, d_GCheckBox);
+	
+	d_window.borderColor = 0xED621E;
+	d_window.backgroundColor = 0xED621E;
+	d_window.isBackgroundPainted = TRUE;
+	d_window.isBorderPainted = TRUE;
+	d_window.borderLeft = 1;
+	d_window.borderTop = 1;
+	d_window.borderRight = 1;
+	d_window.borderBottom = 1;
+	
+	
+}	
+
+FUNCTION event() {
+}
+
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	free d_GProgressBar;
+	free d_window;
+	free d_vmCU;
+	free d_ImageFrame;
+	free d_ImageProgress;
+	free d_GCheckBox;
+	free d_GRadioButton;
+}
+
+FUNCTION processPacket()
+{
+}
+
+/*
+*响应GRadioButton焦点事件
+*/
+ FUNCTION GRB_handleFocus(GRadioButton this, int focusType)
+ {
+ 	boolean eventConsumed = FALSE;
+ 	switch(focusType)
+ 	{
+ 		case EVENT_TYPE_FOCUSGAINED:
+ 			this.backgroundColor = 0xffff00;
+ 		break;
+ 		case EVENT_TYPE_FOCUSLOST:
+ 			this.backgroundColor = 0xF79044;
+ 		break;
+ 		default:
+ 		break;
+ 	}
+ 	return eventConsumed;
+ }
+ /*
+*响应GCheckBox焦点事件
+*/
+  FUNCTION GCB_handleFocus(GCheckBox this, int focusType)
+ {
+ 	boolean eventConsumed = FALSE;
+ 	switch(focusType)
+ 	{
+ 		case EVENT_TYPE_FOCUSGAINED:
+ 			this.backgroundColor = 0xffff00;
+ 		break;
+ 		case EVENT_TYPE_FOCUSLOST:
+ 			this.backgroundColor = 0xF79044;
+ 		break;
+ 		default:
+ 		break;
+ 	}
+ 	return eventConsumed;
+ }
+ 

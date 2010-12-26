@@ -1,0 +1,49 @@
+#include "./GGameIcon.h"
+#include "./GWidget.gtl"
+
+/**
+ * 创建GGameIcon.
+ * @param widgetName 控件的名称.
+ */
+FUNCTION GGI_makeGGameIcon(GGameIcon this, String widgetName, Object[] animateSetList)
+{
+	GGameIcon gi = NULL;
+	if(IsNotNull(this)){
+		gi = Realize(Gui_GGI_MakeGGameIcon(this, widgetName, animateSetList));
+	}
+	else{
+		gi = Realize(Gui_GGI_MakeGGameIcon(new GGameIcon, widgetName, animateSetList));
+	}
+	
+	//GGI_initGGameIcon(gi);
+	gi.func_paint = GW_paint;
+	gi.func_destroy = GW_destroy;
+	gi.isShown = TRUE;
+	
+	GGameIcon ret = Object_Create(gi);
+	free gi;
+	
+	return ret;
+}
+
+//FUNCTION GGI_initGGameIcon(GGameIcon this)
+//{
+//	this.func_paint = GW_paint;
+//	this.func_destroy = GGI_destroy;
+//	this.isShown = TRUE;
+//}
+
+FUNCTION GGI_setAnimateSetList(GGameIcon this, Object[] animatePlayerList)
+{
+	Gui_GGI_SetAnimatePlayerList(this, animatePlayerList);
+}
+
+//FUNCTION GGI_destroy(GGameIcon this)
+//{
+//	OBJECT_FREE(this.leftWidget);
+//	OBJECT_FREE(this.rightWidget);
+//	OBJECT_FREE(this.upWidget);
+//	OBJECT_FREE(this.downWidget);
+//	OBJECT_FREE(this.observer);
+//	OBJECT_FREE(this);
+//}

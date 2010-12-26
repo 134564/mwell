@@ -1,0 +1,469 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_test_3";
+DESCRIPTION "gui测试界面"; 
+
+#include "../core/common/general.gtl"
+#include "../core/gui/guicommon.gtl"//main cycle
+#include "../core/gui/gprogressbar.gtl"
+#include "../core/gui/gbutton.gtl"
+#include "../core/gui/gcontainer.gtl"
+#include "../core/gui/gvmcanvasunit.gtl"
+#include "../core/gui/gwindow.gtl"
+#include "../core/gui/glabel.gtl"
+#include "../core/gui/gicon.gtl"
+#include "../core/gui/gcheckbox.gtl"
+#include "../core/gui/gradiobutton.gtl"
+#include "../core/gui/gscrollbar.gtl"
+
+
+DATA{
+	GVMCanvasUnit	vmCU;
+	GWindow		 window;
+	GContainer   container1;
+	GLabel		label1;
+	//GLabel		label2;
+	GIcon[]		Icon;
+	GIcon[]     XYIcon;
+	GScrollPanel		scrollbar;
+	GContainer[]			xycontainer1;
+	//GImageNumber			xyimagenumber;
+	ImageSet 	Image;
+	ImageSet	IconImage;
+	ImageSet	ImageSkill;
+	ImageSet	ImageNumber;
+	
+}
+
+FUNCTION event()
+{
+
+}
+
+FUNCTION init()
+{
+	
+	
+	//---------------------------To create GCanvasUnit----------------------------
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(cuName));
+	//////////////////////////////////////////////////////////////////////////////
+	
+	//---------------------------To create GWindow---------------------------------
+	String captionText = Realize(Object_Create("技能列表"));
+	Image = Realize(ImageSet_Create("ui_res240.pip", TRUE));
+	
+	IconImage = Realize(ImageSet_Create("ability.pip", TRUE));
+	String windowName = Realize(Object_Create("window"));
+	window = Realize(GWnd_makeGWindow(windowName, captionText, Image, 12, 11));
+									
+	//init the window's property						
+	GWnd_initGWindow(window);
+	
+	GWnd_setBound(window, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+			
+	//add window to vmCu		
+	GC_addChildWidget(vmCU, window, 0);	
+	GW_setBound(vmCU, 0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+	
+	//---------------------------To Create GContainer1----------------------------
+	String Contain1Text = Realize(Object_Create("Gift"));
+	container1 = Realize(GC_makeGContainer(Contain1Text + "Container"));
+	free Contain1Text;
+	//GC_SetProperty(container1);
+	GC_addChildWidget(window, container1, 0);	
+	GW_setBound(container1, 
+	window.titleBar.borderLeft, 
+	window.titleBar.h, 
+	DEFAULT_WIDTH - window.titleBar.borderRight, 
+	DEFAULT_HEIGHT - window.titleBar.h - window.leftButton.h);
+	
+	container1.borderColor = 0xED621E;
+	container1.backgroundColor = 0xED621E;
+	container1.isBackgroundPainted = TRUE;
+	container1.isBorderPainted = TRUE;
+	//to create a label
+	String Label1Text = Realize(Object_Create("Gift"));
+	label1 = Realize(GL_makeGLabel(Label1Text + "GLabel", NULL, Image, 7));
+	free Label1Text;
+	GL_setProperty(label1);
+	GC_addChildWidget(container1, label1, 0);
+	
+	GW_setBound(label1, 
+	0, 
+	0, 
+	container1.w, 
+	container1.h);
+	
+	//to create gicon
+	Icon = new GIcon[5];
+	for(int i = 0; i < 5; i++)
+	{
+		String IconText = Realize(Object_Create(IntToStr(i)));
+		Icon[i] = GI_makeGIcon(IconText, NULL, Image, 65 + i, IconText, 0, G_CENTER );
+		free IconText;
+		GC_addChildWidget(container1, Icon[i], 0);
+
+	}
+	
+	for(int j = 0; j < 5; j++)
+	{	
+		GW_setBound(Icon[j], Icon[0].nPipWidth*(j + 1), (Icon[0].nPipHeight)/2, Icon[0].nPipWidth, Icon[0].nPipHeight);
+	}
+
+	GW_setBound(Icon[4], container1.w - Icon[4].nPipWidth, container1.h - Icon[4].nPipHeight, Icon[4].nPipWidth, Icon[4].nPipHeight);
+	
+	
+	
+	//to create a scrollpanel
+	String ScrollPanelText = Realize(Object_Create("ScrollPanel"));
+	scrollbar = GSP_makeGScrollPanel(ScrollPanelText);
+	free ScrollPanelText;
+	
+	GC_addChildWidget(container1, scrollbar, 0);
+	
+	scrollbar.func_handleFocus = GSP_handleFocus;
+	
+	
+	
+	GSP_setBounds(scrollbar, 
+	label1.borderLeft, 
+	(Icon[0].h)/2 + Icon[4].h, 
+	container1.w - label1.borderLeft*2 - (Icon[0].nPipWidth), 
+	container1.h - (Icon[0].h)/2 - Icon[4].h - Icon[4].nPipHeight*2 - 5 - 14);
+	
+	
+	ImageSkill = Realize(ImageSet_Create("ability240.pip", TRUE));
+	
+	ImageNumber = Realize(ImageSet_Create("number240.pip", TRUE));
+	/*String XYIconText = Realize(Object_Create("Skill"));
+	XYIcon = Realize(GI_makeGXYIcon(XYIconText + "XYIcon", NULL, ImageSkill, ImageNumber, 0, 60, 1, XYIconText, 0, G_CENTER));		
+	free XYIconText;
+	GIXY_initGIcon(XYIcon);
+	GIXY_setBound(XYIcon,0, 0);
+	GC_addChildWidget(container1, XYIcon, 0);*/
+	XYIcon = new GIcon[12];
+	for(int k = 0; k < 12; k++)
+	{
+		String XYIconText = Realize(Object_Create(IntToStr(k) + "Skill"));
+		XYIcon[k] = Realize(GI_makeGIcon(XYIconText + "XYIcon", NULL, ImageSkill, 60 + k, XYIconText, 0, G_CENTER));		
+		//GI_makeGIcon(IconText, NULL, Image, 65 + i, IconText, 0, G_CENTER );
+		free XYIconText;
+		GI_initGIcon(XYIcon[k]);
+		
+		//GIXY_setBound(XYIcon[k], scrollbar.x + (XYIcon[0].nIconWidth + XYIcon[0].nNumWidth)*(k + 1), scrollbar.y + XYIcon[0].nNumHeight + XYIcon[0].nIconHeight);
+		GW_setBound(XYIcon[k],0, 0, XYIcon[k].nPipWidth, XYIcon[k].nPipHeight);//如果用Linelayout，则不需要计算贴现这些控件的初始位置，在Linlayout中会计算好
+		/*XYIcon[k].imNum.isBackgroundPainted = TRUE;
+		XYIcon[k].imNum.isBorderPainted = FALSE;
+		XYIcon[k].imNum.imageNumber = 1;
+		XYIcon[k].imNum.isShowSign = FALSE;
+		XYIcon[k].imNum.plusStartIndex = 60;
+		XYIcon[k].imNum.subStartIndex = 75;
+		XYIcon[k].imNum.backgroundColor = 0x00ff00;*/
+		XYIcon[k].observer = scrollbar;
+		XYIcon[k].func_handleFocus = GSP_childFocusGain;
+		//XYIcon[k].icon_clicked = GSB_TouchbarButton;
+		//XYIcon[k].
+		
+		XYIcon[k].borderColor = 0xED621E;
+		XYIcon[k].backgroundColor = 0xF79044;
+		XYIcon[k].isBackgroundPainted = FALSE;
+		XYIcon[k].isBorderPainted = TRUE;
+		XYIcon[k].borderLeft = 1;
+		XYIcon[k].borderTop = 1;
+		XYIcon[k].borderRight = 1;
+		XYIcon[k].borderBottom = 1;
+		
+	}
+	
+	//to create the first line container
+	xycontainer1 = new GContainer[5];
+	for(int l = 0; l < 2; l++)
+	{
+		String xycontainText = Realize(Object_Create(IntToStr(l) + "Gift1"));
+		xycontainer1[l] = Realize(GC_makeGContainer(xycontainText + "Container"));
+		free xycontainText;
+		//GC_SetProperty(xycontainer1[l]);
+		xycontainer1[l].backgroundColor = 0xED621E;//可以查看scrollpanell的contentarea的大小区域，只需改变背景颜色即可
+		GC_addChildWidget(scrollbar.contentArea, xycontainer1[l], 0);	
+		GW_setBound(xycontainer1[l], 
+		scrollbar.contentArea.x + XYIcon[0].w/2,
+		scrollbar.contentArea.y + l*3*3*XYIcon[0].h ,
+		scrollbar.contentArea.w,
+		XYIcon[0].h);
+		for(int m = 0; m < 3; m++)
+		{
+			GC_addChildWidget(xycontainer1[l], XYIcon[m + l*7], 0);
+		}
+		GC_setLineLayout(xycontainer1[l], LAYOUT_ORIENT_HORIZON, LAYOUT_ALIGN_HLEFT, XYIcon[0].nPipWidth);
+		GC_pack(xycontainer1[l]);	
+	}
+	//+ scrollbar.upArrow.h
+	for(int n = 2; n < 4; n++)
+	{
+		String xycontainText1 = Realize(Object_Create(IntToStr(n) + "Gift2"));
+		xycontainer1[n] = Realize(GC_makeGContainer(xycontainText1 + "Container"));
+		free xycontainText1;
+		//GC_SetProperty(xycontainer1[n]);
+		xycontainer1[n].backgroundColor = 0xED621E;//可以查看scrollpanell的contentarea的大小区域，只需改变背景颜色即可
+		GC_addChildWidget(scrollbar.contentArea, xycontainer1[n], 0);	
+		GW_setBound(xycontainer1[n], 
+		scrollbar.contentArea.x + 2*XYIcon[0].w + 5,
+		scrollbar.contentArea.y + (n - 1)*3*XYIcon[0].h ,
+		scrollbar.contentArea.w - 2*XYIcon[0].w - 5,
+		XYIcon[0].h);
+		for(int p = 3; p < 5; p++)
+		{
+			GC_addChildWidget(xycontainer1[n], XYIcon[p + (n- 2)*2], 0);
+		}
+		GC_setLineLayout(xycontainer1[n], LAYOUT_ORIENT_HORIZON, LAYOUT_ALIGN_HLEFT, XYIcon[0].nPipWidth);
+		GC_pack(xycontainer1[n]);	
+	}
+	
+	//+ scrollbar.upArrow.
+	String xycontainText2 = Realize(Object_Create("gift5"));
+	xycontainer1[4] = Realize(GC_makeGContainer(xycontainText2 + "Container"));
+	free xycontainText2;
+	//GC_SetProperty(xycontainer1[4]);
+	xycontainer1[n].backgroundColor = 0xED621E;//可以查看scrollpanell的contentarea的大小区域，只需改变背景颜色即可
+	GC_addChildWidget(scrollbar.contentArea, xycontainer1[4], 0);
+	GW_setBound(xycontainer1[4], 
+		scrollbar.contentArea.x + 2*XYIcon[0].w + 5,
+		scrollbar.contentArea.y + 12*XYIcon[0].h,
+		scrollbar.contentArea.w - 2*XYIcon[0].w - 5,
+		XYIcon[0].h);
+	GC_addChildWidget(xycontainer1[4], XYIcon[10], 0);
+	GC_addChildWidget(xycontainer1[4], XYIcon[11], 0);
+	GC_setLineLayout(xycontainer1[4], LAYOUT_ORIENT_HORIZON, LAYOUT_ALIGN_HLEFT, XYIcon[0].nPipWidth);
+	GC_pack(xycontainer1[4]);	
+	
+	
+	/*String xyinumText = Realize(Object_Create("xyinum"));
+	xyimagenumber = Realize(GXYINUM_makeGXYImageNumber(xyinumText + "GXYImageNumber", 150, ImageNumber, 60, "当前", "点", 0, G_CENTER));
+	free xyinumText;
+	GC_addChildWidget(container1, xyimagenumber, 0);
+	GW_setBound(xyimagenumber, 
+	xyimagenumber.nWidth, scrollbar.y + scrollbar.h + 10, xyimagenumber.nWidth, xyimagenumber.nHeight);
+	xyimagenumber.isBackgroundPainted = FALSE;
+	xyimagenumber.isBorderPainted = FALSE;
+	xyimagenumber.imageNumber = 150;
+	xyimagenumber.isShowSign = FALSE;
+	xyimagenumber.plusStartIndex = 60;
+	xyimagenumber.subStartIndex = 75;
+	xyimagenumber.backgroundColor = 0x00ff00;
+	xyimagenumber.foregroundColor = 0x000000;*/
+	boolean bJudge = GSP_isScrollBarNeeded(scrollbar, 13*(XYIcon[0].h));
+	
+	GSP_setScrollAmount(scrollbar, 13*(XYIcon[0].h), (XYIcon[0].h));
+	
+	//GSB_setBarStep(scrollbar.vScrollBar, 3);
+	//GW_requestFocus(scrollbar);
+	
+	//GSB_setScrollBarVisible(scrollbar.vScrollBar, FALSE);
+	
+	window.borderColor = 0xED621E;
+	window.backgroundColor = 0xED621E;
+	window.isBackgroundPainted = TRUE;
+	window.isBorderPainted = TRUE;
+	window.borderLeft = 1;
+	window.borderTop = 1;
+	window.borderRight = 1;
+	window.borderBottom = 1;
+	
+	
+	
+	//properties
+	window.contentArea.borderColor = 0xF79044;
+	window.contentArea.backgroundColor = 0xF79044;
+	window.contentArea.isBackgroundPainted = TRUE;
+	window.contentArea.isBorderPainted = TRUE;
+	window.contentArea.borderLeft = 1;
+	window.contentArea.borderTop = 1;
+	window.contentArea.borderRight = 1;
+	window.contentArea.borderBottom = 1;
+	
+	window.statusBar.borderColor = 0xF79044;//0xED621E;
+	window.statusBar.backgroundColor = 0xF79044;
+	window.statusBar.isBackgroundPainted = TRUE;
+	window.statusBar.isBorderPainted = TRUE;
+	window.statusBar.borderLeft = 1;
+	window.statusBar.borderTop = 1;
+	window.statusBar.borderRight = 1;
+	window.statusBar.borderBottom = 1;
+	GL_setProperty(window.titleBar);
+	
+	
+	window.leftButton.borderColor = 0xED621E;
+	window.leftButton.backgroundColor = 0xED621E;
+	window.leftButton.borderLeft = 1;
+	window.leftButton.borderTop = 1;
+	window.leftButton.borderRight = 1;
+	window.leftButton.borderBottom = 1;
+	window.leftButton.selectionColor = 0xff0000;
+	window.leftButton.isSelectionPainted = TRUE;
+	
+	window.rightButton.borderColor = 0xED621E;
+	window.rightButton.backgroundColor = 0xED621E;
+	window.rightButton.borderLeft = 1;
+	window.rightButton.borderTop = 1;
+	window.rightButton.borderRight = 1;
+	window.rightButton.borderBottom = 1;
+	window.rightButton.isSelectionPainted = TRUE;
+	
+
+	
+	
+	GW_requestFocus(XYIcon[0]);
+	
+	GW_setRelativeLeftWidget(XYIcon[0], XYIcon[2]);
+	GW_setRelativeRightWidget(XYIcon[0], XYIcon[1]);
+	GW_setRelativeLeftWidget(XYIcon[1], XYIcon[0]);
+	GW_setRelativeRightWidget(XYIcon[1], XYIcon[2]);
+	GW_setRelativeLeftWidget(XYIcon[2], XYIcon[1]);
+	GW_setRelativeRightWidget(XYIcon[2], XYIcon[0]);
+	
+	GW_setRelativeLeftWidget(XYIcon[3], XYIcon[4]);
+	GW_setRelativeRightWidget(XYIcon[3], XYIcon[4]);
+	GW_setRelativeLeftWidget(XYIcon[4], XYIcon[3]);
+	GW_setRelativeRightWidget(XYIcon[4], XYIcon[3]);
+	
+	GW_setRelativeLeftWidget(XYIcon[5], XYIcon[6]);
+	GW_setRelativeRightWidget(XYIcon[5], XYIcon[6]);
+	GW_setRelativeLeftWidget(XYIcon[6], XYIcon[5]);
+	GW_setRelativeRightWidget(XYIcon[6], XYIcon[5]);
+	
+	GW_setRelativeLeftWidget(XYIcon[7], XYIcon[9]);
+	GW_setRelativeRightWidget(XYIcon[7], XYIcon[8]);
+	GW_setRelativeLeftWidget(XYIcon[8], XYIcon[7]);
+	GW_setRelativeRightWidget(XYIcon[8], XYIcon[9]);
+	GW_setRelativeLeftWidget(XYIcon[9], XYIcon[8]);
+	GW_setRelativeRightWidget(XYIcon[9], XYIcon[7]);
+	
+	GW_setRelativeLeftWidget(XYIcon[10], XYIcon[11]);
+	GW_setRelativeRightWidget(XYIcon[10], XYIcon[11]);
+	GW_setRelativeLeftWidget(XYIcon[11], XYIcon[10]);
+	GW_setRelativeRightWidget(XYIcon[11], XYIcon[10]);
+	
+
+	
+	GW_setRelativeUpWidget(XYIcon[0], XYIcon[7]);
+	GW_setRelativeDownWidget(XYIcon[0], XYIcon[7]);
+	GW_setRelativeUpWidget(XYIcon[1], XYIcon[10]);
+	GW_setRelativeDownWidget(XYIcon[1], XYIcon[3]);
+	GW_setRelativeUpWidget(XYIcon[2], XYIcon[11]);
+	GW_setRelativeDownWidget(XYIcon[2], XYIcon[4]);
+	
+	GW_setRelativeUpWidget(XYIcon[3], XYIcon[1]);
+	GW_setRelativeDownWidget(XYIcon[3], XYIcon[5]);
+	GW_setRelativeUpWidget(XYIcon[4], XYIcon[2]);
+	GW_setRelativeDownWidget(XYIcon[4], XYIcon[6]);
+	
+	GW_setRelativeUpWidget(XYIcon[5], XYIcon[3]);
+	GW_setRelativeDownWidget(XYIcon[5], XYIcon[8]);
+	GW_setRelativeUpWidget(XYIcon[6], XYIcon[4]);
+	GW_setRelativeDownWidget(XYIcon[6], XYIcon[9]);
+	
+	GW_setRelativeUpWidget(XYIcon[7], XYIcon[0]);
+	GW_setRelativeDownWidget(XYIcon[7], XYIcon[0]);
+	GW_setRelativeUpWidget(XYIcon[8], XYIcon[5]);
+	GW_setRelativeDownWidget(XYIcon[8], XYIcon[10]);
+	GW_setRelativeUpWidget(XYIcon[9], XYIcon[6]);
+	GW_setRelativeDownWidget(XYIcon[9], XYIcon[11]);
+	
+	GW_setRelativeUpWidget(XYIcon[10], XYIcon[8]);
+	GW_setRelativeDownWidget(XYIcon[10], XYIcon[1]);
+	GW_setRelativeUpWidget(XYIcon[11], XYIcon[9]);
+	GW_setRelativeDownWidget(XYIcon[11], XYIcon[2]);
+	
+								
+}
+
+FUNCTION event() {
+}
+
+FUNCTION cycleImpl()
+{
+	
+}
+
+FUNCTION cycleUIImpl()
+{
+	
+}
+
+FUNCTION paintImpl()
+{
+	
+}
+
+FUNCTION destroyImpl()
+{
+	
+	free window;
+	free Image;
+	free IconImage;
+	free vmCU;
+	free container1;
+	free label1;
+//	free label2;
+	free Icon;
+	free XYIcon;
+	free scrollbar;
+	free xycontainer1;
+	//free xyimagenumber;
+}
+
+FUNCTION processPacketImpl()
+{
+	return FALSE;
+}
+
+ /*
+*响应GScrollPanel焦点事件
+*/
+  FUNCTION GSP_handleFocus(GScrollPanel this, int focusType)
+ {
+ 	boolean eventConsumed = FALSE;
+ 	switch(focusType)
+ 	{
+ 		case EVENT_TYPE_FOCUSGAINED:
+ 			this.borderColor = 0x00ff00;
+ 		break;
+ 		case EVENT_TYPE_FOCUSLOST:
+ 			this.borderColor = 0xF79044;
+ 		break;
+ 		default:
+ 		break;
+ 	}
+ 	return eventConsumed;
+ }
+
+FUNCTION setFocus(GWidget this, GWidget left, GWidget right, GWidget up, GWidget down)
+{
+	
+	GW_setRelativeLeftWidget(this, left);
+	GW_setRelativeRightWidget(this, right);
+	GW_setRelativeUpWidget(this, up);
+	GW_setRelativeDownWidget(this, down);
+	
+	
+}
+
+/*setFocus(XYIcon[0], XYIcon[0], XYIcon[1], XYIcon[0], XYIcon[7]);
+	setFocus(XYIcon[1], XYIcon[0], XYIcon[2], XYIcon[1], XYIcon[3]);
+	setFocus(XYIcon[2], XYIcon[1], XYIcon[2], XYIcon[2], XYIcon[4]);
+	
+	setFocus(XYIcon[3], XYIcon[3], XYIcon[4], XYIcon[1], XYIcon[5]);
+	setFocus(XYIcon[4], XYIcon[0], XYIcon[1], XYIcon[0], XYIcon[3]);
+	
+	setFocus(XYIcon[5], XYIcon[5], XYIcon[6], XYIcon[3], XYIcon[8]);
+	setFocus(XYIcon[6], XYIcon[5], XYIcon[6], XYIcon[4], XYIcon[9]);
+	
+	setFocus(XYIcon[7], XYIcon[7], XYIcon[8], XYIcon[0], XYIcon[10]);
+	setFocus(XYIcon[8], XYIcon[7], XYIcon[8], XYIcon[0], XYIcon[3]);
+	setFocus(XYIcon[9], XYIcon[0], XYIcon[1], XYIcon[0], XYIcon[3]);*/
+	
+	//setFocus(XYIcon[10], XYIcon[10], XYIcon[11], XYIcon[7], XYIcon[10]);
+	//setFocus(XYIcon[11], XYIcon[10], XYIcon[12], XYIcon[8], XYIcon[11]);
+	//setFocus(XYIcon[12], XYIcon[11], XYIcon[12], XYIcon[9], XYIcon[12]);

@@ -1,0 +1,87 @@
+#include "./GCheckBox.h"
+#include "./GButton.gtl"
+
+/**
+ * 创建GCheckBox
+ * 
+ * @param widgetNmae	空间名称（调试用途）
+ * @param text			控件中的内容
+ * @return的对象是Realize过的
+ *
+ * NOTE:	默认情况为非选中状态，（可自行通过GCheckBox的变量isSelected来设置选中状态）
+ */
+ FUNCTION GCBOX_makeGCheckBox(GCheckBox this, String widgetName, String _caption)
+ {
+ 	GCheckBox cb = NULL;
+ 	if(IsNotNull(this)){
+ 		cb = Realize(Gui_GCBOX_MakeGCheckBox(this, widgetName, _caption));
+ 	}
+ 	else{
+ 		cb = Realize(Gui_GCBOX_MakeGCheckBox(new GCheckBox, widgetName, _caption));
+ 	}
+ 	
+	//GCBOX_initGCheckBox(cb);
+ 	//#if GB_ISSELECTION_PAINTED == TRUE
+ 	cb.isSelectionPainted = TRUE;
+ 	//#else
+ 	cb.isSelectionPainted = FALSE;
+ 	//#endif
+ 	
+ 	//#if GB_ISBACKGROUND_PAINTED == TRUE
+ 	cb.isBackgroundPainted = TRUE;
+ 	//#else
+ 	cb.isBackgroundPainted = FALSE;
+ 	//#endif
+ 	
+ 	cb.selectionColor = 0xFFFF0000;
+	cb.func_paint = GW_paint;
+ 	cb.func_handleKey = GBtn_handleKey;
+ 	cb.func_handleTouch = GBtn_handleTouch;
+	cb.btn_clicked = GCB_ClickFunImpl;	
+	cb.func_destroy = GBtn_destroy;
+	
+	GCheckBox ret = Object_Create(cb);
+	free cb;
+	
+	return ret;
+ }
+
+/**
+ * 初始化GCheckBox
+ */
+ FUNCTION GCBOX_initGCheckBox(GCheckBox this)
+ {
+ 	//GBtn_initGButton(this);
+ 	//#if GB_ISSELECTION_PAINTED == TRUE
+ 	this.isSelectionPainted = TRUE;
+ 	//#else
+ 	this.isSelectionPainted = FALSE;
+ 	//#endif
+ 	
+ 	//#if GB_ISBACKGROUND_PAINTED == TRUE
+ 	this.isBackgroundPainted = TRUE;
+ 	//#else
+ 	this.isBackgroundPainted = FALSE;
+ 	//#endif
+ 	
+ 	this.selectionColor = 0xFFFF0000;
+	this.func_paint = GW_paint;
+ 	this.func_handleKey = GBtn_handleKey;
+ 	this.func_handleTouch = GBtn_handleTouch;
+	this.btn_clicked = GCB_ClickFunImpl;	
+	this.func_destroy = GBtn_destroy;
+ }
+ 
+ /**
+ * 处理GCheckBox的btn_clicked事件
+ */
+ FUNCTION GCB_ClickFunImpl(GCheckBox this)
+ {
+ 	this.isSelected = (this.isSelected != TRUE);
+ 	return TRUE;
+ }
+// 
+// FUNCTION GCBOX_destroy(GCheckBox this)
+// {
+// 	GBtn_destroy(this);
+// }

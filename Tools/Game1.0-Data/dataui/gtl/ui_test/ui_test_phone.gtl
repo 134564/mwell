@@ -1,0 +1,152 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_test";
+DESCRIPTION "window测试界面"; 
+
+#include "../core/gui/guiInclude.h"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GWindow window;
+
+	GContainer testContainer;
+	
+	int screenHeight;
+	int screenWidth;
+	
+	int clientAreaW;
+	int clientAreaH;
+	
+	int []colors;
+	int colorIndex;
+
+	ImageSet res;
+}
+
+FUNCTION init()
+{
+	res = Realize(ImageSet_Create("ui_res240.pip", TRUE));
+	screenHeight = GetScreenHeight();
+	screenWidth = GetScreenWidth();
+	// 创建canvasUnit以及一个container.
+	create_canvasUnit();
+	
+	// 测试窗口
+	create_Window();
+	
+	// 测试窗口功能
+	test_Window();
+	
+	// 初始化颜色
+	init_colors();
+}
+
+FUNCTION event() {
+}
+
+/////////////// common function //////////////////////
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	free vmCU;
+	
+	// 窗口的销毁需要调用窗口本身的销毁函数， 已经在窗口的初始化过程中设置了其func_destroy 为GWnd_destroyGWindow，这里不需要再显示调用
+	//GWnd_destroyGWindow(window);
+}
+
+FUNCTION processPacket()
+{
+	return FALSE;
+}
+/////////////// create function //////////////////////
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = (GVMCU_MakeGVMCU_R(NULL, cuName));
+	free cuName;
+	GW_setBound(vmCU, 0, 0, screenWidth, screenHeight);
+}
+
+FUNCTION create_Window()
+{
+	// 创建一个窗口
+	String windowName = Realize(Object_Create("window"));
+	String windowCaption = Realize(Object_Create("测试Window"));
+	window = (GWnd_makeGWindow_R(NULL, windowName, windowCaption, NULL, -1, -1, "左软键", "右软件"));
+	free windowName;
+	free windowCaption;
+	
+	GC_addChildWidget(vmCU, window, 0);
+	GWnd_setBound(window, 0, 0, screenWidth, screenHeight);
+	window.leftButton.btn_clicked = leftbutton_Clicked;
+	window.rightButton.btn_clicked = rightbutton_Clicked;
+	
+	GW_requestFocus(window.leftButton);
+}
+
+// 测试窗口的属性 只是在window的客户区中添加子控件
+FUNCTION test_Window()
+{
+	String containerName = Realize(Object_Create("testContainer"));
+	testContainer = (GC_makeGContainer_R(NULL, containerName));
+	free containerName;
+	testContainer.isBackgroundPainted = TRUE;
+	testContainer.backgroundColor = 0x753d9a;
+	testContainer.isBorderPainted = TRUE;
+	testContainer.borderColor = 0xffffff;
+	GW_setBorderSize(testContainer, 2, 2, 2, 2);
+	
+	// 获取窗口的客户区大小
+	clientAreaW = GWnd_getClientWidth(window);
+	clientAreaH = GWnd_getClientHeight(window);
+	
+	GW_setBound(testContainer, 0, 0, clientAreaW, clientAreaH);
+	
+	// 需调用window自身的子控件添加函数
+	GWnd_addChildWidget(window, testContainer, 0);
+	GW_setRelativeRightWidget(window.leftButton, window.rightButton);
+}
+
+FUNCTION init_colors()
+{
+	colors = new int[3];
+	colors[0] = 0xff0000;
+	colors[1] = 0x00ff00;
+	colors[2] = 0x0000ff;
+}
+
+FUNCTION leftbutton_Clicked(GButton this)
+{
+	// window 的左软键被按下时的处理事件
+	if (colorIndex > 2)
+		colorIndex = 0;
+		
+	testContainer.backgroundColor = colors[colorIndex];
+	colorIndex++;
+	
+	GW_requestFocus(this);
+	return TRUE;
+}
+
+FUNCTION rightbutton_Clicked(GButton this)
+{
+	// window 的右软键被按下时的处理事件
+	testContainer.backgroundColor = 0x00ffff;
+	GW_requestFocus(this);
+	int ret = OpenUI("ui_gui_listbox");
+	return TRUE;
+}

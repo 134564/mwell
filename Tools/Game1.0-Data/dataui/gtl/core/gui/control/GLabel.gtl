@@ -1,0 +1,107 @@
+#include "./GLabel.h"
+
+//	公共接口
+//	public:
+
+/**
+ * 创建GLabel.
+ *
+ * @param widgetName	控件名
+ * @param text			label中要显示的内容字符串
+ * 
+ * NOTE:	label不支持分行显示功能
+ */
+FUNCTION GL_makeGLabel(GLabel this, String widgetName, String text)
+{
+	GLabel widget = NULL;
+	if(IsNotNull(this)){
+		widget = Realize(Gui_GL_MakeGLabel(this, widgetName, text));
+	}
+	else{
+		widget = Realize(Gui_GL_MakeGLabel(new GLabel, widgetName, text));
+	}
+	
+	//added by zxf
+	if(IsNotNull(text))
+	{
+		widget.h = GetFontHeight();
+		widget.w = StringWidth(text);
+	}
+	
+	//GL_initGLabel(widget);
+	widget.func_paint = GW_paint;
+	widget.func_destroy = GL_destroy;
+	widget.textInsetColor = 0xFFFFFFFF;
+
+	GLabel ret = Object_Create(widget);
+	free widget;
+	return ret;
+}
+
+/**
+ * 设置label中的文本内容.
+ *
+ * NOTE:	希望动态调整Label宽高，将adjustSize设为TRUE；默认为FALSE不动态调整。
+ */
+FUNCTION GL_setLabelText(GLabel this, String text)
+{
+	Gui_GL_SetLabelText(this, text);
+}
+
+/**
+ * Gui_GL_GetLabelText(GLabel this)
+ * 获取label的文本内容.
+ *
+ * NOTE:	注意返回值处理！！
+ */
+FUNCTION GL_getLabelText(GLabel this)
+{
+	return Gui_GL_GetLabelText(this);
+}
+
+FUNCTION GL_destroy(GLabel this)
+{
+	OBJECT_FREE(this._flyStrInfo);
+	OBJECT_FREE(this.leftWidget);
+	OBJECT_FREE(this.rightWidget);
+	OBJECT_FREE(this.upWidget);
+	OBJECT_FREE(this.downWidget);
+	OBJECT_FREE(this.observer);
+	OBJECT_FREE(this);
+}
+
+//	私有接口
+//	protected:
+
+/**
+ * 创建GLabel, 每次创建创建GLabel子控件时必须调用此方法,相当于调用了
+ * 基类的构造方法.
+ * @param this 要初始化的创建GLabel指针地址.
+ */
+//FUNCTION GL_initGLabel(GLabel this) 
+//{
+//	this.func_paint = GW_paint;
+//	this.func_destroy = GL_destroy;
+//	this.textInsetColor = 0xFFFFFFFF;
+//}
+
+/*设置字体的飞行属性
+@params isFly		标志是否允字体飞行
+@params oritation	字体飞行的方向(水平，垂直)
+@params	x			相对于控件的x
+@params	y			相对于控件的y
+@params	w			飞行区域的宽度
+@params	y			飞行区域的高度
+@params step		飞行的步长 
+*/
+FUNCTION GL_isFlyText(GLabel this, boolean isFly, int oritation, int x, int y, int w, int h, int step){
+	this.isFly = isFly;
+	free this._flyStrInfo;
+	this._flyStrInfo = Realize(new FlyStrInfo);
+	this._flyStrInfo.flyOrientation = oritation;
+	this._flyStrInfo.flyRect_x = x;
+	this._flyStrInfo.flyRect_y = y;
+	this._flyStrInfo.flyRect_w = w;
+	this._flyStrInfo.flyRect_h = h;
+	this._flyStrInfo.flyStrDistance = step;
+}

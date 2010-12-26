@@ -1,0 +1,2415 @@
+ /**
+ * 角色登陆<br>
+ * serial int<br>
+ * 角色Id int<br>
+ */
+#define ACTOR_LOGIN_CLIENT 				 1017
+
+	/**
+ * 角色信息<br>
+ * serial int<br>
+ * 角色信息 PLAYER<br>
+ */
+#define ACTOR_LOGIN_SERVER 				 1018
+
+/**
+ * 获取角色列表<br>
+ * serial int<br>
+ */
+#define ACTOR_LIST_CLIENT 				 1015
+
+/**
+ * 角色列表 <br>
+ * server->client <br>
+ * serial int <br>
+ * 数量 byte <br>
+ * 循环N次 <br>
+ * 角色ID int<br>
+ * 角色名字 string <br>
+ * 角色性别 sex   byte<br>
+ * 角色等级 level  byte<br>
+ */
+#define ACTOR_LIST_SERVER 				 1016
+
+/**
+ * 登录协议<br>
+ * 用户serial int<br>
+ * 用户名	String<br>
+ * 密码	String<br>
+ */
+#define LOGIN_CLIENT  1003
+	
+/**
+ * 登录协议<br>
+ * player信息    bytes<br>
+ */
+#define LOGIN_SERVER  1004
+
+/**
+ * 删除角色信息
+ * serial  int
+ * playerId int
+ */
+#define ACTOR_DELETE_CLIENT  2304
+
+/**
+ * 删除角色信息
+ */
+#define ACTOR_DELETE_SERVER  2305
+
+
+/**
+ * 请求其他玩家的信息
+ * serial      int
+ * playerId    int
+ */
+#define VIEW_NET_PLAYER_CLIENT  2310
+	
+		/**
+	 * 请求其他玩家的信息
+	 * playerId    int
+	 * 玩家名称     string
+	 * 玩家形象     short
+	 * 玩家装备信息     bytes
+	 * 玩家装备ep数量 epcount byte
+	 * 				循环epcout{
+	 * 					ep      int
+	 * 				}
+	 * 玩家等级     byte
+	 * 玩家公会名称 string
+	 * 玩家军阶     string
+	 * 称号         string
+	 * 师傅         string
+	 * 配偶         string
+	 * 家乡         string
+	 * 是否有宠物exist byte
+	 * 如果exsit = 1{
+	 * 				宠物名称       string
+	 * 				宠物形象       short
+	 * 				宠物装备       bytes
+	 *  			宠物装备ep数量 epcount byte
+	 * 				            循环epcout{
+	 * 									ep      int
+	 * 							}
+	 * 				宠物技能数量m   byte
+	 * 					循环m次{
+	 * 							技能名称 string
+	 * 							技能id int
+	 * 							技能icon byte
+	 * 							}
+	 * 				}
+	 */
+#define VIEW_NET_PLAYER_SERVER  2311
+
+
+
+
+
+
+
+
+
+
+/**
+ * 同步玩家数据
+ * 同步数量							byte
+ * 重复n次
+ * 	属性描述							short
+ *  属性值							int,string,complex
+ * 提示数量
+ * 重复n次
+ * 	属性描述							short
+ * 	属性值							int,string,complex
+ */		
+#define CONN_SYNC_PLAYER_SERVER 144
+
+/**
+ * 获取背包信息
+ * 
+ */
+#define CONN_BAGS_CLIENT  146
+	
+/**
+ * 返回背包信息<br>
+ * 包格数量(n)						byte<br>
+ * 循环n次<br>
+ *	{背包信息						BAG<br>
+ *		背包内容如下  	包格Id              byte<br>
+ *						包格大小（m）            byte<br>
+ *						循环m次	<br>
+ *					 	背包栏信息			BagGrid<br>
+ *						{背包栏内容如下<br>
+ *							背包栏id         byte<br>
+ *							背包栏数量（z）      short<br>
+ *								如果z > 0 读取物品信息内容（这个以后会有改动，现在下发的只是引擎里的信息）<br>
+ *								{
+ *									物品id     int<br>
+ *									物品名称name utf<br>
+ *									物品绑定，最大堆叠数量，品质(k)     short<br>
+ *									    k的含义是1——3位表示绑定类型  4-13位标示最大堆叠数量， 13位以后标示品质<br>
+ *									物品分组group      byte<br>
+ *									物品图标索引icon    short<br>
+ *									物品使用级别uselevel  byte<br>
+ *									物品价格price         int<br>
+ *									物品是否可以使用，使用环境， 目标类型，使用后是否消失，是否是任务物品（f）   byte<br>
+ *										f的含义1位是否可以使用<br>
+ *												2-3位是使用环境<br>
+ *												4-6位目标类型<br>
+ *												7位是使用后是否消失<br>
+ *												8位是是否是任务物品<br>
+ *									如果物品可以使用，写下信息<br>
+ *									{
+ *											施法时间	time  short<br>
+ *											冷却id         short<br>
+ *											冷却时间			int<br>
+ *											施法距离			byte<br>
+ *											职业       		byte<br>
+ *											确认对话			utf<br>
+ *									}
+ *									
+ *									如果是装备（group == TYPE_EQUIP = 1）， 装备部位part             byte<br>
+ *									是否绑定bound          byte<br>
+ *									实例instanceId         int <br>  
+ *								}
+ *						}
+ *								
+ *	}
+ */
+#define CONN_BAGS_SERVER  147
+
+
+/**
+ * 同步地图上的对象（玩家/npc/怪物） 
+ * id								int
+ * instanceId						int
+ * type								byte  0~6位为阵营  7位表示是怪物还是玩家(1表示怪物 0 表示玩家)
+ * name                             String
+ * x								int
+ * y								int
+ * imageId							short
+ */
+#define UNIT_REFRESH_SERVER 193
+
+/**
+ * 刷新多人走入走出视野信息
+ * 数量								byte
+ * 循环n次
+ * id								int
+ * instanceId						int
+ * type								byte 0~6位为阵营  7位表示是怪物还是玩家(1表示怪物 0 表示玩家)
+ * name                             String
+ * x								int
+ * y								int
+ * imageId							short
+ */
+ #define UNIT_MULTI_REFRESH_SERVER 193
+ 
+ 
+/**
+ * 任务信息下发，暂时只有场景任务需要
+ * 任务Id						int
+ * 任务名字						string
+ * 任务etf						byte[]
+ * 任务变量						int[]
+ */
+ #define AREAQUEST_INFO_SERVER  334
+ 
+ /**
+	 * 同步属性，这个用来广播
+	 * instanceId                  int
+	 * type                        byte
+	 * value                       int
+	 */
+#define CONN_SYNC_PROPERTY  339
+	
+	   /**
+     * 同步属性，这个用来广播
+     * 数量                                                               byte
+     * 循环n次
+     *  instanceId                  int
+     *  type                        byte
+     *  value                       int
+     */
+#define CONN_SYNC_MULTI_PROPERTY  340
+ 
+/**
+ * 移除物品
+ * 包格Id						byte
+ * 物品Id						int
+ * InstanceId					int
+ * 物品数量						byte
+ */
+#define CONN_REMOVEITEM_CLIENT  		1301
+
+
+/**
+ * 服务器上传的接触npc协议
+ * npcinstanceIdid					int
+ * questId							int
+ */
+#define CONN_TOUCHNPC_CLIENT 1103
+
+	/**
+	 * 使用物品
+	 * 包格Id						byte    如果没指定包格，那么包格Id为-1
+	 * 物品Id						int
+	 * 物品实例Id					int
+	 * 目标Id						int
+	 * 使用时间						int
+	 */
+#define CONN_USEITEM_CLIENT  1302
+
+#define BAG_ARRANGE_CLIENT		1304
+/**
+* 整理背包
+* serial							int
+* index                            int
+*/
+
+/**
+ * 角色当前的技能列表 
+ * 技能数量 byte<br>
+ * 技能 SKILL bytes [ 技能描述内容如下:<br>
+ * 技能Id int<br>
+ * 技能名字 string<br>
+ * 技能类型 int //按位划分(0:主动伤害 1:主动辅助2:被动技能3:光环技能7:技能是否能放置于技能栏)<br>
+ * 技能图标Id int //图标Id<br>
+ * ]<br>
+ */
+#define CONN_ROLE_SKILL_LIST_SERVER  1007
+	
+	/**
+	 * 所有技能列表
+	 * 技能数量						byte
+	 * 	技能							SKILL	 
+	 * [ 技能描述内容如下:<br>
+	 * 		技能Id						int<br>
+			技能名字						string<br>
+			技能cd组                       byte<br>
+			技能cd时间                    int<br>
+			技能范围						byte<br>
+			技能类型						byte	//按位划分(0:主动伤害 1:主动辅助2:被动技能3:光环技能7:技能是否能放置于技能栏)<br>
+			技能目标类型					byte	//按位划分(0:[友善目标,敌对目标]1:[不需要目标,单体目标]<br>
+			起手技能动画Id				int		
+			施法动画Id					int
+			命中动画Id					int
+			轨迹动画Id					int
+			技能图标Id					int		//图标Id<br>
+			技能耗蓝                       short<br>
+			升级所需级别                 short<br>
+		]<br>
+	 */
+#define CONN_SKILL_LIST_SERVER  1008
+	
+/**
+ * serial int <br>
+ * 天赋树个数 byte<br>
+ * 天赋树信息 <br>
+ * treeName String <br>
+ * treeID 	int<br>
+ * totalPoint	int<br>
+ * talentCount	int<br>
+ * 	循环count次<br>
+ * 		talent.name  String <br>
+ * 		talent.id	int<br>
+ * 		talent.iconIndex	int <br>
+ * 		talent.row	byte<br>
+ * 		talent.column	  byte<br> 
+ * 
+ * 
+ * @see shaft.talent.TalentTreeEx#toClientBytes 
+ */
+#define CONN_TALENT_LIST_SERVER  1009
+
+	
+	/**
+	 * 获取技能描述<br>
+	 * client->server<br>
+	 * serial int<br>
+	 * 技能ID  int <br>
+	 */
+#define CONN_SKILL_DESC_CLIENT 1010
+
+	/**
+	 * 技能描述<br>
+	 * server->client <br>
+	 * serial int <br>
+	 * 技能ID int <br>
+	 * 描述 string<br>
+	 */
+#define CONN_SKILL_DESC_SERVER  1011
+
+/**
+	 * 技能攻击<br>
+	 * 时间							int<br>
+	 * x							short<br>
+	 * y							short<br>
+	 * 方向							byte<br>
+	 * 目标InstanceId(如果是AOE技能的话，目标传-1。表明不需要技能对象)				int<br> 
+	 * 技能Id						int<br>		
+	 */
+#define CONN_SKILL_ATTACK_CLIENT  1085 
+	
+	/**
+	 * 技能攻击<br>
+	 * 源类型                    	byte<br>
+	 * 源InstanceId					int<br>
+	 * 目标类型                   	byte<br>
+	 * 目标InstanceId				int<br>
+	 * 释放动画ID                   	int<br>
+	 * 
+	 */
+#define CONN_SKILL_ATTACK_SERVER   1086 
+	
+	/**
+	 * 被攻击
+	 * 目标类型                   	byte<br>
+	 * 目标InstanceId				int<br>
+	 * 时间							int<br>
+	 * 源类型                    	byte<br>
+	 * 源InstanceId					int<br>
+	 * 攻击结果类型					byte	0 命中 1 miss 2 免疫 3 命中且暴击<br>
+	 * 技能组id   					int     <br>
+	 * 伤害值						int		只有在命中时有意义<br>
+	 * 轨迹动画                     	int <br>
+	 * 受攻击动画					int<br>
+	 */
+#define CONN_SKILL_ATTACKED_SERVER   1087 
+	/**
+	 * 攻击失败
+	 * 类型						byte  	1 距离太远 2 当前有攻击正在进行 3 目标已经死亡 4 目标不存在 
+	 * 									5 没有技能 6 此技能不能在马上使用 7 这个技能必须选择一个目标
+	 * 									8 这个技能不能对这个目标使用 9 目标没有死亡 10 次技能CD时间没到 11 当前状态不能使用此技能
+	 * 									12 没有足够的mana 13 级别保护 14 目标不在视野范围内 15 技能被打断
+	 * sourceInstanceId			int     源InstanceId
+	 * targetInstanceId			int		目标InstanceId
+	 * attackId					int		技能Id
+	 */
+#define CONN_ATTACK_FAIL_SERVER  1088
+	
+	/**
+	 * 自动攻击开始
+	 * 自动攻击对象InstanceId				int
+	 */
+#define CONN_AUTOATTACK_START_SERVER  1089
+	/**
+	 * 宠物炼化请求<br>
+	 * serial int <br>
+	 * mainPetInstanceID  int  主宠<br>
+	 * assistPetInstanceID int 副宠<br>
+	 */
+#define PET_REFINERY_CLIENT  1810
+	
+	/**
+	 * 宠物炼化成功<br>
+	 * serial int<br>
+	 */
+#define PET_REFINERY_SERVER  1811
+
+
+
+	/**
+	 * id								int
+	 * instanceId						int
+	 * 是否可见                          byte
+		 * type								short  0~6位为阵营  高7位数据后表示人物,资源，任务物品，采集，怪物,网络玩家 分别为0,1,2,3,4,10
+		 * name                             String
+		 * x								int
+		 * y								int
+		 * imageId							short
+		 * headAreaX                        byte
+		 * headAreaY                        byte
+		 * layer                            int
+		 * 【
+		 * 	如果是人物npc
+		 * 		是否是功能npc               	byte 
+		 * 		功能名称                    	String
+		 * 】
+		 * hpPercent						byte
+		 * mpPercent						byte
+	 */
+#define CONN_SPRITE_REFRESH_SERVER  1193
+
+	/**
+	 * 玩家上骑
+	 * horseId		int 坐骑ID
+	 * inatanceID	int 实例ID
+	 */
+#define CONN_HORSE_ON_CLIENT  1210
+	
+	/**
+	 * 玩家上骑
+	 * horseId		int 坐骑ID
+	 * inatanceID	int 实例ID
+	 * hosrseEp      int horseEp<br>
+	 */
+#define CONN_HORSE_ON_SERVER  1211
+	
+	/**
+	 * 玩家下骑
+	 * horseId		int 坐骑ID
+	 * inatanceID	int 实例ID
+	 */
+#define CONN_HORSE_DOWN_CLIENT  1212
+	
+	/**
+	 * 玩家下骑
+	 * horseId		int 坐骑ID
+	 * inatanceID	int 实例ID
+	 * horseEpPart   byte  horseEp显示部位<br>
+	 */
+#define CONN_HORSE_DOWN_SERVER  1213
+
+	/**
+	 * 角色坐骑列表
+	 * horseSpaceSize	byte 坐骑栏个数
+	 * newSpaceMoney	int 新坐骑栏价值
+	 * count			byte 坐骑个数
+	 * [坐骑信息
+	 * instanceId 		int 实例ID<br>
+	 * horseId			int 坐骑模板ID<br>
+	 * name       		int <br>
+	 * description		String 坐骑描述<br>
+	 * speed			byte 速度增加百分比(0-100)<br>
+	 * summonTime		short 召唤时间：毫秒<br>
+	 * iconIndex		short 图标索引<br>
+	 * animate			short 动画索引<br>
+	 * ep  int      坐骑ep<br>
+	 * ]
+	 */
+#define CONN_HORSE_LIST_SERVER 1216
+
+	/**
+	 * 购买新栏
+	 * horseSpaceSize	byte 坐骑栏总数量 
+	 * newSpaceMoney	int 新坐骑栏价值
+	 */
+#define  CONN_HORSE_BUYSPACE_SERVER 1217
+	
+	/**
+	 * 购买新栏
+	 * serial		int
+	 * horseId		int 购买数量 
+	 */
+#define  CONN_HORSE_BUYSPACE_CLIENT 1218
+
+	 
+	/**
+	 * 坐骑放生
+	 * horseId		int 坐骑ID
+	 * inatanceID	int 实例ID
+	 */
+#define  CONN_HORSE_FREE_SERVER   1219 
+	
+	/**
+	 * 坐骑放生
+	 * horseId		int 坐骑ID
+	 * inatanceID	int 实例ID
+	 */
+#define  CONN_HORSE_FREE_CLIENT   1220 
+
+
+/**
+	 * 整理背包
+	 * serial							int
+	 * index                            int
+	 */
+#define CONN_BAG_ARRANGE_CLIENT  1304
+	
+	/**
+	 * 整理背包完成
+	 * serial							int
+	 * 循环n次							byte
+	 * 	包格信息							GRID
+	 */
+#define CONN_BAG_ARRANGE_SERVER  1305
+/**
+	 
+	 * 宠物栏数量 byte<br>
+	 * 宠物数量 byte<br>
+		 * 如果数量大于零 发宠物数据<br>
+		 * { id int<br>
+		 * instanceId int<br>
+		 * name string<br>
+		 * 宠物品质 quality  byte<br>
+		 * 当前经验 exp int<br>
+		 * 升级所需经验 upExp int<br>
+		 * 同人物战斗属性 <br>
+		 * 同人物身上装备 <bt>
+		 *  级别 byte<br>
+		 *  技能数量 byte [<br>
+		 *  名称		String <br>
+		 *  技能ID	int <br>
+		 *  技能级别		byte<br>
+		 *  技能图标ID 	byte<br>
+		 *  ] <br>
+		 * }
+	 */
+
+
+/**
+	 * 配方列表请求<br>
+	 * serial int <br>
+	 * formulaType byte 配方的类型 0为装备，1为饰品，2为神农，3为制造<br>
+	 */
+#define FORMULA_LIST_CLIENT  1812
+	
+/**
+	 * 配方列表信息<br>
+	 * serial int <br>
+	 * proficiency 生产熟练度<br>
+	 * amount int 配方数量<br>
+	 * 如果 amount > 0 ,循环amount次 { <br>
+	 * byte[]{
+	 * formulaId int 配方ID <br>
+	 * itemTitle String 配方生成物品的名称<br>
+	 * itemIconID short 配方生成物品的图标<br>
+	 * formulaLevel short 配方所需熟练度<br>
+	 * }
+	 * produceCount short 可以制作的物品数量<br>
+	 * }<br>
+	 */
+#define FORMULA_LIST_SERVER  1813
+	
+	/**
+	 * 配方产出物品描述信息请求<br>
+	 * serial int <br>
+	 * formulaId int 配方ID <br>
+	 */
+#define FORMULA_DISCRIPTION_CLIENT  1814
+	
+
+	/**
+	 * 配方产出物品描述信息<br>
+	 * serial int <br>
+	 * type byte 产出类型 0为物品 -1为装备<br>
+	 * 如果产出的为装备<br>
+	 * {<br>
+	 * useLevel short 可以使用的等级 <br>
+	 * equipTitle String 装备名称 <br>
+	 * 装备属性信息byte[] 包括int[21]<br>
+	 * }<br>
+	 * 如果产出的是物品<br>
+	 * {<br>
+	 * useLevel short 使用等级<br>
+	 * itemDescription String 物品的描述<br>
+	 * }<br>
+	 */
+#define FORMULA_DISCRIPTION_SERVER  1815	
+
+	/**
+	 * 打造配方请求<br>
+	 * int serial <br>
+	 * int formulaId 配方ID<br>
+	 * byte count 打造的数量<br>   
+	 */
+#define FORMULA_PRODUCE_CLIENT  1816
+	/**
+	 * 打造配方确认<br>
+	 * int serial <br>
+	 */
+#define FORMULA_PRODUCE_SERVER  1817
+	/**
+	 * 配方所需请求<br>
+	 * int serial <br>
+	 * int formulaId 配方ID<br>
+	 */
+#define FORMULA_REQUIREMENT_INFO_CLIENT  1818
+	/**
+	 * 配方所需信息<br>
+	 * int serial <br>
+	 * size   byte 需求复杂类型的数量<br>
+	 * 如果size >0 循环size次 <br>
+	 * {<br>
+	 * amount byte 某个需求的数量 <br>
+	 * type byte 需求的类型  金钱TYPE_MONEY = 0, I币TYPE_IMONEY = 1, 物品TYPE_ITEM = 2<br>              ??????已有的金钱是需求的数量？？？？	 * duct byte 是否扣除 1扣除 0不扣除<br>
+	 * 如果需求类型为物品<br>
+	 * [<br>
+	 * itemId int 物品ID <br>
+	 * title String 物品名称 <br>
+	 * ]<br>
+	 * }<br>
+	 * 
+	 */
+#define FORMULA_REQUIREMENT_INFO_SERVER  1819
+
+#define CONN_PET_LIST_SERVER  1504
+	
+	/**
+	 * 请求物品信息<br>
+	 * 物品Id int <br>
+	 * 物品实例Id int -1 表示请求一般信息 <br>
+	 */
+#define ITEMINFO_CLIENT    1502 //获取物品描述 Client->Server
+	
+	/**
+	 * 类型								byte  0位为1说明需要ITEM信息，1位为1说明需要物品描述
+	 * 物品Id							int
+	 * 物品实例Id						int
+	 * 物品信息							ITEM  如果没有要ITEM信息，那么这个字段不存在
+	 * 物品描述信息						String 如果没有要描述信息，这个字段不存在
+	 */
+	 
+/**查看物品信息<br>
+	 * /**
+	 * 类型 byte type -1是装备 0是物品<br>
+	 * 物品Id int <br>
+	 * 物品实例Id int <br>
+	 * {<br>
+	 * 装备查看信息<br>
+	 * {
+	 * 		byte[]装备的基本信息(同背包的物品信息里的装备信息)<br>
+	 * 		int PastTime 到期时间//编辑器没有此项支持 <br>
+	 * 		byte starLevel 是否可鉴定星级<br>
+	 * 		如果可以鉴定,则有此项{
+	 * 		byte currentStarLevel 当前星级<br>
+	 * }
+	 * byte duration 装备耐久<br>
+	 * byte holeCount 宝石洞数<br>
+	 * byte maxHoleCount 最大宝石洞数<br>
+	 * byte currentHoleCount 当前镶嵌的宝石数<br>
+	 * 如果currentHoleCount>0 循环currentHoleCount次，则读取宝石信息 byte[]{<br>
+	 * 		String jewelName 宝石名称<br>
+	 * 		String jewelDescription 宝石描述<br>
+	 * }<br>
+	 * 鉴定信息<br>
+	 * {<br>
+	 *     鉴定内容<br>
+	 * }<br>
+	 * int suitID 套装ID<br>
+	 * String suitName套装名称<br>
+	 * byte suitEquipCount 套装总数量<br>
+	 * byte suitBuffCount 套装效果数量<br>
+	 * 如果suitEquipCount>0 ,循环suitEquipCount次 读取套装名称<br>
+	 * {<br>
+	 * 		String equipName 装备名称<br>
+	 * }<br>
+	 * 如果suitBuffCount>0 ,循环suitBuffCount次，读取套装效果<br>
+	 * {<br>
+	 * 		byte equipNum 出现此套装效果的装备数目
+<br>
+	 * 		String suitBuffDesc 套装对应装备BUFF的效果<br>
+	 * }<br>
+	 * }<br>
+	 * 如果不是装备，那么上面这个字段不存在<br>
+	 * 其他物品查看信息<br>
+	 * {
+	 * name 	String 物品名称<br>
+	 * useLevel  Byte 使用级别<br>
+	 * bindType  Byte 绑定类型<br>
+	 * useTimes  byte 使用次数<br>
+	 * description String 描述<br>
+	 * cooldownTime  int 冷却时间（毫秒）<br>
+	 * price   int 出售价格   -1表示不可出售<br>
+	 * }
+	 * 如果没有要其他物品信息，上面这个字段不存在<br>
+	 * }<br>
+	 */
+#define ITEMINFO_SERVER    1503 //获取物品描述 Server->Client
+	
+	/**
+	 * 上传服务器的接触npc协议
+	 * ui名称					string
+	 * id					string
+	 */
+#define OPENUI_SERVER  1104 
+
+////////////////////////////////////////////TT/////////////////////////////
+/**  Client->Server
+	 * 装备<br>
+	 * serial int<br>
+	 * 物品equiptype byte 玩家为1,宠物为2 <br>
+	 * 物品ItemId int <br>
+	 * 物品instanceId int <br>
+	 * 宠物petInstanceId int 如果是宠物，则需要发送这个id<br>
+	 */
+#define EQUIP_CLIENT  1603//获取宠物装备描述 
+
+	/**  Server->Client
+	 * 装备成功<br>
+	 * serial int<br>
+	 * 
+	 */
+#define EQUIP_SERVER  1604
+
+	/** Client->Server
+	 * 卸下装备 <br>
+	 * serial int<br>
+	 * 装备类型equiptype byte 玩家为1,宠物为2 <br>
+	 * 装备索引index int <br>//从左上到右下0——9
+	 * 宠物petInstanceId int<br>
+	 * 如果是宠物，则需要发送这个id<br>
+	 */
+#define UNEQUIP_CLIENT  1605
+
+	/**  Server->Client
+	 * 卸下装备成功<br>
+	 * serial int<br>
+	 */
+#define UNEQUIP_SERVER  1606
+
+//////////////////////////////////TTend/////////////////////////////////////////
+
+//获取生产技能信息
+#define CONN_PRODUCE_INFO_CLIENT 
+
+
+/**
+ * 返回生产技能信息
+ * 循环3次 （0 冶铸、1装备、2神农）
+ * {
+ *     熟练度(n)				short
+ *     配方数量(n)			short
+ *     循环n次
+ *     { 配方信息
+ *       配方id    	 			int
+ *       配方名称         String
+ * 			 配方图标索引			 byte 
+ *       需求物品种类m     byte
+ *       {循环m次
+ *           物品ID     		int
+ *           物品名称       String	
+ *           物品个数       byte
+ *       }
+ *      }
+ *  }     
+ */
+#define CONN_PRODUCE_INFO_SERVER 
+/**
+	 * 天赋加减点 <br>
+	 * Client -> Server <br>
+	 * serial int <br>
+	 * type 	byte <br> 0表示为加点  1表示为减点
+	 * skillID int 技能ID<br>
+	 */
+#define TALENT_ADDPOINT_CLIENT  1805
+	/**
+	 * 天赋加减点确认 <br>
+	 * Server -> Client <br>
+	 * skillID int 技能ID <br>
+	 */
+#define TALENT_ADDPOINTCONFIRM_SERVER  1806
+	/**
+	 * 获取天赋技能描述<br>
+	 * client->server<br>
+	 * serial int<br>
+	 * 技能ID int <br>
+	 */
+#define TALENT_DESC_CLIENT  1807
+	
+/**天赋技能描述<br>
+	 * server->client <br>
+	 * serial int <br>
+	 * 技能ID skillID int <br>
+	 * 当前等级描述perDesc  String <br>
+	 * 下一等级描述nextDesc string <br>
+	 */
+#define TALENT_DESC_SERVER  1808
+
+/**
+	 * 天赋信息请求<br>
+	 * Client -> Server <br>
+	 * serial int <br>
+	 */
+#define TALENT_INFO_CLIENT 1809 
+
+
+//   /**
+//    * 添加关卡中可以接受的任务
+//    * 起始npcid          int
+//    * 终止npcid          int
+//    * 任务id		         int
+//    * 任务等级       		 byte
+//    * 任务名字         		 string
+//    */
+//#define CONN_QUEST_START_ADDED_SERVER	125 
+//
+//   /**
+//    * 移除关卡中可以接受的任务
+//    * 起始npcId          int
+//    * 任务id		         int
+//    */
+//#define CONN_QUEST_START_REMOVED_SERVER		126      
+//
+//    /**
+//     * 添加关卡中可完成的任务
+//     * 结束npcid          int
+//     * 任务id         int
+//     * 是否需要完成提醒 byte
+//     */
+//#define CONN_QUEST_FINISH_ADDED_SERVER		127
+//
+//    /**
+//     * 移除关卡中可完成的任务
+//     * 结束npcid          int
+//     * 任务id         int
+//     */
+//
+//#define CONN_QUEST_FINISH_REMOVED_SERVER    128 
+//
+//#define CONN_QUEST_DESC_CLIENT              129 //获取任务描述 Server->Client
+//
+//
+//		/**
+//		 * 任务描述
+//		 * serial						int
+//		 * 任务id						int
+//		 * 描述							string
+//		 * 任务目标的数量				byte
+//		 * 奖励组数量					byte
+//		 * 循环n次
+//			 	奖励组Id						byte
+//			 	奖励数量						byte
+//			 	循环n次
+//			 		奖励类型						byte
+//			 		奖励内容						int,ITEM(属性值，如果类型是101，那么这个字段就是ITEM)
+//		 */
+//#define CONN_QUEST_DESC_SERVER		130 
+//
+//       /**
+//        * 接受任务成功
+//        * 任务id         int
+//        * 任务etf            byte[]
+//	    * 循环n次
+//	    *  任务目标描述					string              
+//        */
+//        
+////接受任务 Client->Server
+//#define CONN_QUEST_ACCEPT_CLIENT        131
+//
+// 
+//#define CONN_QUEST_ACCEPTED_SERVER		132 
+//
+//       /**
+//        * 任务完成
+//        * 任务id         int
+//        */
+//#define CONN_QUEST_FINISHED_SERVER      135 
+//
+//
+//       /**
+//        * 完成任务失败
+//        * 任务Id         int
+//        * 任务失败原因       byte    1 没有任务 2 不能完成
+//        */
+//#define CONN_QUEST_FINISH_FAIL_SERVER   138
+//
+//
+//	   /**
+//	   	*取任务阶段性描述 Client->Server
+//	   	*任务Id			 int
+//	    */
+//#define CONN_QUEST_PREDESC_CLIENT       149 
+//
+//
+//	/**
+//	 * 任务描述
+//	 * 任务Id						int
+//	 * 任务起始描述					String
+//	 * 奖励组数量					byte
+//	 * 循环n次
+//	 	奖励组Id						byte
+//	 	奖励数量						byte
+//	 	循环n次
+//	 		奖励类型						byte
+//	 		奖励内容						int,ITEM(属性值，如果类型是101，那么这个字段就是ITEM)
+//	 */
+//#define CONN_QUEST_PREDESC_SERVER   	150 
+//
+//#define CONN_QUEST_POSTDESC_CLIENT      151 //取任务结束描述 Client->Server
+//
+//#define CONN_QUEST_UNFINISHDESC_CLIENT  332 //获取任务未完成描述
+//
+//
+//      /**
+//       * 任务描述
+//       * 任务Id           int
+//       * 任务起始描述               String
+//       * 奖励组数量                    byte
+//       * 循环n次
+//                                             奖励组Id       byte
+//             	  奖励数量                   byte
+//            	   	  循环n次
+//                                                             奖励类型                        byte
+//                  	        奖励内容                        int,ITEM(属性值，如果类型是101，那么这个字段就是ITEM)
+//            */
+//#define CONN_QUEST_UNFINISHDESC_SERVER  333
+//
+//	    /**
+//         * 任务结束描述
+//         *    任务Id                     int
+//         * 任务结束描述                   string
+//         */
+//#define CONN_QUEST_POSTDESC_SERVER		152 
+//            
+//            
+//            /**
+//             * 任务列表
+//             * 任务数量                     byte
+//             * 循环n次
+//             *  任务Id                        int
+//             *  任务名字                        string
+//             *  任务etf                       byte[]
+//             *  任务变量                        int[]
+//	 		 * 循环n次
+//	 		 *  任务目标描述					string   
+//	 		 * 任务失败状态					byte (1 失败 0 没失败)          
+//            */
+//
+//#define CONN_QUEST_LIST_SERVER		    160 //获取任务列表 Server->Client
+//
+//        	/**
+//			 * 任务失败
+//			 * 任务Id				int
+//			 */
+//#define CONN_QUEST_FAIL_SERVER		    139 //任务失败 Server->Client
+//
+//
+//            /**
+//             * 服务器跟客户端同步任务变量
+//             * 同步数量                     byte
+//             * 循环n次
+//             *  任务Id                    int
+//             *  变量Index                 int
+//             *  变量值                     int
+//            */
+//#define CONN_VM_VARIABLE_SYNC_SERVER	163 //服务器与客户端同步变量 Server->Client
+//
+//
+//
+//            /**
+//             * 放弃任务成功
+//             * serial                       int
+//             * 任务Id                     int
+//             */
+//#define CONN_QUEST_ABANDON_SERVER       173 //放弃任务Server->Client
+//
+
+/**
+ * 装备
+ * serial						int
+ * equiptype                    byte 玩家为1,宠物为2
+ * ItemId						int
+ * instanceId					int
+ * petId                        int  如果是宠物，则需要读取这个id
+ */
+#define EQUIP_CLIENT  			1603
+/**
+ * 装备成功
+ * serial						int
+ * 
+ */
+#define EQUIP_SERVER  			1604
+/**
+ * 卸下装备
+ * serial						int
+ * equiptype                    byte 玩家为1,宠物为2
+ * index						int
+ * petId                        int  如果是宠物，则需要读取这个id
+ */
+#define UNEQUIP_CLIENT  	    1605
+/**
+ * 卸下装备成功
+ * serial						int
+ */
+#define UNEQUIP_SERVER  	    1606
+
+/**
+	 * 同步宠物数据
+	 * 宠物的实例id                     int
+	 * 同步数量							byte
+	 * 重复n次
+	 * 	属性描述							short
+	 *  属性值							int,string,complex
+	 * 提示数量
+	 * 重复n次
+	 * 	属性描述							short
+	 * 	属性值							int,string,complex
+	 */		
+#define CONN_SYNC_PET_SERVER 1607
+
+/**
+	 * 人物属性加点									<br>
+	 * Client -> Server 							<br>
+	 * strengthAdd               		int 加力量的点数<br>
+	 * agilityAdd						int 加敏捷的点数<br>
+	 * staminaAdd						int 加体力的点数<br>
+	 * intellectAdd						int 加智力的点数<br>
+	 * restPoint						int 剩余的属性点数<br>
+	 */
+#define  ROLE_ADD_POINT_CLIENT  1801
+
+
+#define  ROLE_ADD_POINT_SERVER  1802	
+
+
+/**
+ * 背包物品移动									<br>
+ * Client -> Server								<br>
+ * bagID								int 背包ID<br>
+ * sourceBagGridID						int 源物品在背包中的位置<br>
+ * destBagGridID						int 目标物品在背包中的位置<br>
+ */
+#define ITEM_STACK_CLIENT  1804
+
+
+
+/**
+ * 取关联玩家列表。<br>
+ * serial int <br>
+ * type byte 类型：0 - 好友、1 - 黑名单、2 - 仇人、3 - 临时、4 - 挚友、<br>
+ * 				   5 - 结义、6 - 配偶、 7 - 师傅、8 - 徒弟；<br>
+ */				   
+#define CONN_RELATIONSHIP_LIST_CLIENT  1951
+
+/**
+ * 返回关联玩家列表。<br>
+ * serial int <br>
+ * count int 列表大小 <br>
+ * 循环N次 <br>
+ * id int 玩家ID <br>
+ * name String 玩家名称<br>
+ * type byte 类型：0 - 好友、1 - 黑名单、2 - 仇人、3 - 临时、4 - 挚友、<br>
+ * 				   5 - 结义、6 - 配偶、 7 - 师傅、8 - 徒弟；<br>
+ * degree int 好友度/仇人度/临时好友交互类型 
+ * online boolean 是否在线，只有在线玩家的下面4个参数才有效 <br>
+ * level short 级别<br>
+ * sex byte 性别 <br>
+ * clazz byte 职业 <br>
+ * tong String 军团<br>
+ */
+#define CONN_RELATIONSHIP_LIST_SERVER  1952
+
+/**
+ * 删除关联玩家。<br>
+ * serial int <br>
+ * FriendID   int   好友id<br>
+ * type byte 类型：0 - 好友、1 - 黑名单、2 - 仇人、3 - 临时、4 - 挚友、<br>
+ * 				   5 - 结义、6 - 配偶、 7 - 师傅、8 - 徒弟；<br>
+ */				   
+#define CONN_DELETE_RELATED_PLAYER_CLIENT  1953
+
+
+/**
+ * 测试协议    客户端
+ * serial    int<br>
+ * content   String<br>
+ */
+#define TEST_CLIENT     2010
+/**
+ * 测试协议  服务器端
+ * serial    int<br>
+ * content   String<br>
+ */
+#define TEST_SERVER      2011
+
+/**
+ * 删除关联玩家。<br>
+ * serial int <br> 
+ */				   
+#define CONN_DELETE_RELATED_PLAYER_SERVER  1954
+
+/**
+ * 新增关联玩家。<br>
+ * serial int <br>
+ * FriendName   String   好友<br>
+ * type byte 类型：0 - 好友、1 - 黑名单、2 - 仇人、3 - 临时、4 - 挚友、<br>
+ * 				   5 - 结义、6 - 配偶、 7 - 师傅、8 - 徒弟；<br>
+ */				   
+#define CONN_ADD_RELATED_PLAYER_CLIENT  1955
+
+
+/**
+ * 新增关联玩家。<br>
+ * serial int <br> 
+ */				   
+#define CONN_ADD_RELATED_PLAYER_SERVER  1956
+
+/**
+ * 兄弟、夫妻、师徒任务/活动<br> 
+ * questType byte 类型：1- 结义、2 - 夫妻、 3 - 师徒<br>
+ */				   
+#define CONN_INTIMATE_QUEST_CLIENT  1957
+
+/**
+ * 兄弟、夫妻、师徒任务/活动。<br>
+ * questCount byte 任务数量<br>
+ * 循环questCount次
+ *     questId int <br>
+ *     questName String<br>
+ *     questLevel byte <br>
+ *     questState byte<br> 0 - 未接，1 - 未完成，2 - 已完成.
+ * partyCount byte 任务数量<br> 
+ * 循环partyCount次
+ *     partyId int <br>
+ *     partyName String<br>
+ *     partyDesc String<br> 
+ */				   
+#define CONN_INTIMATE_QUEST_SERVER  1958
+/**
+	 * 快捷栏设置<br>
+	 * serial           int
+	 * 
+	 * {这是一个bytes
+		 * 循环21次<br>
+		 * {
+		 * 		数据类型 type  byte
+		 * 		数据实例 instance   int
+		 * }
+	 * }
+	 */
+#define FAST_SET_CLIENT 2301
+	
+	/**
+	 * /**
+	 * 快捷栏设置
+	 * 循环数量count     byte
+	 * 循环count次<br>
+	 * {
+	 * 		数据类型 type  byte
+	 * 		数据实例 instance   int
+	 * }
+	 */
+#define	  FAST_SET_SERVER 2302	
+	
+
+// 网络协议
+#define CONN_ERROR                                                              -1 //错误包
+
+#define CONN_SYNC_CLIENT                                                        101 //时间同步 Client->Server
+#define CONN_SYNC_SERVER                                                        102 //时间同步 Server->Client
+#define CONN_ACTOR_LOGIN_CLIENT                                                 103 //用户登录 Client->Server
+#define CONN_ACTOR_LOGIN_SERVER                                                 104 //用户登录 Server->Client
+#define CONN_MOVE_CLIENT                                                        105 //移动 Client->Server
+#define CONN_MOVE_SERVER                                                        106 //移动 Server->Client
+#define CONN_ON_HORSE_CLIENT                                                    107 //上马 Client->Server
+#define CONN_OFF_HORSE_CLIENT                                                   108 //下马 Client->Server
+#define CONN_ATTACK_CLIENT                                                      109 //攻击 Client->Server
+#define CONN_ATTACK_SERVER                                                      110 //攻击 Server->Client
+#define CONN_ATTACKED_SERVER                                                    111 //被攻击 Server->Client
+#define CONN_LOGOUT_CLIENT                                                      113 //下线 Client->Server
+#define CONN_LOGOUT_SERVER                                                      114 //下线 Server->Client
+#define CONN_UNIT_INVISIBLE_SERVER                                              115 //单位不可见 Server->Client
+#define CONN_TOUCHEXIT_CLIENT                                                   116 //touch出口 Client->Server
+#define CONN_PKG_SERVER                                                         117 //关卡数据 Server->Client
+#define CONN_ANIMATEGET_CLIENT                                                  118 //获取动画文件 Client->Server
+#define CONN_ANIMATEGET_SERVER                                                  119 //获取动画文件 Server->Client
+#define CONN_NPC_CHAT_SERVER                                                    121 //Npc Chat Message Server->Client
+#define CONN_MESSAGE_SERVER                                                     122 //Message Server->Client
+#define CONN_QUESTION_SERVER                                                    123 //Question Message Server->Client
+#define CONN_ABILITIES_SERVER                                                   124 //技能列表 Server->Client
+#define CONN_QUEST_START_ADDED_SERVER                                           125 //添加关卡中可以接受的任务 Server->Client
+#define CONN_QUEST_START_REMOVED_SERVER                                         126 //移除关卡中可以接受的任务 Server->Client
+#define CONN_QUEST_FINISH_ADDED_SERVER                                          127 //添加关卡中可完成的任务 Server->Client
+#define CONN_QUEST_FINISH_REMOVED_SERVER                                        128 //移除关卡中可完成的任务 Server->Client
+#define CONN_QUEST_DESC_CLIENT                                                  129 //获取任务描述 Server->Client
+#define CONN_QUEST_DESC_SERVER                                                  130 //任务描述 Server->Client
+#define CONN_QUEST_ACCEPT_CLIENT                                                131 //接受任务 Client->Server
+#define CONN_QUEST_ACCEPTED_SERVER                                              132 //接受任务成功 Server->Client
+#define CONN_LOADING_FINISHED_CLIENT                                            133 //载入地图完成 Client->Server
+#define CONN_GOMAP_ALLOW                                                        134 //允许跳转地图 Server->Client
+#define CONN_QUEST_FINISHED_SERVER                                              135 //任务完成 Server->Client
+#define CONN_ATTACK_FAIL_SERVER                                                 1088 //攻击失败 Server->Client
+#define CONN_QUEST_FINISH_CLIENT                                                137 //完成任务 Client->Server
+#define CONN_QUEST_FINISH_FAIL_SERVER                                           138 //完成任务失败 Server->Client
+#define CONN_QUEST_FAIL_SERVER                                                  139 //任务失败 Server->Client
+#define CONN_CTNGET_CLIENT                                                      140 //获取ctn文件 Client->Server
+#define CONN_CTNGET_SERVER                                                      141 //ctn文件数据 Server->Client
+//#define CONN_USEITEM_CLIENT                                                     145 //使用物品 Client->Server
+#define CONN_BAG_CLIENT                                                         146 //获取背包信息 Client->Server
+#define CONN_BAG_SERVER                                                         147 //背包信息 Server->Client
+//#define CONN_REMOVEITEM_CLIENT                                                  148 //移除物品 Client->Server
+#define CONN_QUEST_PREDESC_CLIENT                                               149 //取任务阶段性描述 Client->Server
+#define CONN_QUEST_PREDESC_SERVER                                               150 //任务阶段性描述 Server->Client
+#define CONN_QUEST_POSTDESC_CLIENT                                              151 //取任务结束描述 Client->Server
+#define CONN_QUEST_POSTDESC_SERVER                                              152 //任务结束描述 Server->Client
+#define CONN_SKILL_LIST_CLIENT                                                  153 //获取玩家当前的技能列表 Client->Server
+#define CONN_SKILL_LIST_SERVER                                                  1008 //玩家当前的技能列表 Server->Client
+#define CONN_SKILL_ADDPOINT_CLIENT                                              155 //给技能加点 Client->Server
+#define CONN_SKILL_REFRESH_CLIENT                                               156 //洗技能点 Client->Server
+#define CONN_SKILL_NAMELIST_CLIENT                                              157 //取技能名字列表 Client->Server
+#define CONN_SKILL_NAMELIST_SERVER                                              158 //技能名字列表 Server->Client
+#define CONN_QUEST_LIST_CLIENT                                                  159 //获取任务列表 Client->Server
+#define CONN_QUEST_LIST_SERVER                                                  160 //获取任务列表 Server->Client
+#define CONN_QUEST_INFO_SERVER                                                  161 //任务信息下发 Server->Client
+#define CONN_VM_VARIABLE_SYNC_CLIENT                                            162 //客户端与服务器同步变量 Client-Server
+#define CONN_VM_VARIABLE_SYNC_SERVER                                            163 //服务器与客户端同步变量 Server->Client
+#define CONN_ACCOUNT_LOGIN_CLIENT                                               166 //登录帐号
+#define CONN_ACCOUNT_LOGIN_SERVER                                               167 //登录帐号成功
+#define CONN_ACTOR_LIST_CLIENT                                                  168 //获取角色列表
+#define CONN_ACTOR_LIST_SERVER                                                  169 //角色列表
+#define CONN_ACTOR_CREATE_CLIENT                                                170 //创建角色	
+#define CONN_ACTOR_CREATE_SERVER                                                171 //创建角色成功
+#define CONN_QUEST_ABANDON_CLIENT                                               172 //放弃任务Client->Server
+#define CONN_QUEST_ABANDON_SERVER                                               173 //放弃任务Server->Client
+#define CONN_NOTIFY_CLIENT                                                      174 //界面Notify
+#define CONN_EQUIP_CLIENT                                                       175 //装备
+#define CONN_EQUIP_SERVER                                                       176 //装备成功
+#define CONN_UNEQUIP_CLIENT                                                     177 //卸下装备
+#define CONN_UNEQUIP_SERVER                                                     178 //卸下装备成功
+#define CONN_PROPERTYPOINT_ADD_CLIENT                                           179 //增加属性点
+#define CONN_PROPERTYPOINT_ADD_SERVER                                           180 //增加属性点成功
+#define CONN_SKILL_DESC_CLIENT                                                  1010 //获取技能描述
+#define CONN_SKILL_DESC_SERVER                                                  1011 //技能描述
+#define CONN_SKILL_ADDPOINT_SERVER                                              183 //加点成功
+#define CONN_SKILL_REFRESH_SERVER                                               184 //洗点成功
+//#define CONN_SKILL_ATTACK_CLIENT                                                185 //发攻击包
+
+#define CONN_VERSION_COMPARE_CLIENT                                             188 //版本比较
+#define CONN_VERSION_COMPARE_SERVER                                             189 //版本比较结果
+    
+#define CONN_GETFILE_CLIENT                                                     191 //下载文件
+
+#define CONN_UNIT_REFRESH_SERVER                                                193
+#define CONN_UNIT_MOVE_SERVER                                                   195
+
+#define CONN_UNIT_INFO_SERVER                                                   197 //unit信息
+
+#define CONN_GATHER_START_CLIENT                                                198 //开始采集
+#define CONN_GATHER_END_CLIENT                                                  199 //采集结束
+
+#define CONN_RELOAD_CLIENT                                                      200 //重载服务器数据
+
+
+/**
+ * 发送聊天信息
+ * channel						byte  0 世界 1 地区 2 同乡 3 神魔 4 洞府 5 小队 6 私聊 7 系统(系统频道不可用，私聊需要加上对方Id，其他忽略)
+ * destId						int
+ * message						string
+ */
+#define CONN_CHAT_CLIENT                                                        201 //发送聊天信息
+
+/**
+ * 聊天信息
+ * channel						byte
+ * sourceId						int （信息发送方的ID）
+ * name							string 
+ * message						string
+ * 
+ */
+#define CONN_CHAT_SERVER                                                        202 //聊天信息
+
+#define CONN_CHAT_OPTION_CLIENT                                                 203 //聊天信息设置
+#define CONN_CHAT_OPTION_SERVER                                                 204 //聊天信息设置成功
+#define CONN_CHAT_NATIVE_CHANGE_CLIENT                                          205 //改变同乡信息
+#define CONN_CHAT_NATIVE_CHANGE_SERVER                                          206 //改变同乡信息成功
+
+#define CONN_PLAYER_INFO_CLIENT                                                 207 //取玩家信息
+#define CONN_PLAYER_INFO_SERVER                                                 208 //玩家信息
+
+#define CONN_PARTY_CREATE_CLIENT                                                209 //创建队伍
+#define CONN_PARTY_CREATE_SERVER                                                210 //创建队伍成功
+#define CONN_PARTY_INVIT_CLIENT                                                 211 //邀请加入队伍
+#define CONN_PARTY_INVIT_SERVER                                                 212 //邀请加入队伍
+#define CONN_PARTY_INVIT_OK_CLIENT                                              213 //答应组队请求
+#define CONN_PARTY_INVIT_REJECT_CLIENT                                          214 //拒绝组队请求
+#define CONN_PARTY_INVIT_REJECT_SERVER                                          215 //拒绝组队请求
+#define CONN_PARTY_INFO_SERVER                                                  216 //小队信息
+#define CONN_PARTY_KICK_CLIENT                                                  217 //踢出队员(队长有效)
+#define CONN_PARTY_KICK_SERVER                                                  218 //被踢出队伍
+#define CONN_PARTY_LEAVE_CLIENT                                                 219 //离开队伍
+#define CONN_PARTY_LEAVE_SERVER                                                 220 //离开队伍成功
+#define	CONN_PARTY_TRANSFER_LEADER_CLIENT										240	//转让队长职位(队长有效)
+#define	CONN_PARTY_INFORM_FOLLOWER_SERVER   									2306//server->client
+#define	CONN_PARTY_INFORM_UNFOLLOWER_SERVER   									2307//server->client
+#define	CONN_PARTY_FOLLOW_LEADER_CLIENT 										2308//跟随队长
+#define	CONN_PARTY_CANCLE_FOLLOW_CLIENT   										2309//取消跟随
+#define CONN_MAIL_POST_CLIENT                                                   1902 //发送邮件
+#define CONN_MAIL_POST_SERVER                                                   1903 //发送邮件成功
+#define CONN_MAIL_LIST_CLIENT                                                   1900 //获取Mail列表
+#define CONN_MAIL_LIST_SERVER                                                   1901 //Mail列表
+#define CONN_MAIL_CONTENT_CLIENT                                                1904 //获取Mail内容
+#define CONN_MAIL_CONTENT_SERVER                                                1905 //Mail内容
+#define CONN_MAIL_ATTACHMENT_CLIENT                                             1910 //提取附件
+#define CONN_MAIL_ATTACHMENT_SERVER                                             1911 //提取附件成功
+#define CONN_MAIL_DELETE_CLIENT                                                 1906 //删除邮件
+#define CONN_MAIL_DELETE_SERVER                                                 1907 //删除邮件成功
+#define CONN_MAIL_FAVORITE_CLIENT                                               1908 //收藏邮件
+#define CONN_MAIL_FAVORITE_SERVER                                               1909 //收藏邮件成功
+#define CONN_MAIL_NEW_SERVER                                                    233 //有新邮件
+
+#define CONN_OPENUI_SERVER                                                      235 //服务器打开脚本
+#define CONN_ACTIONBAR_OPTION_CLIENT                                            236 //请求技能条
+#define CONN_ACTIONBAR_OPTION_SERVER                                            237 //技能条数据
+#define CONN_SET_ACTIONBAR_OPTION_CLIENT                                        238 //提交技能条修改
+#define CONN_SET_ACTIONBAR_OPTION_SERVER                                        239 //技能条修改成功
+
+
+//好友，黑名单，仇人，临时好友相关
+#define CONN_ADD_FRIEND_CLIENT                                                  241 //请求添加好友/黑名单/仇人
+#define CONN_ADD_FRIEND_SERVER                                                  242 //添加好友/黑名单/仇人成功
+#define CONN_DEL_FRIEND_CLIENT                                                  243 //请求删除好友/黑名单/仇人
+#define CONN_DEL_FRIEND_SERVER                                                  244 //删除好友/黑名单/仇人成功
+#define CONN_GET_FRIENDLIST_CLIENT                                              245 //取关联玩家列表
+#define CONN_GET_FRIENDLIST_SERVER                                              246 //返回关联玩家列表
+#define CONN_FRIEND_ONLINE_SERVER                                               247 //好友/仇人上下线通知
+#define CONN_ENEMY_POSITION_CLIENT                                              248 //查看方位
+#define CONN_ENEMY_POSITION_SERVICE                                             249 //查看仇人方位成功
+
+//军团相关
+#define CONN_TONG_CREATE_CLIENT                                                 251 //请求创建军团
+#define CONN_TONG_CREATE_SERVER                                                 252 //创建军团成功
+#define CONN_TONG_MEMBER_CHANGE_SERVER                                          253 //军团成员属性变更通知
+#define CONN_TONG_LIST_CLIENT                                                   254 //取军团成员列表
+#define CONN_TONG_LIST_SERVER                                                   255 //返回军团成员列表
+#define CONN_TONG_INVITE_CLIENT                                                 256 //邀请加入军团
+#define CONN_TONG_INVITE_SERVER                                                 257 //邀请发送成功
+#define CONN_TONG_INVITATION_SERVER                                             258 //向被邀请加入军团的角色发送的通知
+#define CONN_TONG_JOIN_CLIENT                                                   259 //请求加入军团
+#define CONN_TONG_JOIN_SERVER                                                   260 //加入军团成功
+#define CONN_TONG_REJECT_CLIENT                                                 261 //拒绝军团邀请
+#define CONN_TONG_QUIT_CLIENT                                                   262 //请求退出军团
+#define CONN_TONG_QUIT_SERVER                                                   263 //退出军团成功
+#define CONN_TONG_SET_SLOGAN_CLIENT                                             264 //请求修改军团公告
+#define CONN_TONG_SET_SLOGAN_SERVER                                             265 //修改军团公告成功
+#define CONN_TONG_PROMOTE_CLIENT                                                266 //请求提升/降职（包括转让都督职务）
+#define CONN_TONG_PROMOTE_SERVER                                                267 //提升/降职成功
+#define CONN_TONG_KICK_CLIENT                                                   268 //请求移出军团成员
+#define CONN_TONG_KICK_SERVER                                                   269 //移出军团成员成功
+#define CONN_TONG_FORBID_CLIENT                                                 270 //请求禁言/解除禁言某军团成员
+#define CONN_TONG_FORBID_SERVER                                                 271 //禁言/解除禁言成功
+#define SYMBIAN_UPDATE_URL_SERVER												272 //服务器强制更新客户端（symbian专用）
+
+#define CONN_ROLL_CLIENT                                                        280 //roll点
+#define CONN_ROLL_SERVER                                                        281 //下发可roll物品
+
+//PK
+#define CONN_PK_INVIT_CLIENT                                                    282 //发起PK
+#define CONN_PK_INVIT_SERVER                                                    283 //接受到别人的PK请求
+#define CONN_PK_REFUSE_CLIENT                                                   284 //拒绝PK
+#define CONN_PK_REFUSE_SERVER                                                   285 //拒绝PK
+#define CONN_PK_OK_CLIENT                                                       286 //同意PK
+#define CONN_PK_OK_SERVER                                                       287 //PK建立成功
+#define CONN_PK_OVER_SERVER                                                     288 //PK结束
+
+#define CONN_BUFF_SYNC_SERVER                                                   291 //同步buf
+#define CONN_COOLDOWN_SERVER                                                    292 //冷却组
+#define CONN_COOLDOWN_END_SERVER                                                293 //冷却组结束
+
+//玩家死亡
+#define CONN_DIE_SERVER                                                         294 //玩家死亡消息
+#define CONN_RELIVE_CLIENT                                                      295 //复活
+#define CONN_RELIVE_SERVER                                                      296 //通知玩家复活
+
+//商店
+#define CONN_SHOP_LIST_CLIENT                                                   300 //取商店商品列表
+#define CONN_SHOP_LIST_SERVER                                                   301 //返回商店商品列表
+#define CONN_SHOP_BUY_CLIENT                                                    302 //请求购买商品
+#define CONN_SHOP_BUY_SERVER                                                    303 //购买商品成功
+#define CONN_SHOP_SELL_CLIENT                                                   304 //请求出售物品
+#define CONN_SHOP_SELL_SERVER                                                   305 //出售物品成功
+
+#define CONN_ACTOR_DELETE_CLIENT                                                310 //删除角色
+#define CONN_ACTOR_DELETE_SERVER                                                311 //删除角色成功
+
+#define CONN_BUFF_DESC_CLIENT	                                                312 //删除角色成功
+#define CONN_BUFF_DESC_SERVER	                                                313 //删除角色成功
+
+#define CONN_CANCEL_AUTOATTACK_CLIENT                                           314 //取消自动攻击
+#define CONN_AUTOATTACK_START_SERVER                                            315 //自动攻击开始
+
+#define CONN_CANCEL_ATTACK														318//取消攻击
+#define CONN_CANCEL_USEITEM 													319//取消
+
+#define CONN_ACCOUNT_REG_CLIENT                                                 316 //注册帐号
+#define CONN_ACCOUNT_REG_SERVER                                                 317 //注册帐号成功
+#define CONN_ACCOUNT_QUICK_REG_CLIENT											322//快速注册
+
+#define CONN_PARTY_TOUCHED_EXIT_SERVER                                          320 //队友touch了地图出口
+#define CONN_FORCE_GOMAP_SERVER                                                 321 //强制过地图
+#define CONN_REPAIR_CLIENT                                                      323 //修理装备
+#define CONN_REPAIR_SERVER                                                      337 //修理装备
+
+#define CONN_CHANGE_SEX_CLIENT												    324 //请求修改性别
+#define CONN_CHANGE_SEX_SERVER												    325	//
+#define CONN_CHANGE_NAME_CLIENT												    326
+#define CONN_CHANGE_NAME_SERVER												    327
+#define CONN_CHANGE_CLASS_CLIENT											    328
+#define CONN_CHANGE_CLASS_SERVER											    329
+#define CONN_CHANGE_FACTION_CLIENT											    330
+#define CONN_CHANGE_FACTION_SERVER											    331
+#define CONN_CHANGE_PASSWORD_CLIENT											    334
+#define CONN_CHANGE_PASSWORD_SERVER											    335
+
+#define CONN_QUEST_UNFINISHDESC_CLIENT										    332 //获取任务未完成描述
+#define CONN_QUEST_UNFINISHDESC_SERVER 									        333 //获取任务未完成描述
+
+#define CONN_OUT_PRISON_CLIENT                                                  338 //脱离卡死
+#define CONN_SHOW_HPMP_SERVER                                                   339 //显示HPMP变化
+
+#define USEITEM_FAIL_SERVER                                                     340 //使用物品失败
+#define CONN_PARTY_DESTORY_CLIENT                                               341 //解除队伍
+#define CONN_PARTY_DESTORY_SERVER                                               342 //队伍已经解除
+
+#define CONN_QUEST_ACCEPT_FAIL_SERVER                                           343 //接任务失败
+#define CONN_GRID_EXCHANGE_CLIENT 												344 //移动包格
+#define CONN_GRID_EXCHANGE_SERVER 												345 //移动包格成功
+
+#define CONN_GM_CALL_CLIENT                                                     346 //呼叫GM
+#define CONN_GM_CALL_SERVER                                                     347 //呼叫GM成功
+
+#define CONN_SHOUT_SERVER                                                       349 //喊话
+#define CONN_FINDPATH_CLIENT                                                    350 //寻找道路
+#define CONN_FINDPATH_SERVER                                                    351 //寻找道路返回
+
+#define CONN_EXCHANGE_INVIT_CLIENT                                             	352
+#define CONN_EXCHANGE_INVIT_SERVER                                              353
+#define CONN_EXCHANGE_INVIT_OK_CLIENT                                           354
+#define CONN_EXCHANGE_INVIT_REFUSE_CLIENT                                       355
+#define CONN_EXCHANGE_INVIT_REFUSE_SERVER                                       356
+#define CONN_EXCHANGE_INFO_SERVER                                             	357
+#define CONN_EXCHANGE_ADDITEM_CLIENT  											358
+#define CONN_EXCHANGE_REMOVEITEM_CLIENT 										359
+#define CONN_EXCHANGE_ACCEPT_CLIENT												360
+#define CONN_EXCHANGE_CANCEL_CLIENT 											361
+#define CONN_EXCHANGE_COMPLETE_SERVER											362
+#define CONN_EXCHANGE_GRIDFULL_SERVER 											363
+
+#define CONN_TITLES_GET_CLIENT                                                  365  //获取Titles
+#define CONN_TITLES_SERVER                                                      366
+#define CONN_TITLE_SET_CLIENT                                                   367  //设置Title
+#define CONN_TITLE_SET_SERVER                                                   368  //设置Title成功
+#define CONN_TITLE_REMOVE_CLIENT                                                369  //丢弃Title
+#define CONN_TITLE_REMOVE_SERVER                                                370  //丢弃Title成功
+#define CONN_TITLE_LIST_CLIENT                                                  371  //获取指定的Title列表
+#define CONN_TITLE_LIST_SERVER                                                  372  //Title列表
+#define CONN_TITLE_BUY_CLIENT                                                   373  //购买Title
+#define CONN_TITLE_BUY_SERVER                                                   374  //购买Title成功
+
+#define CONN_FORGET_SKILL_CLIENT                                                375
+#define CONN_FORGET_SKILL_SERVER                                                376
+
+#define CONN_GIFT_LIST_CLIENT													377
+#define CONN_GIFT_LIST_SERVER													378
+#define CONN_GIFT_GET_CLIENT													379
+#define CONN_GIFT_GET_SERVER													380
+
+#define CONN_CONFIG_CLIENT                                                      382 //客户端取配置请求
+#define CONN_CONFIG_SERVER                                                      383 //客户端配置
+#define CONN_CONFIG_SAVE_CLIENT                                                 384 //保存客户端配置
+#define CONN_CONFIG_SAVE_SERVER                                                 385 //保存客户端配置成功
+
+#define CONN_PUSH_HINT_SERVER                                                   199 //下发小提示
+
+//#if SupportSound == true
+#define CONN_MUSIC_SERVER														620 //播放背景音乐请求
+//#endif
+
+//坐骑相关协议
+#define CONN_HORSE_EQUIP_CLIENT                                                 386 //请求装备坐骑
+#define CONN_HORSE_EQUIP_SERVER                                                 387 //装备坐骑成功
+#define CONN_HORSE_RIDE_CLIENT                                                  388 //请求上骑
+#define CONN_HORSE_RIDE_SERVER                                                  389 //上骑成功
+#define CONN_HORSE_FEED_CLIENT                                                  390 //请求喂食
+#define CONN_HORSE_FEED_SERVER                                                  391 //喂食成功
+#define CONN_HORSE_FOOD_CLIENT                                                  392 //请求装备喂食
+#define CONN_HORSE_FOOD_SERVER                                                  393 //装备喂食成功
+#define CONN_HORSE_THROW_CLIENT                                                 394 //请求丢弃坐骑
+#define CONN_HORSE_THROW_SERVER                                                 395 //丢弃坐骑成功
+#define CONN_HORSE_CHANGENAME_CLIENT                                            396 //请求修改坐骑名字
+#define CONN_HORSE_CHANGENAME_SERVER                                            397 //修改坐骑名字成功
+#define CONN_HORSE_CHANGE_SKILL_CLIENT                                          398 //请求给坐骑加点
+#define CONN_HORSE_CHANGE_SKILL_SERVER                                          399 //给坐骑加点成功
+#define CONN_HORSE_BAG_CLIENT                                                   400 //请求坐骑包信息
+#define CONN_HORSE_BAG_SERVER                                                   401 //坐骑包信息成功
+#define CONN_HORSE_PACK_CLIENT                                                  402 //请求坐骑打包
+#define CONN_HORSE_PACK_SERVER                                                  403 //坐骑打包成功
+#define CONN_HORSE_UNEQU_CLIENT                                                 404 //请求卸下坐骑装备
+#define CONN_HORSE_UNEQU_SERVER                                                 405 //卸下坐骑装备成功
+#define CONN_HORSE_UNRIDE_CLIENT                                                406 //请求下骑
+#define CONN_HORSE_UNRIDE_SERVER                                                407 //下骑成功
+#define CONN_TITLE_SALARY_CLIENT                                                408 //领取俸禄
+#define CONN_TITLE_SALARY_SERVER                                                408 //领取俸禄成功
+
+#define CONN_GATHER_CANCLED_SERVER												411//采集被打断:1 采集物品已经不存在 2 遭受攻击  3主动打断
+#define CONN_VIEW_ACCEPT_SERVER                                                 412 //切换地图以后的服务器确认，客户端在发送完LOADING_FINISH_CLIENT包以后等待次包，然后才将场景显示出来
+
+#define CONN_BATTLEFIELD_SIGNUP_CLIENT 											413//战场报名
+#define CONN_BATTLEFIELD_SIGNUP_SERVER											414//报名成功
+#define CONN_BATTLEFIELD_TRAN_SERVER											415//传送通知
+#define CONN_BATTLEFIELD_TRAN_CLIENT 											416//确认传送
+#define CONN_BATTLEFIELD_START_NOTIFY_SERVER									417//开战通知
+#define CONN_BATTLEFIELD_QUIT_CLIENT											418//退出战场
+#define CONN_BATTLEFIELD_INFO_CLIENT											419//查看成绩
+#define CONN_MAP_INFO_SERVER                                                    420//战场信息
+
+#define CONN_SKILL_REFRESH_MONEY_CLIENT											421//洗点花费查询
+#define CONN_SKILL_REFRESH_MONEY_SERVER											422//洗点花费返回
+#define CONN_SKILL_INFO_CHANGED_SERVER                                          423//技能属性变化
+
+#define CONN_CHINARUN_CLIENT                                                    424 //神州行充值
+#define CONN_CHINARUN_SERVER                                                    425 //神州行返回
+#define CONN_ACTIVATIONCODE_CLINET                                              426 //激活码换物品
+#define CONN_ACTIVATIONCODE_SERVER                                              427 //激活码换物品成功
+#define CONN_ISHOP_LIST_CLIENT                                                  428 //获取i币商店列表
+#define CONN_ISHOP_LIST_SERVER                                                  429 //i币商店列表
+#define CONN_LEADER_TRAN_SERVER                                                 430 //队长传送过地图
+
+
+#define CONN_STAR_ENHANCE_CLIENT                                                433 //星级鉴定
+#define CONN_STAR_ENHANCE_SERVER                                                434
+#define CONN_START_ENHANCE_MONEY_CLIENT                                         435 //获取星级鉴定金钱
+#define CONN_START_ENHANCE_MONEY_SERVER                                         436
+#define CONN_NATURAL_ENHANCE_CLIENT                                             437 //资质鉴定
+#define CONN_NATURAL_ENHANCE_SERVER                                             438
+#define CONN_NATURAL_ENHANCE_MONEY_CLIENT                                       439 //获取资质鉴定金钱
+#define CONN_NATURAL_ENHANCE_MONEY_SERVER                                       440
+
+//投票
+#define CONN_CHINAJOY_GIFT_CLIENT                                               441 //金翎投票
+#define CONN_CHINAJOY_GIFT_SERVER                                               442 //投票成功
+#define CONN_CHINAJOY_COUNT_CLIENT                                              443 //今天的投票次数
+#define CONN_CHINAJOY_COUNT_SERVER                                              444 //返回投票次数
+
+
+#define CONN_AUCTION_CREATEAUCTION_CLIENT										477
+#define CONN_AUCTION_CREATEAUCTION_SERVER 										478
+#define CONN_AUCTION_LIST_CLIENT											 	479
+#define CONN_AUCTION_LIST_SERVER												480
+#define CONN_AUCTION_BUY_CLIENT 												481
+#define CONN_AUCTION_BUY_SERVER													482
+#define CONN_AUCTION_PUBLISHIED_CLIENT 											483
+#define CONN_AUCTION_PUBLISHIED_SERVER 											484
+
+#define CONN_SUITE_CLIENT														485//套装信息
+#define CONN_SUITE_SERVER														486
+
+#define CONN_MARRIAGE_CLIENT													487//发起结婚请求
+#define CONN_MARRIAGE_INVITE_SERVER												489//被邀请结婚
+#define CONN_MARRIAGE_ANSWER_CLIENT												490//响应结婚
+#define CONN_MARRIAGE_COMPLETE													488//结婚结束
+
+#define CONN_DIVORCE_CLIENT														491//离婚申请
+#define CONN_DIVORCE_ASK_SERVER													492//征求被动方意见
+#define CONN_DIVORCE_ANSWER_CLIENT												493//被动方反馈
+#define CONN_DIVORCE_SERVER														494//离婚结果
+
+//镶嵌
+#define CONN_DECORATE_ADD_JEWEL_CLIENT											495//镶嵌宝石请求
+#define CONN_DECORATE_ADD_JEWEL_SERVER											496//镶嵌宝石响应
+#define CONN_DECORATE_REMOVE_JEWEL_CLIENT										497//摘除宝石请求
+#define CONN_DECORATE_REMOVE_JEWEL_SERVER										498//摘除宝石响应
+#define CONN_DECORATE_ADD_HOLE_CLIENT											499//装备打孔请求
+#define CONN_DECORATE_ADD_HOLE_SERVER											500//装备打孔响应
+#define CONN_DECORATE_ADD_MAX_HOLE_CLIENT										501//扩充孔数请求
+#define CONN_DECORATE_ADD_MAX_HOLE_SERVER										502//扩充孔数响应
+#define CONN_DECORATE_GET_CONFIG_CLIENT                                         503//获得镶嵌参数请求
+#define CONN_DECORATE_GET_CONFIG_SERVER                                         504//获得镶嵌参数响应
+#define CONN_DECORATE_MERGE_JEWEL_CLIENT                                        505//宝石合成请求
+#define CONN_DECORATE_MERGE_JEWEL_SERVER                                        506//宝石合成响应
+
+//天气
+#define CONN_WEATHER_SERVER                                                     614//通知天气系统
+
+
+#define CONN_FORMULA_LIST_CLIENT								 510 //玩家学会的配方
+#define CONN_FORMULA_LIST_SERVER								 511
+#define CONN_FORMULA_INFO_CLIENT								 512 //配方详情
+#define CONN_FORMULA_INFO_SERVER								 513 
+#define CONN_PRODUCE_CLIENT										 514 //打造
+#define CONN_PRODUCE_SERVER										 515
+#define CONN_FORMULA_DELETE_CLIENT								 516 //删除
+#define CONN_FORMULA_DELETE_SERVER								 517 //删除
+
+#define CONN_TELEPORT_LIST_CLIENT									518//驿站传送点列表
+#define CONN_TELEPORT_LIST_SERVER									519//
+#define CONN_TELEPORT_CLIENT										520//驿站传送
+
+#define CONN_DEPOT_YESORNO_CLIENT										521 //是否开启过
+#define CONN_DEPOT_YESORNO_SERVER										522
+#define CONN_DEPOT_REQUEST_CLIENT										523 //开启仓库
+#define CONN_DEPOT_REQUEST_SERVER										524
+#define CONN_DEPOT_ARRANGE_CLIENT										525 // 仓库整理
+#define CONN_DEPOT_ARRANGE_SERVER										526
+#define CONN_DEPOT_GETFROMDEPOT_CIENT									527 //to bag
+#define CONN_DEPOT_GETFROMBAG_CLIENT									528 //to depot
+#define CONN_DEPOT_GETFROMBAG_SERVER									529
+
+#define CONN_TOPLIST_KILLCOUNT_CLINET                                   530 //杀敌排名
+#define CONN_TOPLIST_KILLCOUNT_SERVER                                   531
+#define CONN_TOPLIST_WEEKRANK_CLIENT                                    532 //战功排名
+#define CONN_TOPLIST_WEEKRANK_SERVER                                    533
+//世界地图协议
+#define WORLD_TELEPORT_CLIENT                                     615//跳转地图
+#define WORLD_TELEPORT_SERVER                                     617//跳转成功
+#define GET_FILE_CLIENT                                           621//请求资源
+#define GET_FILE_SERVER                                           622//下载资源
+
+//清除副本进度
+#define CONN_INSTANCE_CLEAR_SERVER													535
+#define CONN_INSTANCE_CLEAR_CLIENT													534
+
+
+/***********************************************
+ * 势力协议	2010-12	fhy[client] & msl[server]
+ ***********************************************/
+#define NATION_WAR_INFO_CLIENT							2200//势力战争信息
+#define NATION_WAR_INFO_SERVER							2201//返回势力战争信息
+/**
+ * 势力宣战
+ * index 			byte  0代表向左列宣战，1代表向右列宣战 <br>
+ */
+#define NATION_WAR_CHALLENGE_CLIENT						2202//势力宣战 - 0代表向左列宣战，1代表向右列宣战
+#define NATION_WAR_CHALLENGE_SERVER						2203//势力宣战
+#define NATION_SLOGAN_EDIT_CLIENT						2204//势力修改公告
+#define NATION_SLOGAN_EDIT_SERVER						2205//势力修改公告
+#define NATION_TAX_EDIT_CLIENT							2206//势力修改税率
+#define NATION_TAX_EDIT_SERVER							2207//势力修改税率
+#define NATION_FORBID_CLIENT							2208//势力玩家禁言
+#define NATION_FORBID_SERVER							2209//势力玩家禁言
+#define NATION_WAR_ACCEPT_CLIENT						2210//势力接受宣战
+#define NATION_WAR_ACCEPT_SERVER						2211//势力接受宣战
+#define NATION_SLOGAN_INFO_CLIENT						2212//势力公告
+#define NATION_SLOGAN_INFO_SERVER						2213//势力返回公告
+#define NATION_TAX_INFO_CLIENT							2214//势力税率
+#define NATION_TAX_INFO_SERVER							2215//势力返回税率
+#define NATION_FORBID_LIST_CLIENT						2216//禁言列表
+/**
+ * 返回禁言列表
+ * serial			int <br> 
+ * count			int <br>
+ *   循环N=count次
+ *   name 			String<br>	 	
+ *   level			byte<br> 
+ *   remainTime			int 剩余时间<br> 
+ */
+#define NATION_FORBID_LIST_SERVER						2217
+/**
+ * 势力解除玩家禁言
+ * serial			int <br> 
+ * name string <br>
+ */
+#define NATION_UNFORBID_CLIENT							2218
+/**
+ * 势力解除玩家禁言
+ * serial			int <br>  
+ */
+#define NATION_UNFORBID_SERVER							2219
+/**
+ * 势力官员列表
+ * serial			int <br>  
+ */
+#define NATION_OFFICER_LIST_CLIENT						2220
+/**
+ * 返回势力官员列表<br>
+ * serial int <br>
+ * adminId int 战场管理员ID
+ * count byte<br>
+ * n = count <br>
+ *  officerId	int 官员ID<br>
+ * 	officerName  String官员姓名<br>
+ * 	officerLevel byte 官员等级<br> 
+ * 
+ */
+#define NATION_OFFICER_LIST_SERVER						2221
+/**
+ * 委任官员<br>
+ * serial			int <br>  
+ * name 			String	<br>
+ */
+#define NATION_OFFICER_APPOINT_CLIENT					2222
+/**
+ * 返回委任<br>
+ * serial int <br> 
+ */
+#define NATION_OFFICER_APPOINT_SERVER					2223
+/**
+ * 申请官员列表<br>
+ * serial			int <br>   
+ */
+#define NATION_OFFICER_REQUEST_LIST_CLIENT				2224
+/**
+ * 返回申请官员列表<br>
+ * serial int <br>
+ * count byte<br>
+ * n = count <br>
+ *  officerId	int 官员ID<br>
+ * 	officerName  String官员姓名<br>
+ * 	officerLevel byte 官员等级<br> 
+ * adminId int 战场管理员ID<br>
+ */
+#define NATION_OFFICER_REQUEST_LIST_SERVER				2225
+/**
+ * 国库捐赠<br>
+ * serial			int <br>   
+ * itemId			int <br>   
+ * instanceId 		int <br>   
+ * count			int <br>   
+ */
+#define NATION_DONATE_CLIENT							2226
+/**
+ * 返回捐赠<br>
+ * serial			int <br>   
+ */
+#define NATION_DONATE_SERVER							2227
+/**
+ * 科技树信息<br>  
+ * serial			int <br>   
+ */
+#define NATION_TECHNOLOGY_TREE_CLIENT					2228
+/**
+ * 科技树信息<br>  
+ * serial int <br>
+ * 科技树个数 byte<br>
+ * 循环1[ 
+ * 		 科技树id byte<br>
+ * 		 科技树名称 String<br>
+ *		 科技树科技数量 byte<br>
+ * 循环2[每个科技信息<br>
+ * 			技能名称	String <br>
+ *			 技能id int<br>
+ *			 技能图标 iconID int<br>
+ * 			技能所在行号 byte<br>
+ * 			技能所在列号 byte <br>
+ * 			技能所需投入点数 int <br>
+ * 			前置技能id int<br>
+ * 			如果没有前置科技，则为-1 <br>
+ * 		 ]<br>
+ * 	   ]<br>
+ */
+#define NATION_TECHNOLOGY_TREE_SERVER					2229
+/**
+ * 国家信息<br>  
+ * serial			int <br>   
+ */
+#define NATION_INFO_CLIENT								2230
+/**
+ * 返回国家信息<br>  
+ * serial int <br>
+ * kingId int 丞相ID<br>
+ * kingName String 丞相名称<br>	  
+ * tax byte 税率<br> 
+ * minTax byte 最小税率<br> 
+ * maxTax byte 最大税率<br> 	
+ * nationSloga String 公告<br>	 
+ */
+#define NATION_INFO_SERVER								2231
+/**
+ * 国家战场信息<br>  
+ * serial			int <br>   
+ */
+#define NATION_BATTLEGROUND_INFO_CLIENT					2232
+/**
+ * 返回国家战场信息<br>  
+ * serial int <br>
+ * count  int <br>
+ * 循环 count次
+ *   playerId int 玩家ID<br>
+ * 	 playerName String 玩家名称<br>	  
+ *	 playerLevel byte 等级<br>  
+ */
+#define NATION_BATTLEGROUND_INFO_SERVER					2233
+/**
+ * 请战列表信息<br>  
+ * serial			int <br>   
+ */
+#define NATION_BATTLEGROUND_REQERLIST_CLIENT			2234
+/**
+ * 返回请战列表信息<br>
+ * serial int <br>
+ * count  int <br>
+ * 循环 count次
+ *   playerId int 玩家ID<br>
+ * 	 playerName String 玩家名称<br>
+ *	 playerLevel byte 等级<br>
+ */
+#define NATION_BATTLEGROUND_REQERLIST_SERVER			2235
+/**
+ * 召入战场<br>
+ * serial			int <br>
+ * name				String<br>
+ */
+#define NATION_BATTLEGROUND_CALLIN_CLIENT				2236
+/**
+ * 返回召入战场<br>  
+ * serial int <br>
+ */
+#define NATION_BATTLEGROUND_CALLIN_SERVER				2237
+/**
+ * 踢出战场<br>
+ * serial			int <br>
+ * id				int<br>
+ */
+#define NATION_BATTLEGROUND_KICKOUT_CLIENT				2238
+/**
+ * 返回踢出战场<br>
+ * serial int <br> 
+ */
+#define NATION_BATTLEGROUND_KICKOUT_SERVER				2239
+/**
+ * 撤销官员<br>
+ * serial			int <br>  
+ * name 			String	<br>
+ */
+#define NATION_OFFICER_DISMISS_CLIENT					2240
+/**
+ * 返回撤销官员<br>
+ * serial int <br> 
+ */
+#define NATION_OFFICER_DISMISS_SERVER					2241
+/**
+ * 国库信息<br>
+ * serial			int <br>   
+ */
+#define NATION_TREASURE_INFO_CLIENT						2242
+/**
+ * 返回国库信息<br>
+ * serial int <br> 
+ * domainNum 领地数量<br>
+ * count 物品数量
+ * 循环
+ * 	物品id
+ * 	物品名称
+ * 	物品数量
+ * 	物品每日产量 
+ */
+#define NATION_TREASURE_INFO_SERVER						2243
+/**
+ * 战场委任指挥官<br>
+ * serial			int <br>  
+ * id	 			int	<br>
+ */
+#define NATION_BATTLEGROUND_SET_ADMIN_CLIENT			2244
+/**
+ * 返回战场委任指挥官<br>
+ * serial int <br> 
+ */
+#define NATION_BATTLEGROUND_SET_ADMIN_SERVER			2245
+/**
+ * 召回战场指挥官<br>
+ * serial			int <br>   
+ * id	 			int	<br>
+ */
+#define NATION_BATTLEGROUND_CALLBACK_ADMIN_CLIENT		2246
+/**
+ * 返回召回战场指挥官<br>
+ * serial int <br> 
+ */
+#define NATION_BATTLEGROUND_CALLBACK_ADMIN_SERVER		2247
+/**
+ * 竞选信息<br>
+ * serial int <br> 
+ */
+#define NATION_CAMPAIGN_CLIENT							2248
+/**
+ * 返回竞选信息<br>
+ * serial	int<br>
+ * number 	int 	竞选人数<br>
+ * content 	String 	竞选宣言<br> 
+ */
+#define NATION_CAMPAIGN_SERVER							2249
+/**
+ * 势力
+ * 修改宣言<br>
+ * serial	int  <br>   
+ * content	String 	竞选宣言<br>
+ */
+#define NATION_DECLARATION_EDIT_CLIENT					2250
+/**
+ * 势力
+ * 返回修改宣言<br> 
+ * serial	int  <br>   
+ */
+#define NATION_DECLARATION_EDIT_SERVER					2251
+/**
+ * 势力
+ * 开始竞选<br>
+ * serial	int  <br>   
+ * id		int 	发布人id<br>
+ */
+#define NATION_CAMPAIGN_BEGIN_CLIENT					2252
+/**
+ * 势力
+ * 返回开始竞选<br> 
+ * serial	int  <br>   
+ */
+#define NATION_CAMPAIGN_BEGIN_SERVER					2253
+/***********************************************
+ * 势力协议	2010-12	fhy[client] & msl[server] END
+ ***********************************************/
+ 
+ 
+/**
+ * 聊天信息设置
+ * serial						int
+ * 改变了的聊天设置数量			byte
+ * 重复n次
+ * 	聊天频道						byte
+ * 	聊天设置						byte  (最低1位是否开启频道，低二位为收到信息是否提示，其余高位表示颜色)
+ * 
+ */
+#define CHAT_OPTION_CLIENT 		 2312
+/**
+ * 聊天信息设置成功
+ * serial						int
+ */
+#define  CHAT_OPTION_SERVER 	 2313
+
+
+/***********************************************
+ * 血盟协议	2010-12	fhy[client] & msl[server]
+ ***********************************************/
+/**
+ * 返回成员列表. <br>
+ * serial	int  <br> 
+ */
+#define TONG_MEMBER_LIST_CLIENT							2010
+/**
+ * 返回成员列表. <br>
+ * serial	int  <br>
+ * count	int <br>
+ * 循环<br>
+ * 		name String <br>
+ * 		level byte <br>
+ *      online byte <br>
+ * 		rank byte <br>
+ * 		carName String<br>  
+ */
+#define TONG_MEMBER_LIST_SERVER							2011
+/**
+ * 血盟信息. <br>
+ * serial	int  <br> 
+ */
+#define TONG_INFO_CLIENT								2012
+/**
+ * 返回血盟信息. <br>
+ * serial	int  <br> 
+ * tongName Stirng <br>
+ * tongLevle byte <br>
+ * leaderName String <br>
+ * leaderId int <br>
+ * total int 血盟人数<br>
+ * max int 最大人数<br>
+ * winNum int 车战胜数<br>
+ * tongNotice String 血盟公告<br>
+ * money int <br>
+ * tongPoint int 血盟点数 <br>
+ */
+#define TONG_INFO_SERVER								2013
+/**
+ * 血盟申请人员列表. <br>
+ * serial	int  <br> 
+ */
+#define TONG_REQER_LIST_CLIENT							2014
+/**
+ * 返回血盟申请人员列表. <br>
+ * serial	int  <br>  
+ * count int <br>
+ * 	循环 count次<br>
+ * 		iconIndex byte<br>
+ * 		name	String<br>
+ * 		level byte<br>
+ * 		id	int <br>
+ * 		isOnline byte<br>
+ */
+#define TONG_REQER_LIST_SERVER							2015
+/**
+ * 血盟
+ * 批准申请人员进入. <br>
+ * serial	int  <br> 
+ * id int<br>
+ */
+#define TONG_REQER_ALLOWED_CLIENT						2016
+/**
+ * 血盟
+ * 返回批准申请人员进入. <br>
+ * serial	int  <br>   
+ */
+#define TONG_REQER_ALLOWED_SERVER						2017
+/**
+ * 血盟
+ * 拒绝申请人员进入. <br>
+ * serial	int  <br> 
+ * id int<br>
+ */
+#define TONG_REQER_DENY_CLIENT							2018
+/**
+ * 血盟
+ * 返回拒绝申请人员进入. <br>
+ * serial	int  <br>   
+ */
+#define TONG_REQER_DENY_SERVER							2019
+/**
+ * 血盟
+ * 官员列表. <br>
+ * serial	int  <br>  
+ */
+#define TONG_OFFICER_LIST_CLIENT						2020
+/**
+ * 血盟
+ * 返回官员列表. <br>
+ * serial	int  <br> 
+ * count int <br>
+ * 	循环 count次
+ * 		name	String<br>
+ * 		rank  byte<br>
+ * 		id	int <br>  
+ */
+#define TONG_OFFICER_LIST_SERVER						2021
+/**
+ * 血盟
+ * 首领退位. <br>
+ * serial	int  <br>  
+ */
+#define TONG_OFFICER_LEADER_ABDICATE_CLIENT				2022
+/**
+ * 血盟
+ * 返回首领退位. <br> 
+ * serial	int  <br>  
+ */
+#define TONG_OFFICER_LEADER_ABDICATE_SERVER				2023
+/**
+ * 血盟
+ * 官员任命. <br>
+ * serial	int  <br>  
+ * id	int<br>
+ * rank byte<br>
+ */
+#define TONG_OFFICER_APPOINT_CLIENT						2024
+/**
+ * 血盟
+ * 返回官员任命. <br> 
+ * serial	int  <br>  
+ */
+#define TONG_OFFICER_APPOINT_SERVER						2025
+/**
+ * 血盟
+ * 捐钱. <br>
+ * serial	int  <br>  
+ * money	int<br>
+ */
+#define TONG_DONATE_MONEY_CLIENT						2026
+/**
+ * 血盟
+ * 返回捐钱. <br> 
+ * serial	int  <br>  
+ */
+#define TONG_DONATE_MONEY_SERVER						2027
+/**
+ * 血盟
+ * 捐物. <br>
+ * serial	int  <br>  
+ * itemId	int<br>
+ * instanceId	int<br>
+ * count	int<br>
+ */
+#define TONG_DONATE_ITEM_CLIENT							2028
+/**
+ * 血盟
+ * 返回捐物. <br> 
+ * serial	int  <br>  
+ */
+#define TONG_DONATE_ITEM_SERVER							2029
+/**
+ * 血盟
+ * 任务. <br>
+ * serial	int  <br>   
+ */
+#define TONG_QUEST_CLIENT								2030
+/**
+ * 血盟
+ * 返回任务. <br> 
+ * serial	int  <br>  
+ * count byte<br>
+ * 	循环count次
+ * 	questId	int <br>
+ * 	questName String<br>
+ * 	level byte	任务等级<br>
+ *  questState byte 0 - 未接，1 - 未完成，2 - 已完成.<br>
+ */
+#define TONG_QUEST_SERVER								2031
+/**
+ * 血盟
+ * 禁言. <br>
+ * serial	int  <br>  
+ * targetId	int<br> 
+ */
+#define TONG_FORBID_CLIENT								2032
+/**
+ * 血盟
+ * 返回禁言. <br> 
+ * serial	int  <br>  
+ */
+#define TONG_FORBID_SERVER								2033
+/**
+ * 血盟
+ * 解除禁言. <br>
+ * serial	int  <br>  
+ * targetId	int<br> 
+ */
+#define TONG_UNFORBID_CLIENT							2034
+/**
+ * 血盟
+ * 返回解除禁言. <br> 
+ * serial	int  <br>  
+ */
+#define TONG_UNFORBID_SERVER							2035
+/**
+ * 血盟
+ * 招募公告详情. <br>
+ * serial	int  <br>   
+ * tongId	int -1表示查看本盟公告<br>
+ */
+#define TONG_RECRUIT_INFO_CLIENT						2036
+/**
+ * 血盟
+ * 返回招募公告详情.. <br> 
+ * serial	int  <br>  
+ * tongName String<br> 
+ * level	byte 血盟等级<br>
+ * recTitle String<br>
+ * recCount byte 招募人数<br>
+ * minLevel byte 招募等级范围<br>
+ * content String 公告内容<br> 
+ */
+#define TONG_RECRUIT_INFO_SERVER						2037
+/**
+* 血盟
+* 修改招募公告. <br>
+* serial	int  <br>   
+* notice	String <br>
+*/
+#define TONG_RECRUIT_EDIT_CLIENT						2038
+/**
+ * 血盟
+ * 返回修改招募公告. <br> 
+ * serial	int  <br>   
+ */
+#define TONG_RECRUIT_EDIT_SERVER						2039
+/**
+ * 血盟
+ * 修改公告. <br>
+ * serial	int  <br>   
+ * notice	String <br>
+ */
+#define TONG_NOTICE_EDIT_CLIENT							2040
+/**
+ * 血盟
+ * 返回修改公告. <br> 
+ * serial	int  <br>   
+ */
+#define TONG_NOTICE_EDIT_SERVER							2041
+/**
+ * 血盟
+ * 踢出血盟. <br> 
+ * serial	int  <br>   
+ * id 	int<br>
+ */
+#define TONG_MEMBER_KICKOUT_CLIENT						2044
+/**
+ * 血盟
+ * 返回踢出血盟.. <br> 
+ * serial	int  <br>   
+ */
+#define TONG_MEMBER_KICKOUT_SERVER						2045
+/***********************************************
+ * 血盟协议	2010-12	fhy[client] & msl[server]END
+ ***********************************************/
+ 
+ /**
+ * 脱离卡死
+ * serial int
+ */
+#define ESCAPE_MAP_CLIENT  		204
+	
+/**
+ * 脱离卡死
+ * mapId   short
+ * x       short
+ * y       short
+ */
+#define   OUT_PRISON_CLIENT  	204
+
+
+/**
+ * 拍卖<br>
+ * 拍卖物品列表<br>
+ * serial  int<br>
+ * keyWord String 关键字<br>
+ * quality byte 品质<br> 
+ * minLevel byte 最小等级<br>
+ * maxLevel byte 最大等级<br>
+ * itemType byte 物品类型  (长柄=0,短柄=1,匕首=2...宝石=13,材料=14)<br>
+ * sortType byte 排序类型  (时间排序=1, 价格排序=2, 品质排序=3)<br>
+ * pageNum short 当前页数<br>
+ * pageSize byte 每页条数  <br>
+ * asc byte 0为升序排列，1为降序排列
+ */
+#define AUCTION_LIST_CLIENT		2501
+
+/**
+ * 拍卖<br>
+ * 返回拍卖物品列表<br>
+ *	int serial  <br>
+ *	short pageTotal 总页数<br>
+ *	byte pageSize 本页条数<br>
+ *		循环N次
+ *		int auctionId 拍卖行ID<br>
+ *		int itemId 物品ID<br>
+ *		int instanceId  <br>
+ *		byte group 类型<br>
+ *		String name 物品名称<br>
+ *		iconIndex byte 图标索引<br>
+ * 		quality byte 品质<br>
+ *		byte count 物品数量<br>
+ *		byte level 等级<br>
+ *		int auctionPrice 拍卖价<br>
+ *		int  fixedPrice 一口价<br>
+ *		String endTime 结束时间<br>
+ */
+#define AUCTION_LIST_SERVER		2502
+
+/**
+ *  拍卖 <br>
+ * 发布拍卖信息
+ * serial						int<br>
+ * itemId						int			物品ID<br>
+ * itemInstanceId				int			物品实例ID<br>
+ * count						short		物品数量 (如果是有实例ID的物品count需为1)<br>
+ * startPrice   				int   		初始价格<br>
+ * endPrice						int			一口价 (一口价可以为0,表示不设置一口价)<br>
+ */
+#define AUCTION_CREATE_CLIENT	2503
+
+/**
+ * 拍卖 <br>
+ * 返回发布拍卖信息成功<br>
+ * serial		int<br>
+ * fees			int		扣除手续费<br>
+ * count		short	数量<br>
+ * name			string	名字<br>
+ */
+#define AUCTION_CREATE_SERVER	2504
+
+/**
+ * 拍卖 <br>
+ * 竞拍请求
+ * serial		int 		
+ * auctionId	int			拍卖行ID
+ * price        int			出价
+ */
+#define AUCTION_BUY_CLIENT		2505
+
+/**
+ * 拍卖 <br>
+ * 返回竞拍请求<br>
+ * serial		int <br>
+ * auctionId	int		拍卖行ID
+ * currentPrice	int		当前价<br>
+ * result 		byte 	竞拍结果0失败，1成功<br>
+ */
+#define AUCTION_BUY_SERVER		2506
+
+/**
+ * 拍卖<br>
+ * 历史记录(请求拍卖中物品列表)<br>
+ * serial 		int <br>
+ * pageNum short 当前页数 <br>
+ * pageSize byte 每页条数  <br>
+ */
+#define AUCTION_PUBLISHIED_CLIENT	2507
+
+/**
+ * serial 		int<br>
+ * short pageTotal 总页数<br>
+ * byte pageSize 本页条数<br> 
+ * 循环N次 N = pageSize;<br>
+ * 		auctionId		int 		拍卖行ID<br> 
+ * 		itemId 			int			物品ID<br>
+ *		instanceId 		int			 <br>
+ *		group			byte		 类型<br>
+ *		name			String		 物品名称<br>
+ *		iconIndex 		byte		<br>
+ *		quality 		byte 		品质<br> 
+ *		count		 	byte		物品数量<br>	
+ * 		currentPrice	int			当前价格<br>	
+ * 		endPrice		int			一口价 0为一口价交易<br>	
+ * 		validtime		String		结束时间<br>	
+ *		hasPeople		byte		有无竞拍人
+ */
+#define AUCTION_PUBLISHIED_SERVER	2508
+	
+/**
+ * 拍卖
+ * 历史记录(请求竞拍物品列表)<br>
+ * serial 		int <br>
+ * pageNum short 当前页数 <br>
+ * pageSize byte 每页条数  <br>
+ */
+#define AUCTION_BID_CLIENT 			2509
+	
+/**
+ * 返回本角色最近在竞拍物品的拍卖信息
+ * serial 		int<br>
+ * short pageTotal 总页数<br>
+ * byte pageSize 本页条数<br> 
+ * 循环N次 N = pageSize;<br>
+ * 		auctionId		int 		拍卖行ID	 
+ * 		itemId 			int			物品ID<br>
+ *		instanceId 		int			 <br>
+ *		group			byte		 类型<br>
+ *		name			String		 物品名称<br>
+ *		iconIndex 		byte		<br>
+ *		quality 		byte 		品质<br> 	 *		
+ *		count		 	byte		物品数量<br>	
+ * 		startPrice		int			起拍价
+ * 		currentPrice	int			当前价格
+ * 		endPrice		int			一口价 0为一口价交易
+ * 		validtime		String		结束时间	 
+ * 		hasPeople		byte		有无竞拍人
+ */
+#define AUCTION_BID_SERVER			2510
+
+/**
+ * 拍卖<br>
+ * 取消拍卖 <br>
+ * serial		int <br>
+ * auctionID	int		   拍卖行ID<br>
+ */
+#define AUCTION_CANCEL_CLIENT		2511
+
+/**
+ * 拍卖<br>
+ * 取消拍卖 <br>
+ * serial		int <br> 
+ */
+#define AUCTION_CANCEL_SERVER		2512
+
+		
+/**
+	 * 幻化装备升级请求 <br>
+	 * int serial <br>
+	 * int id 幻化装备id<br>
+	 * int instanceId 幻化装备InstanceId<br>
+	 */
+#define DECORATION_UPLEVEL_CLIENT  1820
+
+	/**
+	 * 幻化装备升级确认<br>
+	 * int serial <br>
+	 * int id 幻化装备Id <br>
+	 * byte buffLevel 幻化装备的特效BUFF级别<br>
+	 * String buffDescription 幻化装备的特效BUFF描述<br>
+	 */
+#define DECORATION_UPLEVEL_SERVER  1821
+
+	/**
+	 * 幻化装备的界面描述请求<br>
+	 * int serial <br>
+	 */
+#define DECORATION_UIINFO_CLIENT  1824
+	/**
+	 * 幻化装备的界面描述信息<br>
+	 * int serial<br>
+	 * 循环3次，幻化装备信息 既11,12,13为幻化装备{<br>
+	 * byte index 幻化装备索引<br>
+	 * byte hasEquip  0表示没有幻化装备 1表示有幻化装备<br>
+	 * 如果 hasEquip为0 则无此项，byte[]{<br>
+	 * byte color 装备的颜色<br>
+	 * int buffId 幻化装备的特效BUFF ID<br>
+	 * byte buffLevel 幻化装备的特效BUFF 级别<br>
+	 * String buffDescription 幻化装备的特效BUFF描述<br>
+	 * }<br>
+	 * }<br>
+	 */
+#define DECORATION_UIINFO_SERVER  1825

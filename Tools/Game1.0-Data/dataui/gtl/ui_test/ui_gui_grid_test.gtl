@@ -1,0 +1,210 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_test";
+DESCRIPTION "gui测试界面"; 
+
+#include "../core/gui/guiInclude.h"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GGridBox gridbox;
+	GListBox listbox;
+
+	GScrollPanel bag;
+	GScrollPanel menu;
+	int gridCount;
+	int gridCols;
+	int gridRows;
+	
+	int listCount;
+	GLabel []lists;
+	
+	GIcon []grids;
+	
+	ImageSet gridSrc;
+}
+
+FUNCTION init()
+{
+	// 加载资源
+	gridSrc = Realize(ImageSet_Create("ability240.pip", TRUE));
+	
+	// 创建canvasUnit以及一个container.
+	create_canvasUnit();
+	
+	// 测试GridBox.
+//	test_gridBox();
+	test_listBox();
+	
+/*	if(btn1 != NULL && btn2 != NULL)
+	{
+		GW_setRelativeDownWidget(btn1, btn2);
+		GW_setRelativeUpWidget(btn1, btn2);
+		GW_requestFocus(btn1);
+		
+		btn1.btn_clicked = btn1_clicked;
+		btn2.btn_clicked = btn2_clicked;
+	}*/
+
+//	GW_setRelativeDownWidget(bag, menu);
+
+//	GW_requestFocus(listbox);
+}
+
+
+FUNCTION event() {
+}
+
+/////////////// common function //////////////////////
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	free vmCU;
+	free gridbox;
+	
+	free grids;
+	free gridSrc;
+}
+
+FUNCTION processPacket()
+{
+
+}
+
+
+//////////////// Event handling //////////////////////
+FUNCTION btn1_clicked(GButton this)
+{
+	//container.backgroundColor = 0xf0f0f0;
+	return TRUE;
+}
+
+FUNCTION btn2_clicked(GButton this)
+{
+	//container.backgroundColor = 0x0f0f0f;
+	return TRUE;
+}
+
+/////////////// create function //////////////////////
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(NULL,cuName));
+	// 创建一个container.
+	String gridboxName = Realize(Object_Create("GridBox"));
+	gridbox = Realize(GGB_makeGGridBox(NULL,gridboxName,4,4));
+	
+	String bagName = Realize(Object_Create("bagScrollPanel"));
+	bag = Realize(GSP_makeGScrollPanel(NULL,bagName,TRUE,TRUE,TRUE,TRUE));
+	
+	String menuName = Realize(Object_Create("menuScrollPanel"));
+	menu = Realize(GSP_makeGScrollPanel(NULL,menuName,TRUE,TRUE,TRUE,TRUE));
+	
+	String listBoxName = Realize(Object_Create("listBox"));
+	listbox = Realize(GLB_makeGListBox(NULL,listBoxName,GetScreenWidth( ) / 2, GetScreenHeight( )/ 2,LAYOUT_ORIENT_VERTICAL,LAYOUT_ALIGN_VBOTTOM,TRUE,FALSE));
+	
+	GW_setBorderSize(listbox, 2, 2, 2, 2);
+	GW_setInsetSize(listbox, 2, 10, 2, 10);
+	listbox.isBorderPainted = TRUE;
+	listbox.selectionColor = 0xff0000;
+	listbox.isSelectionPainted = TRUE;
+	
+	free listBoxName;
+	free menuName;
+	free bagName;
+	free cuName;
+	free gridboxName;
+	
+	GW_setBound(vmCU, 0, 0, 240, 320);
+	GW_setBorderSize(gridbox, 2, 2, 2, 2);
+//	GC_addChildWidget(vmCU, bag, 0);
+	GC_addChildWidget(vmCU, menu, 0);
+	
+//	GSP_setGScrollPanel_Bounds(bag, 0, 0, 200, 120);
+	GSP_setBounds(menu, 0, 122, 200, 120);
+
+	GSP_setContentArea(menu, listbox, TRUE);
+//	GSP_setContentArea(bag, gridbox);
+}
+
+FUNCTION test_listBox()
+{
+	listCount = 10;
+	lists = new GLabel[listCount];
+	
+	for (int i=0; i<listCount; i++)
+	{
+		String tmpName = Realize(Object_Create("list_test_menu_ ") + i);
+		lists[i] = Realize(GL_makeGLabel(NULL,tmpName, tmpName));
+		GLB_addItem(listbox, lists[i]);
+		GL_setLabelText(NULL,lists[i]);
+		init_gList(lists[i]);
+		free tmpName;
+	}
+	GC_pack(listbox);
+
+	for (int j=0; j < (listCount - 1); j++)
+	{
+		GW_setRelativeDownWidget(lists[i], lists[i + 1]);
+	}
+	GW_setRelativeDownWidget(lists[listCount - 1], lists[0]);
+}
+
+FUNCTION init_gList(GLabel _glist)
+{
+	_glist.borderColor = 0x757575;
+	_glist.backgroundColor = 0xF79044;
+	_glist.isBackgroundPainted = TRUE;
+	_glist.isBorderPainted = TRUE;
+//	_glist.foregroundColor = 0xff0000;
+	_glist.selectionColor = 0xff0000;
+	_glist.isSelectionPainted = TRUE;
+	GW_setBorderSize(_glist, 2, 2, 2, 2);
+	GW_setInsetSize(_glist, 2, 2, 2, 2);
+}
+
+FUNCTION test_gridBox()
+{
+	gridCount = 16;
+	grids = new GIcon[16];
+	
+	gridCols = 4;
+	gridRows = 4;
+	GC_setGridLayout(gridbox, gridCols, gridRows);
+	
+	for (int i=0; i<gridCount; i++)
+	{
+		String tmpName = Realize(Object_Create("grid ") + i);
+		grids[i] = Realize(GI_makeGIcon(NULL,tmpName,gridSrc, (46 + i)%10));
+		GLB_addItem(gridbox, grids[i]);
+		init_gGrid(grids[i]);
+		free tmpName;
+	}
+	GGB_pack(gridbox);
+}
+
+FUNCTION init_gGrid(GIcon _grid)
+{
+	_grid.borderColor = 0xffffff;
+	_grid.backgroundColor = 0x00ff00;
+	_grid.isBackgroundPainted = TRUE;
+	_grid.isBorderPainted = TRUE;
+	_grid.foregroundColor = 0xff0000;
+	_grid.selectionColor = 0xffffff;
+	_grid.isSelectionPainted = TRUE;
+	GW_setBorderSize(_grid, 1, 1, 1, 1);
+}

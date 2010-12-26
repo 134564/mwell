@@ -1,0 +1,81 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_task1";
+DESCRIPTION "轩辕任务界面"; 
+
+
+#include "../core/common/general.gtl"
+#include "../core/gui/gvmcanvasunit.gtl"
+#include "../core/gui/guicommon.gtl"
+#include "../core/gui/gicon.gtl"
+#include "../core/gui/gwindow.gtl"
+
+
+DATA
+{
+	GVMCanvasUnit vmCU;
+	GWindow taskWindow;
+	
+	ImageSet uiRes;
+}
+
+FUNCTION init()
+{
+	uiRes = Realize(ImageSet_Create("ui_res.pip", TRUE));
+	create_canvasUnit();
+	
+	//创建主界面window
+	create_window();
+}
+
+FUNCTION cycleImpl()
+{
+}
+
+FUNCTION cycleUIImpl()
+{
+}
+
+FUNCTION paintImpl()
+{
+}
+
+FUNCTION destroyImpl()
+{
+	free vmCU;
+	free taskWindow;
+}
+
+FUNCTION processPacketImpl()
+{
+	return FALSE;
+}
+
+FUNCTION event()
+{
+}
+
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(cuName));
+	free cuName;
+	
+	GW_setBound(vmCU, 0, 0, 320, 480);
+}
+
+FUNCTION create_window()
+{
+	String taskWindowName = Realize(Object_Create("taskWindowName"));
+	taskWindow = GWnd_makeGWindow(taskWindowName, NULL, uiRes, 10, 11);
+	
+	GC_addChildWidget(vmCU, taskWindow, 0);
+	GW_setBound(taskWindow, 0, 0, 320, 480);
+	
+	taskWindow.backgroundColor = 0xad4619;
+	taskWindow.isBackgroundPainted = TRUE;
+}
+

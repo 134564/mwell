@@ -1,0 +1,310 @@
+#include "./GListBox.h"
+#include "./GContainer.gtl"
+#include "./GScrollPanel.gtl"
+#include "../layout/GLayoutData.gtl"
+
+//	公共接口
+//	public:
+
+/**
+ * 创建GListBox.
+ * @param widgetName	控件的名字
+ * @param width			控件的宽度
+ * @param height		控件的高度
+ * @param orientation	listbox的朝向(LAYOUT_ORIENT_HORIZON:水平;LAYOUT_ORIENT_VERTICAL:垂直)
+ * @param alignement	listbox中的控件对齐方式(参照general.gtl)
+ * @param isScrollBarPaint		是否绘制滚动条（设置成显示状态后才会根据需求动态显示，否则，不绘制）
+ * @param isArrowPaint			是否绘制箭头（设置成显示状态后才会根据需求动态显示，否则，不绘制）
+ *
+ * NOTE:	ListBox在创建的时候必须设置一个最大宽度和高度, 如果listbox添加的Item总高度没有超过listBox的
+ * 			最大高度, 则listBox的高度为添加的item总高度, 否则需要显示滚动条, 其高度为最大高度.
+ */
+FUNCTION GLB_makeGListBox(GListBox this, String widgetName, int width, int height, int orientation, int alignement, boolean isScrollBarPaint, boolean isArrowPaint)
+{
+	GListBox glb = NULL;
+	if(IsNotNull(this)){
+		glb = Realize(Gui_GC_MakeGContainer(this, widgetName));
+	}
+	else{
+		glb = Realize(Gui_GC_MakeGContainer(new GListBox, widgetName));
+	}
+	
+	glb.orientation = orientation;
+	
+	// 创建内嵌式scrollpanel
+	/**
+	 * TODO: 这里最好是将生成的scrollpanel作为listBox中的一个字段,
+	 * 而不是将其保存在listBox中的observer字段里, 逻辑将比较清晰些.
+	 */ 
+	String scrollPanelName = Realize(Object_Create(widgetName + "_scrollPanel"));
+	if (LAYOUT_ORIENT_HORIZON == orientation)
+	 {
+		 glb.scrollPanel = Realize(GSP_makeGScrollPanel(NULL, scrollPanelName, FALSE, FALSE, isScrollBarPaint, isArrowPaint));
+	}
+	else
+	{
+		glb.scrollPanel = Realize(GSP_makeGScrollPanel(NULL, scrollPanelName, isScrollBarPaint, isArrowPaint, FALSE, FALSE));
+	}
+	OBJECT_FREE(scrollPanelName);
+
+	Gui_GC_SetLineLayout(glb.scrollPanel.contentArea, orientation, alignement, 2);
+	Gui_GC_AddChildWidget(glb, glb.scrollPanel, 0);
+	OBJECT_SET(glb.observer, glb.scrollPanel);
+	glb.scrollPanel.bMoved = TRUE;
+	// 根据用户设置的大小设置listbox和滚动区域
+	GLB_setBound(glb, 0, 0, width, height);
+	
+	//GLB_initGListBox(glb);
+	glb.scrollPanel.vGap = 2;
+	glb.scrollPanel.hGap = 2;
+	glb.isCycled = TRUE;
+	glb.func_cycle = GLB_cycle;
+	glb.func_paint = GW_paint;
+	glb.func_destroy = GLB_destroy;
+	
+	GListBox ret = Object_Create(glb);
+	free glb;
+	
+	return ret;
+}
+
+/**
+ * 销毁GGridBox.
+ */
+FUNCTION GLB_destroy(GListBox this)
+{
+	OBJECT_FREE(this.scrollPanel);
+	
+	OBJECT_FREE(this.leftWidget);
+	OBJECT_FREE(this.rightWidget);
+	OBJECT_FREE(this.upWidget);
+	OBJECT_FREE(this.downWidget);
+	OBJECT_FREE(this.observer);
+	OBJECT_FREE(this);
+}
+
+/*根据索引获取子控件*/
+FUNCTION GLB_getChildByIndex(GListBox this, int index){
+	return Gui_GC_GetChildByIndex(this.scrollPanel.contentArea, index);
+}
+
+/**
+ * 当listbox有变化时重置子控件的位置.
+ *
+ * 变化是指：添加删除子控件;子控件大小改变等.
+ */
+FUNCTION GLB_reset(GListBox this){
+	Gui_GC_SetChildrenOffset(this.scrollPanel.contentArea, 0, 0);
+	Gui_GC_doLayout(this.scrollPanel.contentArea);
+}
+
+/**
+ * 设置listbox中的item的间隙.
+ */
+FUNCTION GLB_setGaps(GListBox this, int gaps)
+{
+	
+	if (this.orientation == LAYOUT_ORIENT_VERTICAL){
+		this.scrollPanel.vGap = gaps;
+		Gui_GC_SetLayoutGaps(this.scrollPanel.contentArea, 0, gaps);
+	} else if (this.orientation == LAYOUT_ORIENT_HORIZON){
+		this.scrollPanel.hGap = gaps;
+		Gui_GC_SetLayoutGaps(this.scrollPanel.contentArea, gaps, 0);
+	}
+}
+
+/**
+ * 设置GListBox以及其子控件的大小和位置.
+ *
+ * NOTE:	如果只调用GW_setBound对listbox设置大小，则可能导致子控件显示不正常.
+ */
+FUNCTION GLB_setBound(GListBox this, int x, int y, int width, int height)
+{
+	Gui_GW_SetBound(this, x, y, width, height);
+	int clientW = GC_getContentAreaWidth(this);
+	int clientH = GC_getContentAreaHeight(this);
+	GSP_setBounds(this.scrollPanel, 0, 0, clientW, clientH);
+}
+/**
+ * 向GListBox中插入子控件.
+ * 
+ * @param item		要插入的子控件
+ * @param index		要插入的位置（前插入）
+ * NOTE:  此方法所做的工作是把Widget添加进GListBox中，顺便设置了items的总高度
+ *			同时将list中的widget总量+1.
+ */
+FUNCTION GLB_insertChildWidget(GListBox this, GWidget item, int index)
+{
+	GWidget tmpItem = Realize(Object_Create(item));
+	this.itemCount++;
+	this.itemsH += tmpItem.h + this.scrollPanel.vGap;
+	OBJECT_SET(tmpItem.observer, this.scrollPanel);
+	Gui_GC_InsertChildWidget(this.scrollPanel.contentArea, tmpItem, index);
+
+	// 默认情况没有scrollbar，将子控件宽度设置成listbox的客户区宽度.
+	if (this.orientation == LAYOUT_ORIENT_VERTICAL)
+	{
+		if ( this.scrollPanel.contentArea.w > 0)
+		{
+			tmpItem.w = GC_getContentAreaWidth(this.scrollPanel.contentArea);
+		}
+	}else{
+		if ( this.scrollPanel.contentArea.h > 0)
+		{
+			tmpItem.h = GC_getContentAreaHeight(this.scrollPanel);
+		}
+	}
+	free tmpItem;
+}
+
+/**
+ * 向GListBox中添加子控件.
+ * 
+ * NOTE:  此方法所做的工作是把Widget添加进GListBox中，顺便设置了items的总高度
+ *			同时将list中的widget总量+1.
+ */
+FUNCTION GLB_addItem(GListBox this, GWidget item)
+{
+	this.itemCount++;
+	this.itemsH += item.h + this.scrollPanel.vGap;
+	OBJECT_SET(item.observer, this.scrollPanel);
+	Gui_GC_AddChildWidget(this.scrollPanel.contentArea, item, 0);
+
+	// 默认情况没有scrollbar，将子控件宽度设置成listbox的客户区宽度.
+	if (this.orientation == LAYOUT_ORIENT_VERTICAL)
+	{
+		if ( this.scrollPanel.contentArea.w > 0)
+		{
+			item.w = GC_getContentAreaWidth(this.scrollPanel.contentArea);
+		}
+	}else{
+		if ( this.scrollPanel.contentArea.h > 0)
+		{
+			item.h = GC_getContentAreaHeight(this.scrollPanel);
+		}
+	}
+}
+
+/**
+ * 移除listbox中的item.
+ *
+ * @param destroy		是否同时删除该子控件
+ */
+FUNCTION GLB_removeItem(GListBox this, GWidget item, boolean destroy)
+{
+	GLB_removeItem1(this, item, FALSE);
+}
+FUNCTION GLB_removeItem1(GListBox this, GWidget item, boolean destroy)
+{
+	this.itemCount--;
+	this.itemsH -= item.h + this.scrollPanel.vGap;
+	if (destroy) {
+		Gui_GW_destroyGWidget(item);
+	} else {
+		Gui_GC_RemoveChildWidget(this.scrollPanel.contentArea, item);
+	}
+}
+
+/**
+ * 清空listbox中的item.
+ */
+FUNCTION GLB_clear(GListBox this, boolean destroy)
+{
+	GLB_clear1(this, FALSE);
+}
+FUNCTION GLB_clear1(GListBox this, boolean destroy)
+{
+	this.itemCount = 0;
+	this.itemsH = 0;
+	this.scrollPanel.scrollOffsetX = 0;
+	this.scrollPanel.scrollOffsetY = 0;
+	Gui_GC_Clear(this.scrollPanel.contentArea, destroy);
+}
+/**
+ * 用于全部添加完成后, 进行是否需要滚动条等操作.
+ */
+FUNCTION GLB_update(GListBox this)
+{
+	if (this.itemCount < 1){
+		return;
+	}
+
+	int scrollW = this.w - this.borderLeft - this.borderRight - this.insetLeft - this.insetRight;
+	int scrollH = this.h - this.borderTop - this.borderBottom - this.insetTop - this.insetBottom;
+
+	int scrollContentAreaW = scrollW;
+	int scrollContentAreaH = scrollH;
+	
+	if (this.itemsH > scrollH)
+	{
+		GWidget[] childrenWidgets = GC_getChildrenWidgets(this.scrollPanel.contentArea);
+		int len = Length(childrenWidgets);
+		this.scrollPanel.isNeedScroll = TRUE;
+		
+		if (this.orientation == LAYOUT_ORIENT_VERTICAL){
+			if (this.scrollPanel.isVArrowPaint){
+				this.scrollPanel.downArrow.isVisible = TRUE;
+			}
+			if (this.scrollPanel.isVScrollBarPaint){
+				scrollContentAreaW -= this.scrollPanel.vScrollBar.w + this.scrollPanel.gapCA2Bar;
+				GSP_setBarVisibility(this.scrollPanel, FALSE, TRUE);
+			}
+			for (int i=0; i<len; i++)
+			{
+				GWidget currentWidget = childrenWidgets[i];
+				currentWidget.w = scrollContentAreaW;
+			}
+		}else{
+			if (this.scrollPanel.isHArrowPaint){
+				this.scrollPanel.rightArrow.isVisible = TRUE;
+			}
+			if (this.scrollPanel.isHScrollBarPaint){
+				scrollContentAreaH -= this.scrollPanel.hScrollBar.h;
+				GSP_setBarVisibility(this.scrollPanel, TRUE, FALSE);}
+
+			for (i=0; i<len; i++)
+			{
+				currentWidget = childrenWidgets[i];
+				currentWidget.h = scrollContentAreaH;
+			}
+		}
+		free childrenWidgets;
+	}
+	Gui_GC_Pack(this.scrollPanel.contentArea);
+	
+	
+	GSP_setBounds(this.scrollPanel, 0, 0, scrollW, scrollH);
+	GSP_setScrollAmount(this.scrollPanel, this.itemsH, this.itemsH / this.itemCount);
+	GLayout_initRelativeFocus(this.scrollPanel.contentArea);
+}
+
+//	私有接口
+//	protected:
+
+/**
+ * 初始化GGridBox.
+ */
+FUNCTION GLB_initGListBox(GListBox this)
+{
+	this.scrollPanel.vGap = 2;
+	this.scrollPanel.hGap = 2;
+	this.isCycled = TRUE;
+	this.func_cycle = GLB_cycle;
+	this.func_paint = GW_paint;
+	this.func_destroy = GLB_destroy;
+}
+
+FUNCTION GLB_cycle(GListBox this)
+{
+	if (IsNotNull(this.scrollPanel)){
+		GWidget[] children = GC_getChildrenWidgets(this.scrollPanel.contentArea);
+		int len = Length(children);
+		for (int i=0; i<len; i++) {
+			if (Gui_GW_IsFocused(children[i])) {
+				this.selectedItemIndex = i;
+				break;
+			}
+		}
+		free children;
+	}
+}

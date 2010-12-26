@@ -1,0 +1,651 @@
+/*
+
+1 如果支持触摸屏事件，那么用户需要调用GSB_setBarStep来设定scrollbar的步长和允许的总步长数量
+*/
+
+#include "GScrollBar.h"
+#include "./GWidget.gtl"
+#include "./GButton.gtl"
+#include "./GContainer.gtl"
+#include "./GScrollPanel.gtl"
+
+ /**
+  * 创建SCrollBar.
+  */
+FUNCTION GSB_makeGScrollBar(GScrollBar this, String widgetName, int orientation, int policy)
+{
+	GScrollBar scrollBar = NULL;
+	if(IsNotNull(this)){
+		scrollBar = Realize(Gui_GC_MakeGContainer(this, widgetName));
+	}
+	else{
+		scrollBar = Realize(Gui_GC_MakeGContainer(new GScrollBar, widgetName));
+	}
+	
+	
+	scrollBar.func_handleTouch = GSB_sbhandleTouch;
+	// “↑↓▽△”
+	
+	// 创建下按钮
+	String incBtnName = Realize(Object_Create("scrollbar_incBtn"));
+	String incBtnCaption = Realize(Object_Create("▼"));
+	scrollBar.incBtn = Realize(GBtn_makeGButton(NULL, incBtnName, incBtnCaption, 0, -1, 0));
+//	GL_SetCaptionInfo(scrollBar.incBtn, FALSE, LAYOUT_ALIGN_HCENTER, LAYOUT_ALIGN_VBOTTOM);
+	GW_setBorderSize(scrollBar.incBtn, 1, 1, 1, 1);
+	scrollBar.incBtn.isBackgroundPainted = TRUE;
+	scrollBar.incBtn.backgroundColor = 0xff927122;
+	scrollBar.incBtn.isBorderPainted = TRUE;
+	scrollBar.incBtn.borderColor = 0xff4a2a19;
+	scrollBar.incBtn.btn_clicked = GSB_DownButtonTouched;
+	scrollBar.incBtn.func_handleTouch = GSB_incBtnhandleTouch;
+	free incBtnCaption;
+	free incBtnName;
+	
+	// 创建上按钮 
+	String decBtnName = Realize(Object_Create("scrollbar_decBtn"));
+	String decBtnCaption = Realize(Object_Create("▲"));
+	scrollBar.decBtn = Realize(GBtn_makeGButton(NULL, decBtnName, decBtnCaption, 0, -1, 0));
+	//GL_SetCaptionInfo(scrollBar.decBtn, FALSE, LAYOUT_ALIGN_HCENTER, LAYOUT_ALIGN_VBOTTOM);
+	GW_setBorderSize(scrollBar.decBtn, 1, 1, 1, 1);
+	scrollBar.decBtn.isBackgroundPainted = TRUE;
+	scrollBar.decBtn.backgroundColor = 0xFF927122;
+	scrollBar.decBtn.isBorderPainted = TRUE;
+	scrollBar.decBtn.borderColor = 0xFF4a2a19;
+	scrollBar.decBtn.btn_clicked = GSB_UpButtonTouched;
+	scrollBar.decBtn.func_handleTouch = GSB_decBtnhandleTouch;
+	free (decBtnCaption);
+	free (decBtnName);
+	
+	// 创建拖动吧
+	String barName = Realize(Object_Create("scrollbar_barBtn"));
+	String barCaption = Realize(Object_Create(""));
+	scrollBar.bar = Realize(GBtn_makeGButton(NULL, barName, barCaption, 0, -1, 0));
+	GW_setBorderSize(scrollBar.bar, 1, 1, 1, 1);
+	scrollBar.bar.isBackgroundPainted = TRUE;
+	scrollBar.bar.backgroundColor = 0xFFd37d23;
+	scrollBar.bar.isBorderPainted = TRUE;
+	scrollBar.bar.borderColor = 0xFF100400;
+	scrollBar.bar.btn_clicked = GSB_knotBarTouched;
+	scrollBar.bar.func_handleTouch = GSB_handleTouchImpl_ScrollBar;
+	scrollBar.bar.h = 10;
+	free (barCaption);
+	free (barName);
+
+	// 将内部控件添加到scrollbar中
+	Gui_GC_AddChildWidget(scrollBar, scrollBar.decBtn, 0);
+	Gui_GC_AddChildWidget(scrollBar, scrollBar.incBtn, 0);
+	Gui_GC_AddChildWidget(scrollBar, scrollBar.bar, 0);
+	
+	// 初始化
+	GSB_initGScrollBar(scrollBar);
+	GSB_setBound(scrollBar, 0, 0, 19, 50);
+
+	GScrollBar ret = Object_Create(scrollBar);
+	free scrollBar;
+	
+	return ret;
+}
+
+ /**
+  * 初始化. 
+  */
+FUNCTION GSB_initGScrollBar(GScrollBar this)
+{
+	this.func_paint = GW_paint;
+	this.func_destroy = GSB_destroy;
+
+	this.isBackgroundPainted = TRUE;
+	this.backgroundColor = 0xFF715235;
+	this.isBorderPainted = TRUE;
+	this.borderColor = 0xFFffcd63;
+	this.borderBottom = 1;
+	this.borderLeft = 1;
+	this.borderRight = 1;
+	this.borderTop = 1;
+	this.scrollBarAmount = this.h - 4 - this.decBtn.h - this.incBtn.h - this.bar.h;
+	this.bTop = FALSE;
+	this.bDown = FALSE;
+}
+
+ /**
+  * 销毁scrollbar. 
+  */
+FUNCTION GSB_destroy(GScrollBar this)
+{
+	OBJECT_FREE(this.decBtn);
+	OBJECT_FREE(this.incBtn);
+	OBJECT_FREE(this.bar);
+
+	OBJECT_FREE(this.leftWidget);
+	OBJECT_FREE(this.rightWidget);
+	OBJECT_FREE(this.upWidget);
+	OBJECT_FREE(this.downWidget);
+	OBJECT_FREE(this.observer);
+	OBJECT_FREE(this);
+}
+
+/**
+ * 设置滚动条的相对位置，相对于scrollpanel的位置
+ * NOTE: 设置滚动条的相对位置必须是调用次方法，通过此方法一并设置了滚动条中组件的相对位置
+ * 否则组件可能无法显示
+ */
+FUNCTION GSB_setBound(GScrollBar this, int x, int y, int width, int height)
+{	
+	int childAreaW = width - this.borderLeft - this.borderRight - this.insetLeft - this.insetRight;
+	int childAreaH = height - this.borderTop - this.borderBottom - this.insetTop - this.insetBottom;
+	Gui_GW_SetBound(this, x, y, width, height);
+	//Gui_GW_SetBound(this, x, y, childAreaW, childAreaH);
+	Gui_GW_SetBound(this.decBtn, 0, 0, childAreaW, this.decBtn.h);
+	Gui_GW_SetBound(this.incBtn, 0, childAreaH - this.incBtn.h, childAreaW, this.incBtn.h);
+	Gui_GW_SetBound(this.bar, 0, this.decBtn.h, childAreaW, this.bar.h);
+}
+
+/**
+ * 设置滚动把的偏移量
+ * 
+ * @param _itemsOffsetX 滚动区域中控件的x偏移量
+ * @param _itemsOffsetY 滚动区域中控件的y偏移量
+ */
+FUNCTION GSB_setScrollBarOffset(GScrollBar this, int _itemsOffsetX, int _itemsOffsetY)
+{
+	if (SCROLLBAR_IVERTICAL == this.orientation)
+	{
+		this.bar.offsetY = (-1)*(this.scrollBarAmount * _itemsOffsetY) / (this.scrollItemsH - this.h);
+		if (this.bar.offsetY < 0)
+		{
+			this.bar.offsetY = 0;
+		}
+		else if (this.bar.offsetY >= this.scrollBarAmount)
+		{
+			this.bar.offsetY = this.scrollBarAmount;
+		}
+		this.bar.absX = -1;
+		this.bar.absY = -1;
+	}
+	else
+	{
+		this.bar.offsetX = (-1)*(this.scrollBarAmount * _itemsOffsetX) / (this.scrollItemsH - this.h);
+		if (this.bar.offsetX < 0)
+		{
+			this.bar.offsetX = 0;
+		}
+		else if (this.bar.offsetX > this.scrollBarAmount)
+		{
+			this.bar.offsetX = this.scrollBarAmount;
+		}
+		this.bar.absX = -1;
+		this.bar.absY = -1;
+	}
+}
+
+/**
+ * 点击scrollbar的上键头 ,注意边界值的判断
+ */
+FUNCTION GSB_UpButtonTouched(GButton this)
+{	
+	GScrollBar tmpScrBar = Realize(Gui_GW_GetParentWidget(this));
+	GScrollPanel tmpscrollPanel = Realize(Gui_GW_GetParentWidget(tmpScrBar));
+	
+	tmpscrollPanel.scrollOffsetY += (tmpscrollPanel.vScrollBar.barunit) * (tmpScrBar.scrollItemsH - tmpScrBar.h) / tmpScrBar.scrollBarAmount;
+	
+	if(tmpscrollPanel.scrollOffsetY < 0 - tmpScrBar.nNeedOffSetY)
+	{
+		tmpscrollPanel.scrollOffsetY = 0 - tmpScrBar.nNeedOffSetY;
+	}else if(tmpscrollPanel.scrollOffsetY > 0){
+		tmpscrollPanel.scrollOffsetY = 0;
+	}
+	GSP_setContentOffset(tmpscrollPanel, 0, tmpscrollPanel.scrollOffsetY);
+	
+	free tmpScrBar;
+	free tmpscrollPanel;
+	
+	return TRUE;
+}
+
+
+/**
+ * 点击scrollbar的下键头
+ */
+FUNCTION GSB_DownButtonTouched(GButton this)
+{	
+	GScrollBar tmpScrBar = Realize(Gui_GW_GetParentWidget(this));
+	GScrollPanel tmpscrollPanel = Realize(Gui_GW_GetParentWidget(tmpScrBar));
+	
+	tmpscrollPanel.scrollOffsetY += 0 - (tmpscrollPanel.vScrollBar.barunit) * (tmpScrBar.scrollItemsH - tmpScrBar.h) / tmpScrBar.scrollBarAmount;
+	
+	if(tmpscrollPanel.scrollOffsetY < 0 - tmpScrBar.nNeedOffSetY)
+	{
+		tmpscrollPanel.scrollOffsetY = 0 - tmpScrBar.nNeedOffSetY;
+	}else if(tmpscrollPanel.scrollOffsetY > 0){
+		tmpscrollPanel.scrollOffsetY = 0;
+	}
+	GSP_setContentOffset(tmpscrollPanel, 0, tmpscrollPanel.scrollOffsetY);
+	
+	free tmpScrBar;
+	free tmpscrollPanel;
+
+	return TRUE;
+}
+
+/*
+*处理touchpress事件
+*/
+FUNCTION GSB_knotBarTouched(GButton this)
+{
+	boolean eventConsumed  = FALSE;
+	
+	GScrollPanel parent = this.observer;
+	//parent.vScrollBar.bTraOffSet = FALSE;
+	if(NULL != parent)
+	{
+		int[] prePos = Gui_GUI_getCurrentTouchPos();
+		parent.vScrollBar.oldX = prePos[0];
+		parent.vScrollBar.oldY = prePos[1];
+		//parent.vScrollBar.absX = prePos[0];
+		//parent.vScrollBar.absY = prePos[1];
+		parent.vScrollBar.bTraOffSet = FALSE;
+		//parent.vScrollBar.bar.offsetY +=(parent.vScrollBar.bar.absY -  parent.vScrollBar.decBtn.absY - parent.vScrollBar.decBtn.h);
+		if(parent.vScrollBar.bar.absY == parent.vScrollBar.decBtn.absY + parent.vScrollBar.decBtn.h)
+		{
+			if(parent.upArrow.isVisible != FALSE)
+			{
+				Gui_GW_SetVisible(parent.upArrow, FALSE);
+			}
+			if(parent.downArrow.isVisible != TRUE)
+			{
+				Gui_GW_SetVisible(parent.downArrow, TRUE);
+			}
+			parent.vScrollBar.bTraOffSet = TRUE;
+		}
+		
+		if(parent.vScrollBar.bar.absY == parent.vScrollBar.decBtn.absY + parent.vScrollBar.decBtn.h + parent.vScrollBar.scrollBarAmount)
+		{
+			if(parent.upArrow.isVisible != TRUE)
+			{
+				Gui_GW_SetVisible(parent.upArrow, TRUE);
+			}
+			if(parent.downArrow.isVisible != FALSE)
+			{
+				Gui_GW_SetVisible(parent.downArrow, FALSE);
+			}
+			parent.vScrollBar.bTraOffSet = TRUE;
+		}
+		
+		parent.vScrollBar.nTraOffSet = parent.vScrollBar.bar.absY - parent.vScrollBar.decBtn.absY - parent.vScrollBar.decBtn.h;
+		
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/*
+计算scrollbar的移动总步数
+@param	num	表示scrollbar的总步长数量
+*/
+FUNCTION GSB_setScrollStep(GScrollBar this, int step)
+{
+	/*if (this.isVisible && 0 != num)
+	{
+		this.barunit =  this.scrollBarAmount/num;
+		this.barscrollunit = this.scrollUnite;
+	}*/
+}
+FUNCTION GSB_sbhandleTouch(GScrollBar this, int eventType, int x, int y)
+{
+	boolean eventConsumed = FALSE;
+	
+	switch(eventType)
+	{	
+		case EVENT_TYPE_TOUCHRELEASED:
+		{
+			return TRUE;
+		}
+		default:
+		break;
+	}
+	return eventConsumed;
+}
+/*
+scrollpanell的container的处理touch相应函数
+*/
+FUNCTION GSB_handleTouchImpl_ScrollBar(GButton this, int eventType, int x, int y)
+{
+	boolean eventConsumed = FALSE;
+	GScrollBar tmpScrBar = Realize(Gui_GW_GetParentWidget(this));
+	GScrollPanel tmpscrollPanel = Realize(Gui_GW_GetParentWidget(tmpScrBar));
+	
+	if (eventType == EVENT_TYPE_TOUCHPRESSED){
+		tmpScrBar.oldX = x;
+		tmpScrBar.oldY = y;
+		eventConsumed = TRUE;
+	} else if (eventType == EVENT_TYPE_TOUCHRELEASED){
+		tmpScrBar.oldX = 0;
+		tmpScrBar.oldY = 0;
+		eventConsumed = TRUE;
+	} else if (eventType == EVENT_TYPE_TOUCHDRAGED){
+		int _x = x;
+		int _y = y;
+		
+		tmpscrollPanel.scrollOffsetY += (tmpScrBar.oldY - y) * (tmpScrBar.scrollItemsH - tmpScrBar.h) / tmpScrBar.scrollBarAmount;
+		
+		if(tmpscrollPanel.scrollOffsetY < 0 - tmpScrBar.nNeedOffSetY)
+		{
+			tmpscrollPanel.scrollOffsetY = 0 - tmpScrBar.nNeedOffSetY;
+		}else if(tmpscrollPanel.scrollOffsetY > 0){
+			tmpscrollPanel.scrollOffsetY = 0;
+		}
+
+		GSP_setContentOffset(tmpscrollPanel, 0, tmpscrollPanel.scrollOffsetY);
+		
+		tmpScrBar.oldY = y;
+		eventConsumed = TRUE;
+	}
+	free tmpScrBar;
+	free tmpscrollPanel;
+/*	GScrollPanel parent = this.observer;
+	eventConsumed = GSB_handleTouchImpl(this, eventType, x, y);
+	if(eventConsumed)
+	{
+		parent.vScrollBar.noff = y - parent.vScrollBar.bar.absY;//鼠标点击的坐标距离bar的坐标距离
+		return TRUE;
+	}
+
+	else
+	{
+		eventConsumed = GSB_knotBarDraged(this, x, y);
+		return eventConsumed;
+	}*/
+	
+	return eventConsumed;
+}
+
+//FUNCTION GSB_handleTouchImpl(GButton this, int eventType, int x, int y)
+//{
+//	boolean eventConsumed = FALSE;
+// 	
+// 	switch(eventType)
+// 	{
+// 		case EVENT_TYPE_TOUCHPRESSED:
+// 		{
+// 			eventConsumed = GBtn_clickedFuncImpl(this);
+// 			break;
+// 			
+// 		}
+// 			
+// 		case EVENT_TYPE_TOUCHRELEASED:
+// 		{
+// 			eventConsumed = GSB_releasedFuncImpl(this);
+// 			//eventConsumed = FALSE;
+// 			break;	
+// 		}
+// 		default:
+// 			break;
+// 	}
+// 	
+// 	return eventConsumed;
+//}
+
+FUNCTION GSB_releasedFuncImpl(GButton this)
+{
+	boolean eventConsumed = FALSE;
+	if(NULL != this)
+	{
+		return TRUE;
+	}
+}
+/*
+scrollpanell的container的处理touchdrag相应函数
+*/
+FUNCTION GSB_knotBarDraged(GButton this, int x, int y)
+{
+	boolean eventConsumed = TRUE;
+	GScrollPanel parent = this.observer;
+	if(NULL != parent)
+	{
+		if(parent.vScrollBar.scrollBarAmount == 0)
+		{
+			return TRUE;
+		}
+		parent.vScrollBar.bar.offsetY = y - parent.vScrollBar.oldY;
+		
+		if(parent.upArrow.isVisible != TRUE)
+		{
+			Gui_GW_SetVisible(parent.upArrow, TRUE);
+		}
+		if(parent.downArrow.isVisible != TRUE)
+		{
+			Gui_GW_SetVisible(parent.downArrow, TRUE);
+		}
+		
+		
+		if(parent.vScrollBar.bar.offsetY > 0)
+		{
+			
+			parent.vScrollBar.bTop = FALSE;
+			//bar已经到达最下端，则继续下拉，滚动条不会继续
+			if(parent.vScrollBar.bar.absY == parent.vScrollBar.absY + parent.vScrollBar.h - parent.vScrollBar.incBtn.h - parent.vScrollBar.bar.h)
+			{
+				parent.vScrollBar.bar.offsetY = 0;//将偏移归零
+				//parent.vScrollBar.bar.y = parent.vScrollBar.decBtn.y + parent.vScrollBar.decBtn.h + parent.vScrollBar.scrollBarAmount;
+				parent.vScrollBar.bar.y = parent.vScrollBar.y + parent.vScrollBar.h - parent.vScrollBar.incBtn.h - parent.vScrollBar.bar.h;
+				parent.vScrollBar.bar.absY = parent.vScrollBar.absY + parent.vScrollBar.h - parent.vScrollBar.incBtn.h - parent.vScrollBar.bar.h;
+				parent.scrollOffsetY = parent.vScrollBar.nNeedOffSetY;	
+				Gui_GC_SetChildrenOffset(parent.contentArea, 0, 0 - parent.scrollOffsetY);
+				if(parent.upArrow.isVisible != TRUE)
+				{
+					Gui_GW_SetVisible(parent.upArrow, TRUE);
+				}
+				if(parent.downArrow.isVisible != FALSE)
+				{
+					Gui_GW_SetVisible(parent.downArrow, FALSE);
+				}
+				return TRUE;
+			}
+			
+			
+			
+			if(parent.vScrollBar.bTraOffSet == FALSE)
+			{
+				
+				parent.vScrollBar.bar.offsetY += parent.vScrollBar.nTraOffSet;
+			}
+			
+			//parent.scrollOffsetY = parent.vScrollBar.bar.offsetY*(parent.vScrollBar.scrollItemsH - parent.vScrollBar.barscrollunit)/(parent.vScrollBar.scrollBarAmount);
+			parent.scrollOffsetY = parent.vScrollBar.bar.offsetY*(parent.vScrollBar.nNeedOffSetY)/(parent.vScrollBar.scrollBarAmount);
+			
+			
+			parent.vScrollBar.bar.y = parent.vScrollBar.decBtn.y + parent.vScrollBar.decBtn.h + parent.vScrollBar.bar.offsetY;
+			
+			parent.vScrollBar.bar.offsetY = 0;//将偏移归零
+			
+			parent.vScrollBar.bar.absY = y - parent.vScrollBar.noff;//使鼠标的坐标始终和bar的absy相对静止
+			
+	
+			
+			
+			
+			
+			if(parent.vScrollBar.bar.absY >= parent.vScrollBar.absY + parent.vScrollBar.h - parent.vScrollBar.incBtn.h - parent.vScrollBar.bar.h)
+			{
+
+				parent.vScrollBar.bar.offsetY = 0;//将偏移归零
+				parent.vScrollBar.bar.y = parent.vScrollBar.y + parent.vScrollBar.h - parent.vScrollBar.incBtn.h - parent.vScrollBar.bar.h;
+				parent.vScrollBar.bar.absY = parent.vScrollBar.absY + parent.vScrollBar.h - parent.vScrollBar.incBtn.h - parent.vScrollBar.bar.h;
+				
+				if(parent.scrollOffsetY > parent.vScrollBar.nNeedOffSetY)
+				{
+					parent.scrollOffsetY = parent.vScrollBar.nNeedOffSetY;	
+				}
+				Gui_GC_SetChildrenOffset(parent.contentArea, 0, 0 - parent.scrollOffsetY);
+				parent.vScrollBar.bDown = TRUE;
+//				parent.downArrow.isVisible = FALSE;
+//				parent.upArrow.isVisible = TRUE;
+				if(parent.upArrow.isVisible != TRUE)
+				{
+					Gui_GW_SetVisible(parent.upArrow, TRUE);
+				}
+				if(parent.downArrow.isVisible != FALSE)
+				{
+					Gui_GW_SetVisible(parent.downArrow, FALSE);
+				}
+				return TRUE;
+			}
+			
+			
+			Gui_GC_SetChildrenOffset(parent.contentArea, 0, 0 - parent.scrollOffsetY);
+			
+		/*	parent.vScrollBar.bar.y = parent.vScrollBar.decBtn.y + parent.vScrollBar.decBtn.h + parent.vScrollBar.bar.offsetY;
+			
+			parent.vScrollBar.bar.offsetY = 0;//将偏移归零
+			
+			parent.vScrollBar.bar.absY = y - parent.vScrollBar.noff;//使鼠标的坐标始终和bar的absy相对静止
+			
+			
+			
+			Gui_GC_SetChildrenOffset(parent.contentArea, 0, 0 - parent.scrollOffsetY);*/
+		
+			
+			
+			//当上导航键没有显示且当前Y坐标不为零, 则要显示上导航键
+			/*if(0 != parent.scrollOffsetY && parent.isupArrowPaint == FALSE)
+			{
+				Gui_GW_SetBound(parent.upArrow, parent.upArrow.x, parent.upArrow.y + parent.upArrow.h, parent.upArrow.w, parent.upArrow.h);
+				parent.isupArrowPaint = TRUE;
+			}
+			else if(0 == parent.scrollOffsetY && parent.isupArrowPaint == TRUE)//否则不显示上箭头
+			{
+				Gui_GW_SetBound(parent.upArrow, parent.upArrow.x, parent.upArrow.y - parent.upArrow.h, parent.upArrow.w, parent.upArrow.h);
+				parent.isupArrowPaint = FALSE;
+			}
+			//当在最下方的时候，不需要显示下箭头
+			if(parent.scrollOffsetY == (parent.vScrollBar.scrollItemsH - parent.vScrollBar.barscrollunit) && parent.isdownArrowPaint ==TRUE)
+			{
+				Gui_GW_SetBound(parent.downArrow, parent.downArrow.x, parent.downArrow.y + parent.downArrow.h, parent.downArrow.w, parent.downArrow.h);
+				parent.isdownArrowPaint = FALSE;
+			}*/
+			
+		}
+		else
+		{
+			
+
+			parent.vScrollBar.bDown = FALSE;
+			//if(parent.vScrollBar.bTop)
+			if(parent.vScrollBar.bar.absY == (parent.vScrollBar.decBtn.absY +  parent.vScrollBar.decBtn.h))
+			{
+				parent.vScrollBar.bar.offsetY = 0;//将偏移归零
+				parent.vScrollBar.bar.y = parent.vScrollBar.decBtn.y + parent.vScrollBar.decBtn.h;
+				parent.vScrollBar.bar.absY = parent.vScrollBar.decBtn.absY +  parent.vScrollBar.decBtn.h;
+				parent.scrollOffsetY = 0;	
+				Gui_GC_SetChildrenOffset(parent.contentArea, 0, 0);
+				if(parent.upArrow.isVisible != FALSE)
+				{
+					Gui_GW_SetVisible(parent.upArrow, FALSE);
+				}
+				if(parent.downArrow.isVisible != TRUE){
+					Gui_GW_SetVisible(parent.downArrow, TRUE);
+				}
+				return TRUE;
+			}
+			
+			
+			if(parent.vScrollBar.bTraOffSet == FALSE)
+			{
+				parent.vScrollBar.bar.offsetY -= parent.vScrollBar.scrollBarAmount - parent.vScrollBar.nTraOffSet;
+			}
+			
+			parent.scrollOffsetY = parent.vScrollBar.bar.offsetY*(parent.vScrollBar.nNeedOffSetY)/parent.vScrollBar.scrollBarAmount;
+			
+
+			/*if((parent.vScrollBar.scrollItemsH - parent.vScrollBar.barscrollunit > (0 - parent.scrollOffsetY))&&(parent.isdownArrowPaint == FALSE))
+			{
+
+				Gui_GW_SetBound(parent.downArrow, parent.downArrow.x, parent.downArrow.y - parent.downArrow.h, parent.downArrow.w, parent.downArrow.h);
+				parent.isdownArrowPaint = TRUE;
+			}*/
+			
+			parent.vScrollBar.bar.y = parent.vScrollBar.decBtn.y + parent.vScrollBar.decBtn.h + parent.vScrollBar.scrollBarAmount + parent.vScrollBar.bar.offsetY;
+			
+			parent.vScrollBar.bar.offsetY = 0;//将偏移归零
+
+			parent.vScrollBar.bar.absY = y - parent.vScrollBar.noff;
+			
+			if(parent.vScrollBar.bar.absY <= parent.vScrollBar.decBtn.absY + parent.vScrollBar.decBtn.h)
+			{
+				parent.vScrollBar.bar.offsetY = 0;//将偏移归零
+				parent.vScrollBar.bar.y = parent.vScrollBar.decBtn.y + parent.vScrollBar.decBtn.h;
+				parent.vScrollBar.bar.absY = parent.vScrollBar.decBtn.absY +  parent.vScrollBar.decBtn.h;
+				
+				if((0 - parent.scrollOffsetY) > parent.vScrollBar.nNeedOffSetY)
+				{
+					parent.scrollOffsetY = parent.vScrollBar.nNeedOffSetY;
+				}
+				Gui_GC_SetChildrenOffset(parent.contentArea, 0, (0 - parent.scrollOffsetY) - (parent.vScrollBar.nNeedOffSetY));
+				parent.vScrollBar.bTop = TRUE;
+				if(parent.upArrow.isVisible != FALSE)
+				{
+					Gui_GW_SetVisible(parent.upArrow, FALSE);
+				}
+				if(parent.downArrow.isVisible != TRUE){
+					Gui_GW_SetVisible(parent.downArrow, TRUE);
+				}
+				return TRUE;
+			}
+			
+			Gui_GC_SetChildrenOffset(parent.contentArea, 0, (0 - parent.scrollOffsetY) - (parent.vScrollBar.nNeedOffSetY));
+			//当上导航键处于显示状态，且当前纵向Y偏移坐标为零，则使上导航键消失
+		/*	if((parent.vScrollBar.barscrollunit - parent.vScrollBar.scrollItemsH) == parent.scrollOffsetY && parent.isupArrowPaint == TRUE)
+			{
+				Gui_GW_SetBound(parent.upArrow, parent.upArrow.x, parent.upArrow.y - parent.upArrow.h, parent.upArrow.w, parent.upArrow.h);
+				parent.isupArrowPaint = FALSE;
+			}*/
+		
+		}
+		
+
+	}
+	return TRUE;
+}
+
+
+FUNCTION GSB_incBtnhandleTouch(GButton this, int eventType, int x, int y)
+{
+	boolean eventConsumed = FALSE;
+	if(NULL != this)
+	{
+		switch(eventType)
+		{
+			case EVENT_TYPE_TOUCHPRESSED:
+			{
+				eventConsumed = GSB_DownButtonTouched(this);
+				break;
+			}
+			default:
+			break;
+		}
+		
+
+		return	eventConsumed;
+	}
+}
+
+FUNCTION GSB_decBtnhandleTouch(GButton this, int eventType, int x, int y)
+{
+	boolean eventConsumed = FALSE;
+	if(NULL != this)
+	{
+		switch(eventType)
+		{
+			case EVENT_TYPE_TOUCHPRESSED:
+			{
+				eventConsumed = GSB_UpButtonTouched(this);
+				break;
+			}
+			default:
+			break;
+		}
+
+		return	eventConsumed;
+	}
+}
+

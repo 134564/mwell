@@ -1,0 +1,78 @@
+#include "./GImageNumber.h"
+#include "./GWidget.gtl"
+
+//	公共接口
+//	public:
+
+/**
+ * 创建GImageNumber.
+ *
+ * @param widgetName	控件名
+ * @param iconsrc		GImageNumber的图片资源
+ * @param startIndex	GImageNumber图片资源中0的起始索引
+ * @return的对象是Realize过的.
+ */
+FUNCTION GIN_makeGImageNumber(GImageNumber this, String widgetName, ImageSet iconsrc, int startIndex)
+{
+	GImageNumber inumber = NULL;
+	if(IsNotNull(this)){
+		inumber = Realize(Gui_GIN_MakeGImageNumber(this, widgetName, iconsrc));
+	}
+	else{
+		inumber = Realize(Gui_GIN_MakeGImageNumber(new GImageNumber, widgetName, iconsrc));
+	}
+
+	if(NULL != iconsrc)
+	{
+		inumber.nPipWidth = ImageSet_GetFrameWidth(iconsrc, startIndex);
+		inumber.nPipHeight = ImageSet_GetFrameHeight(iconsrc, startIndex);
+		inumber.w = inumber.nPipWidth;
+		inumber.h = inumber.nPipHeight;
+	}
+	inumber.startIndex  = startIndex;
+
+	//GIN_initGImageNumber(inumber);
+	inumber.func_paint = GW_paint;
+	inumber.func_destroy = GW_destroy;
+	
+	GImageNumber ret = Object_Create(inumber);
+	free inumber;
+	
+	return ret;
+}
+
+/**
+ * Gui_GIN_SetImageNumber(this, number)
+ * 设置GImageNumber的数字字符串.
+ *
+ * @param number	要设置的数字字符串
+ */
+FUNCTION GIN_setImageNumber(GImageNumber this, String number)
+{
+	Gui_GIN_SetImageNumber(this, number);
+}
+
+/**
+ * 销毁GImageNumber.
+ */
+//FUNCTION GIN_destroy(GImageNumber this)
+//{
+//	free (this.leftWidget);
+//	free (this.rightWidget);
+//	free (this.upWidget);
+//	free (this.downWidget);
+//	free (this.observer);
+//	free (this);
+//}
+
+//	私有接口
+//	protected:
+
+/**
+ * 初始化GImageNumber.
+ */
+//FUNCTION GIN_initGImageNumber(GImageNumber this) 
+//{
+//	this.func_paint = GW_paint;
+//	this.func_destroy = GIN_destroy;
+//}

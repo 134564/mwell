@@ -1,0 +1,198 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_table";
+DESCRIPTION "表格界面"; 
+
+#include "../core/gui/guiInclude.h"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GTable table;
+
+	// 保存屏幕宽高 
+	int screenHeight;
+	int screenWidth;
+	
+	int clientAreaW;
+	int clientAreaH;
+	
+	int colCnt;
+	int rowCnt;
+
+	String []listsCaption;
+	GContainer []lists;
+	
+	int[] temalign;
+	String[] eleCaption;
+	String[] eleCaption1;
+	String[] eleCaption2;
+	int[] colRates;
+	
+	String rowName;
+	String[] colName;
+	GContainer rowsWidget;
+	GLabel[] colsWidget;
+	
+	String rowName1;
+	String[] colName1;
+	GContainer rowsWidget1;
+	GLabel[] colsWidget1;
+}
+
+FUNCTION init()
+{
+	// 初始化基本数据
+	//buttonSrc = Realize(ImageSet_Create("ui_res240.pip"));
+	screenHeight = GetScreenHeight();
+	screenWidth = GetScreenWidth();
+	
+	// 创建canvasUnit以及一个window.
+	create_canvasUnit();
+	
+	// 创建table
+	Create_table();
+	
+	// 创建Widget并添加到table中
+	Create_tableItems();
+}
+
+FUNCTION event() {
+}
+
+/////////////// common function //////////////////////
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	free vmCU;
+	//free listsCaption;
+	//free lists;
+}
+
+FUNCTION processPacket()
+{
+}
+
+/////////////// create function //////////////////////
+FUNCTION create_canvasUnit()
+{
+	// 创建一个canvasUnit, 它是脚本界面的最基本组织形式, 每个界面window必须
+	// 有一个canvasUnit.
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(NULL,cuName));
+	free cuName;
+	GW_setBound(vmCU, 0, 0, screenWidth, screenHeight);
+}
+
+// 创建table
+FUNCTION Create_table()
+{
+	String tableName = Realize(Object_Create("table"));
+	String tableHeadStr = Realize(Object_Create("tableHeadStr"));
+	table = Realize(GT_makeGTable(NULL,tableName, tableHeadStr, LAYOUT_ALIGN_HLEFT, FALSE,screenWidth, screenHeight));
+	free tableName;
+	free tableHeadStr;
+	
+	table.borderColor = 0x00330022;
+	table.isBorderPainted = TRUE;
+	
+	GW_setBorderSize(table, 4, 4, 4, 4);
+	GW_setBorderSize(table.body, 2, 2, 2, 2);
+	GC_addChildWidget(vmCU, table, 0);
+	table.body.borderColor = 0x00663322;
+	table.body.isBorderPainted = TRUE;
+	//GT_setBound(table, 0, 0, 200, 300);
+	GT_setBound(table, 0, 0, screenWidth, screenHeight);
+	GT_setTable(table, 4);
+	colRates = new int[table.colCnt];
+	colRates[0] = 20;
+	colRates[1] = 40;
+	colRates[2] = 20;
+	colRates[3] = 20;
+	
+	
+	GT_setColRates(table, colRates);
+
+	temalign = new int[table.colCnt];
+	temalign[0] = LAYOUT_ALIGN_HCENTER;
+	temalign[1] = LAYOUT_ALIGN_HRIGHT;
+	temalign[2] = LAYOUT_ALIGN_HRIGHT;
+	
+	eleCaption = new String[table.colCnt];
+	eleCaption[0] = "Name";
+	eleCaption[1] = "Age";
+	eleCaption[2] = "Addr.";
+	eleCaption1 = new String[table.colCnt];
+	eleCaption1[0] = "Name1";
+	eleCaption1[1] = "Age1";
+	eleCaption1[2] = "Addr1.";
+	eleCaption2 = new String[table.colCnt];
+	eleCaption2[0] = "Name2";
+	eleCaption2[1] = "Age2";
+	eleCaption2[2] = "Addr2.";
+	
+
+	rowName = new String[table.rowCnt];
+	colName = new String[table.colCnt];
+	rowsWidget = new GContainer;
+	colsWidget = new GLabel[table.colCnt];
+	rowName = Realize(Object_Create("row" + table.rowCnt));
+	rowsWidget = Realize(GC_makeGContainer(NULL, rowName));
+	GT_init_TableList(rowsWidget);
+	for(int j=0; j<table.colCnt; j++)
+	{
+		colName[j] = Realize(Object_Create(eleCaption[j]));
+		colsWidget[j] = Realize(GL_makeGLabel(NULL, colName[j], colName[j]));
+	}
+	
+	
+	rowName1 = new String[table.rowCnt];
+	colName1 = new String[table.colCnt];
+	
+	rowsWidget1 = new GContainer;
+	colsWidget1 = new GLabel[table.colCnt];
+	rowName1 = Realize(Object_Create("row" + table.rowCnt));
+	rowsWidget1 = Realize(GC_makeGContainer(NULL, rowName1));
+	GT_init_TableList(rowsWidget1);
+	for(int jj=0; jj<table.colCnt; jj++)
+	{
+		colName1[jj] = Realize(Object_Create(eleCaption1[jj]));
+		colsWidget1[jj] = Realize(GL_makeGLabel(NULL, colName1[jj], colName1[jj]));
+	}
+	
+	
+	GT_addChildWidget(table,  rowsWidget, colsWidget,temalign, eleCaption);
+	GT_addChildWidget(table,  rowsWidget1, colsWidget1,temalign, eleCaption1);
+	
+}
+FUNCTION GT_init_TableList(GContainer this)
+{
+	GW_setBorderSize(this, 2, 2, 2, 2);
+	this.isBorderPainted = TRUE;
+	this.borderColor = 0x757575;
+	this.isSelectionPainted = TRUE;
+	this.selectionColor = 0xff0000;
+	this.isBackgroundPainted = TRUE;
+	this.backgroundColor = 0xffffff;
+}
+
+// 创建listItems并添加到listbox中
+FUNCTION Create_tableItems()
+{
+}
+FUNCTION btn_grid_clicked(GContainer btn)
+{
+	GW_requestFocus(btn);
+	return TRUE;
+}

@@ -1,0 +1,143 @@
+#include "./GSlider.h"
+#include "./GContainer.gtl"
+
+
+FUNCTION GSL_makeGSlider(GSlider this, String widgetName,  int orientation, int alignement, int gap, int max, int min)
+{
+	// 创建一个SCrollPanel
+	GSlider slider = NULL;
+	if(IsNotNull(this)){
+		slider = Realize(Gui_GC_MakeGContainer(this, widgetName));
+	}
+	else{
+		slider = Realize(Gui_GC_MakeGContainer(new GSlider, widgetName));
+	}
+	
+	GSL_initGSlider(slider, max, min);
+	Gui_GC_SetLineLayout(slider, orientation,  alignement, gap);	
+	
+	GSlider ret = Object_Create(slider);
+	free slider;
+	return ret;
+}
+
+//FUNCTION GSL_destroy(GSlider this)
+//{
+//	if(IsNotNull(this)){
+//		// 调用基类的析构函数.
+//		GC_destroy(this);
+//	}
+//}
+
+FUNCTION GSL_initGSlider(GSlider this, int max, int min)
+{
+//	GC_initGContainer(this);
+	
+	this.maxValue = max;
+	this.minValue = min;
+	this.currentValue = (max + min) / 2;	
+	//this.func_handleKey = GSL_handleKey;
+	
+	GW_setBorderSize(this, 1, 1, 1, 1);
+//	this.func_destroy = GSL_destroy;
+	this.func_paint = GW_paint;
+	this.func_destroy = GW_destroy;
+}
+
+FUNCTION  GSL_setMax(GSlider this, int max)
+{
+	this.maxValue = max;
+}
+
+FUNCTION  GSL_setMin(GSlider this, int min)
+{
+	this.minValue = min;
+}
+
+FUNCTION  GSL_setValue(GSlider this, int value)
+{
+	this.currentValue = value;	
+}
+
+FUNCTION GSL_setKnobAmount(GSlider this, int step)
+{
+	this.valueStep = step;
+	/*int sliderAmount = this.sliderGIcon.w - this.knobGIcon.w;
+	this.knobStep = (valueStep * sliderAmount) / (this.maxValue - this.minValue);*/
+} 
+
+/*FUNCTION GSL_DecBtn_clicked(GButton this)
+{
+	GSlider parent = Realize(GW_getParent(this));
+	
+	int amount = parent.knobGIcon.w/2 - parent.sliderGIcon.w/2;
+	
+	if(parent.currentValue > parent.minValue && parent.knobGIcon.offsetX > amount)
+	{
+		parent.knobGIcon.offsetX -= parent.knobStep;
+		parent.currentValue--;
+		parent.knobGIcon.absX = -1;
+		parent.knobGIcon.absY = -1;
+	}	
+	
+	free parent;
+	return TRUE;
+}*/
+
+/*FUNCTION GSL_IncBtn_clicked(GButton this)
+{
+	GSlider parent = Realize(GW_getParent(this));
+	
+	int amount = parent.sliderGIcon.w/2 - parent.knobGIcon.w/2;
+	
+	if(parent.currentValue < parent.maxValue && parent.knobGIcon.offsetX < amount)
+	{
+		parent.knobGIcon.offsetX += parent.knobStep;
+		parent.currentValue++;
+		parent.knobGIcon.absX = -1;
+		parent.knobGIcon.absY = -1;
+	}	
+	
+	free parent;
+	return TRUE;
+}*/
+
+
+/*
+FUNCTION GSL_handleKey(GSlider this, int eventType, int keyCode, int modifierCode)
+ {
+ 	boolean eventComsumed = FALSE;
+ 	
+ 	switch(eventType)
+ 	{
+ 		case EVENT_TYPE_KEYPRESSED:
+ 			break;
+		case EVENT_TYPE_KEYRELEASED:
+			// 定义okay和数字5键触发点击事件.
+			switch(keyCode)
+			{
+				case KEY_CODE_LEFT:
+					return GSL_DecBtn_clicked(this.decreaseGButton);
+					break;
+				case KEY_CODE_RIGHT:
+					return GSL_IncBtn_clicked(this.increaseGButton);
+					break;
+				
+				//case KEY_CODE_OKAY:
+				//case KEY_CODE_NUM5:
+				//	eventComsumed = GBtn_clickedFuncImpl(this);
+				//	break;
+				default:
+					break;
+			}
+			break;
+		default:
+			break;
+ 	}
+ 	
+ 	return eventComsumed;
+ }*/
+
+
+
+

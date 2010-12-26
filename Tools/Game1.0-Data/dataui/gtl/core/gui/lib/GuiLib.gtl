@@ -1,0 +1,48 @@
+LIBRARY; 
+VERSION 3;
+ID 1;
+ATTRIBUTE 4;
+NAME "GuiLib";
+DESCRIPTION "GUIº¯Êý¿â";
+
+// Configuration.
+#include "../../common/commonDef.h"
+#include "../common/GuiCommonDef.h"
+
+// Abstract Gui Base class.
+#include "../control/GGuiObject.h"
+
+// Control
+#include "../control/GButton.gtl"
+#include "../control/GCheckBox.gtl"
+#include "../control/GContainer.gtl"
+#include "../control/GGameIcon.gtl"
+#include "../control/GGrid.gtl"
+#include "../control/GGridBox.gtl"
+#include "../control/GIcon.gtl"
+#include "../control/GImageNumber.gtl"
+#include "../control/GLabel.gtl"
+#include "../control/GListBox.gtl"
+#include "../control/GMessageBox.gtl"
+#include "../control/GProgressBar.gtl"
+#include "../control/GRadioButton.gtl"
+#include "../control/GTextArea.gtl"
+#include "../control/GTextField.gtl"
+
+#include "../control/GScrollBar.gtl"
+#include "../control/GScrollPanel.gtl"
+#include "../control/GSlider.gtl"
+#include "../control/GVMCanvasUnit.gtl"
+#include "../control/GWidget.gtl"
+#include "../control/GWindow.gtl"
+#include "../control/GTreeView.gtl"
+#include "../control/GTable.gtl"
+
+// Layout
+#include "../layout/GLayoutData.gtl"
+
+// Event
+#include "../event/GEvent.gtl"
+
+// Gtl Common function callback.
+#include "../common/GuiProcessCallBack.gtl"

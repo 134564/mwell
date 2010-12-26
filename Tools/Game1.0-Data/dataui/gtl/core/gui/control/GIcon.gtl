@@ -1,0 +1,65 @@
+#include "./GIcon.h"
+#include "./GWidget.gtl"
+
+ //------------------------ public --------------------------------------------
+/**
+ * 创建GIcon.
+ *
+ * @param widgetName	控件名（用于客户端调试用）
+ * @param image			控件的图片资源
+ * @param frameIndex	图片资源的索引
+ *
+ * NOTE:	当传入的图片资源不为空时,控件会根据图片大小设置默认的宽和高,否则默认宽高都为0.
+ */
+ FUNCTION GI_makeGIcon(GIcon this, String widgetName, ImageSet image, int frameIndex)
+ {
+
+ 	GIcon widget = NULL;
+ 	if(IsNotNull(this)){
+ 		widget = Realize(Gui_GI_MakeGIcon(this, widgetName));
+ 	}
+ 	else{
+ 		widget = Realize(Gui_GI_MakeGIcon(new GIcon, widgetName));
+ 	}
+
+	// 当icon有图片资源时，控件大小默认为图片大小，否则，大小为0，需要用户自己调用GW_setBound设置大小
+	if(NULL != image)
+	{
+		widget.image = Realize(image);
+		widget.index = frameIndex;
+		widget.nPipWidth = ImageSet_GetFrameWidth(image, frameIndex);
+		widget.nPipHeight = ImageSet_GetFrameHeight(image, frameIndex);
+		widget.w = widget.nPipWidth;
+		widget.h = widget.nPipHeight;
+	}
+	
+	//GI_initGIcon(widget);
+	widget.func_paint = GW_paint;
+	widget.func_destroy = GI_destroy;
+	
+	GIcon ret = Object_Create(widget);
+	free widget;
+	
+	return ret;
+ }
+ 
+FUNCTION GI_destroy(GIcon this)
+{
+	OBJECT_FREE(this.image);
+	OBJECT_FREE(this.leftWidget);
+	OBJECT_FREE(this.rightWidget);
+	OBJECT_FREE(this.upWidget);
+	OBJECT_FREE(this.downWidget);
+	OBJECT_FREE(this.observer);
+	OBJECT_FREE(this);
+}
+
+ //------------------------ protected --------------------------------------------
+/**
+ * 初始化GIcon.
+ */
+// FUNCTION GI_initGIcon(GIcon this)
+// {
+//	this.func_paint = GW_paint;
+//	this.func_destroy = GW_destroy;
+// }

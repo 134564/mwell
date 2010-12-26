@@ -1,0 +1,7 @@
+// 这里定义资源常来 比如png/pip/ctn名称
+
+// 通用UI资源pip
+#define RESOURCE_UI_PIP "ui.pip"
+#define RESOURCE_NUMBER_PIP "number.pip"
+#define RESOURCE_ITEM_PIP "item240.pip"
+#define RESOURCE_SKILL_PIP "ability.pip"

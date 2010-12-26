@@ -1,0 +1,156 @@
+#include "./GMessageBox.h"
+#include "./GLabel.gtl"
+#include "./GContainer.gtl"
+#include "./GButton.gtl"
+#include "./GVMCanvasUnit.gtl"
+#include "./GTextArea.gtl"
+
+/**
+ * 创建GMessageBox.
+ * @param widgetName 控件的名称.
+ * @param caption    messagebox的标题.
+ * @param text		信息内容
+ * @param type		消息框按钮的类型
+ *
+ * @return 新创建的GMessageBox.
+ */
+FUNCTION GMB_makeGMessageBox(GMessageBox this, String widgetName, String _caption, String text, String[] buttonNames, int type)
+{
+	GMessageBox messageBox = NULL;
+	
+	if(IsNotNull(this)){
+		messageBox = Realize(Gui_GVMCU_MakeGVMCU(this, widgetName));
+	}
+	else{
+		messageBox = Realize(Gui_GVMCU_MakeGVMCU(new GMessageBox, widgetName));
+	}
+	//GC_setBorderLayout(messageBox, 0, 0, 0, 0);
+
+	messageBox.caption = Realize(GL_makeGLabel(NULL, widgetName + "_caption", _caption));
+	//GL_SetCaptionInfo(messageBox.caption, TRUE, LAYOUT_ALIGN_HCENTER, LAYOUT_ALIGN_VMIDDLE);
+	Gui_GC_AddChildWidget(messageBox, messageBox.caption, 0);
+	messageBox.text = Realize(GTA_makeGTextArea(NULL, widgetName + "_text"));
+	Gui_GC_AddChildWidget(messageBox, messageBox.text, 0);
+	messageBox.text.isBackgroundPainted = TRUE;
+	messageBox.text.backgroundColor = 0xffffff;
+	
+	if (IsNull(buttonNames)){
+		String okButtonCaption = Realize(Object_Create("确定"));
+		String cancleButtonCaption = Realize(Object_Create("取消"));
+	} else {
+		okButtonCaption = Realize(Object_Create(buttonNames[0]));
+		if (Length(buttonNames)>1){
+			cancleButtonCaption = Realize(Object_Create(buttonNames[1]));
+		}else {
+			cancleButtonCaption = Realize(Object_Create("取消"));
+		}
+	}
+	switch (type)
+	{
+	case MB_OK:
+		messageBox.OK = Realize(GBtn_makeGButton(NULL, widgetName + "_okButton", okButtonCaption, 0, -1, 0));
+		//GL_SetCaptionInfo(messageBox.OK, TRUE, LAYOUT_ALIGN_HCENTER, LAYOUT_ALIGN_VMIDDLE);
+		Gui_GC_AddChildWidget(messageBox, messageBox.OK, 0);
+		break;
+	case MB_OKCANCEL:
+		messageBox.OK = Realize(GBtn_makeGButton(NULL, widgetName + "_okButton", okButtonCaption, 0, -1, 0));
+		//GL_SetCaptionInfo(messageBox.OK, TRUE, LAYOUT_ALIGN_HCENTER, LAYOUT_ALIGN_VMIDDLE);
+		Gui_GC_AddChildWidget(messageBox, messageBox.OK, 0);
+		GW_setBorderSize(messageBox.OK, 2, 2, 2, 2);
+		messageBox.OK.isBackgroundPainted = TRUE;
+		messageBox.OK.backgroundColor = 0xffffff;
+		messageBox.OK.isBorderPainted = TRUE;
+		messageBox.OK.borderColor = 0x7f846d;
+		messageBox.OK.isSelectionPainted = TRUE;
+		messageBox.OK.selectionColor = 0xff0000;
+		
+		messageBox.Cancle = Realize(GBtn_makeGButton(NULL, widgetName + "_cancleButton", cancleButtonCaption, 0, -1, 0));
+		//GL_SetCaptionInfo(messageBox.Cancle, TRUE, LAYOUT_ALIGN_HCENTER, LAYOUT_ALIGN_VMIDDLE);
+		Gui_GC_AddChildWidget(messageBox, messageBox.Cancle, 0);
+		GW_setBorderSize(messageBox.Cancle, 2, 2, 2, 2);
+		messageBox.Cancle.isBackgroundPainted = TRUE;
+		messageBox.Cancle.backgroundColor = 0xffffff;
+		messageBox.Cancle.isBorderPainted = TRUE;
+		messageBox.Cancle.borderColor = 0x7f846d;
+		messageBox.Cancle.isSelectionPainted = TRUE;
+		messageBox.Cancle.selectionColor = 0xff0000;
+		break;
+	default:
+		break;
+	}
+	OBJECT_FREE(okButtonCaption);
+	OBJECT_FREE(cancleButtonCaption);
+	
+	GMB_initGMessageBox(messageBox);
+	
+	// 这句必须在messagebox的初始化之后做，否则TextArea的大小为0，无法计算text的行数
+	messageBox.text.maxH = messageBox.text.h;
+	GTA_setText(messageBox.text, text);
+	
+	GMessageBox ret = Object_Create(messageBox);
+	free messageBox;
+	return ret;
+}
+
+FUNCTION GMB_destroy(GMessageBox this)
+{
+	// 析构控件.
+	OBJECT_FREE(this.caption);
+	OBJECT_FREE(this.text);
+	OBJECT_FREE(this.OK);
+	OBJECT_FREE(this.Cancle);
+
+	OBJECT_FREE(this.leftWidget);
+	OBJECT_FREE(this.rightWidget);
+	OBJECT_FREE(this.upWidget);
+	OBJECT_FREE(this.downWidget);
+	OBJECT_FREE(this.observer);
+	OBJECT_FREE(this.userData);
+	OBJECT_FREE(this);
+}
+
+FUNCTION GMB_initGMessageBox(GMessageBox this)
+{
+	//GC_initGContainer(this);
+	this.func_paint = GW_paint;
+	this.func_destroy = GMB_destroy;
+	GW_setBorderSize(this, 2, 2, 2, 2);
+	this.isBorderPainted = TRUE;
+	this.borderColor = 0xffffff;
+	this.isBackgroundPainted = TRUE;
+	this.backgroundColor = 0xB25500;
+	this.isModal = TRUE;
+	GMB_setBounds(this, GetScreenWidth() / 3, GetScreenHeight() / 3, GetScreenWidth() / 3, GetScreenHeight() / 3);
+	
+	if (this.OK && this.Cancle)
+	{
+		GW_setRelativeRightWidget(this.OK, this.Cancle);
+		GW_setRelativeRightWidget(this.Cancle, this.OK);
+		GW_setRelativeDownWidget(this.OK, this.Cancle);
+		GW_setRelativeDownWidget(this.Cancle, this.OK);
+	}
+}
+
+FUNCTION GMB_setBounds(GMessageBox this, int x, int y, int width, int height)
+{
+	Gui_GW_SetBound(this, x, y, width, height);
+	
+	int _clientAreaW =  width - this.borderLeft - this.borderRight - this.insetLeft - this.insetRight;
+	int _clientAreaH = height - this.borderTop - this.borderBottom - this.insetTop - this.insetBottom;
+
+	Gui_GW_SetBound(this.caption, 0, 0, _clientAreaW, this.caption.h);
+	if (IsNotNull(this.OK) && IsNotNull(this.Cancle))
+	{
+		Gui_GW_SetBound(this.OK, 0, _clientAreaH - this.OK.h, this.OK.w, this.OK.h);
+		Gui_GW_SetBound(this.Cancle, _clientAreaW - this.Cancle.w, _clientAreaH - this.Cancle.h, this.Cancle.w, this.Cancle.h);
+	}
+	else if (this.OK)
+	{
+		Gui_GW_SetBound(this.OK, (_clientAreaW - this.OK.w) / 2, _clientAreaH - this.OK.h, this.OK.w, this.OK.h);
+	}
+
+	Gui_GW_SetBound(this.text, 0, this.caption.h, _clientAreaW, _clientAreaH - this.caption.h - this.OK.h);
+	this.text.maxH = this.text.h;
+	GTA_reset(this.text);
+}
+

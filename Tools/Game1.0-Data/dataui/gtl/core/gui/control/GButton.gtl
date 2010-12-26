@@ -1,0 +1,243 @@
+#include "./GButton.h"
+#include "./GLabel.gtl"
+
+/**
+ * 创建GButton.
+ *
+ * @param widgetName	button控件的名称，用于客户端调试时判断是哪个控件.
+ * @param text			button中要显示的内容
+ * @param image			button用到的图片资源
+ * @param imageIndex	button中图片的索引
+ * @param trans			button中图片的翻转方式	（传入的值请参照genera.gtl脚本中“图片翻转方式”的定义）
+ * @return的对象是Realize过的
+ */
+ FUNCTION GBtn_makeGButton(GButton this, String widgetName, String text, ImageSet image, int imageIndex, int trans)
+ {
+ 	if (IsNotNull(this)){
+ 		GButton btn = Realize(Gui_GBtn_MakeGButton(this, widgetName, text));
+ 	}else{
+ 		btn = Realize(Gui_GBtn_MakeGButton(new GButton, widgetName, text));
+ 	}
+ 	
+ 	btn.trans = trans;
+ 	//add by zxf
+ 	if(IsNotNull(image) && IsNull(text))
+ 	{
+ 		btn.GB_BKG_WIDTH = ImageSet_GetFrameWidth(image, imageIndex);
+ 		btn.GB_BKG_HEIGHT = ImageSet_GetFrameHeight(image, imageIndex);
+ 	}
+ 	else if(IsNull(image) && IsNotNull(text))
+ 	{
+ 		GW_setBorderSize(btn, 2, 2, 2, 2);
+	 	btn.GB_BKG_HEIGHT = GetFontHeight() + 4;
+	 	btn.GB_BKG_WIDTH = StringWidth(text) + 4;
+	 	btn.foregroundColor = 0xFF00FF00;
+ 	}
+ 	else if(IsNotNull(image)&& IsNotNull(text))
+ 	{
+ 		int imageheight = ImageSet_GetFrameHeight(image, imageIndex);
+ 		int imagewidth = ImageSet_GetFrameWidth(image, imageIndex);
+		int fontheight = GetFontHeight();
+		int strwidth = StringWidth(text);
+		
+		if(imageheight > fontheight) {
+			btn.GB_BKG_HEIGHT = imageheight;
+		}else{
+			btn.GB_BKG_HEIGHT = fontheight;
+		}
+		
+		if (imagewidth > 0) {
+			btn.GB_BKG_WIDTH = imagewidth;
+		}else{
+			btn.GB_BKG_WIDTH = strwidth;
+		}
+ 	}
+
+	btn.image = Realize(image);
+	btn.index = imageIndex;
+	
+	btn.w = btn.GB_BKG_WIDTH;
+	btn.h = btn.GB_BKG_HEIGHT;
+ 	btn.textInsetColor = 0xFFFFFFFF;
+ 	btn.textBorderColor = 0;
+
+	//GBtn_initGButton(btn);
+ 	//#if GB_ISSELECTION_PAINTED == TRUE
+ 	btn.isSelectionPainted = TRUE;
+ 	//#else
+ 	btn.isSelectionPainted = FALSE;
+ 	//#endif
+ 	
+ 	//#if GB_ISBACKGROUND_PAINTED == TRUE
+ 	btn.isBackgroundPainted = TRUE;
+ 	//#else
+ 	btn.isBackgroundPainted = FALSE;
+ 	//#endif
+ 	
+ 	btn.selectionColor = 0xFFFF0000;
+	btn.func_paint = GW_paint;
+ 	btn.func_destroy = GBtn_destroy;
+ 	btn.func_handleKey = GBtn_handleKey;
+ 	btn.func_handleTouch = GBtn_handleTouch;
+	
+	GButton ret = Object_Create(btn);
+	free btn;
+	
+	return ret;
+ }
+  /**
+  *	外部设置GButton的图片资源.
+  */
+ FUNCTION GBtn_setRes(GButton this, ImageSet image, int imageIndex, int trans)
+ {
+ 	OBJECT_SET(this.image, image);
+ 	this.index = imageIndex;
+ 	this.trans = trans;
+ }
+ 
+ /**
+  *	初始化GButton.
+  */
+// FUNCTION GBtn_initGButton(GButton this)
+// {
+// 	//#if GB_ISSELECTION_PAINTED == TRUE
+// 	this.isSelectionPainted = TRUE;
+// 	//#else
+// 	this.isSelectionPainted = FALSE;
+// 	//#endif
+// 	
+// 	//#if GB_ISBACKGROUND_PAINTED == TRUE
+// 	this.isBackgroundPainted = TRUE;
+// 	//#else
+// 	this.isBackgroundPainted = FALSE;
+// 	//#endif
+// 	
+// 	this.selectionColor = 0xFFFF0000;
+//	this.func_paint = GW_paint;
+// 	this.func_destroy = GBtn_destroy;
+// 	this.func_handleKey = GBtn_handleKey;
+// 	this.func_handleTouch = GBtn_handleTouch;
+// }
+ 
+ FUNCTION GBtn_destroy(GButton this)
+{
+	OBJECT_FREE(this.image);//added by zxf
+	//GL_destroy(this);
+	OBJECT_FREE(this._flyStrInfo);
+	OBJECT_FREE(this.leftWidget);
+	OBJECT_FREE(this.rightWidget);
+	OBJECT_FREE(this.upWidget);
+	OBJECT_FREE(this.downWidget);
+	OBJECT_FREE(this.observer);
+	OBJECT_FREE(this);
+}
+ 
+ /**
+ * GButtonGroup 
+ */
+FUNCTION GBtnGrp_makeGButtonGroup(String groupName)
+{
+	GButtonGroup rbGroup = Realize(new GButtonGroup);
+	rbGroup.groupId = groupName;
+	rbGroup.rbContainer = Realize(Vector_Create());
+	
+	GButtonGroup ret = Object_Create(rbGroup);
+	free rbGroup;
+	
+	return ret;
+}
+
+FUNCTION GBtnGrp_addElement(GButtonGroup this, GButton button)
+{
+	if(IsNotNull(button)){
+		Vector_Add(this.rbContainer, button);
+	}
+}
+
+FUNCTION GBtnGrp_getElementSize(GButtonGroup this)
+{
+	if(IsNotNull(this.rbContainer)){
+		return Vector_Size(this.rbContainer);
+	}
+	
+	return 0;
+}
+
+FUNCTION GBtnGrp_getElement(GButtonGroup this, int index)
+{
+	if(IsNotNull(this.rbContainer)){
+		int size = Vector_Size(this.rbContainer);
+		if(index < size){
+			return Realize(Vector_Get(this.rbContainer, index));
+		}
+	}
+	
+	return NULL;
+}
+
+FUNCTION GBtnGrp_removeElement(GButtonGroup this, GButton button)
+{
+	if(IsNotNull(button)){
+		int size = Vector_Size(this.rbContainer);
+		for(int i = 0; i < size; i++){
+			GButton element = Vector_Get(this.rbContainer, i);
+			if(element.clientId == button.clientId){
+				Vector_Remove(this.rbContainer, i);
+				break;
+			}
+		}
+	}
+}
+
+FUNCTION GBtnGrp_destroy(GButtonGroup this)
+{
+	OBJECT_FREE(this.groupId);
+	Vector_Clear(this.rbContainer);
+	OBJECT_FREE(this.rbContainer);
+	OBJECT_FREE(this);
+}
+ 
+ 
+ //------------------------ protected --------------------------------------------
+ /**
+  * Button 的handleKey方法.
+  * 如果button被按下的按键为okay或者数字5键, 即认为触发了一次按钮点击事件,
+  * 如果设置了button的点击事件方法, 则调用该处理方法, 并返回事件被处理了的bool值.
+  * @param this 
+  * @param eventType 事件类型.
+  * @param keyCode 按键码
+  * @param modifierCode 辅助按键码.
+  * @return 事件是否处理了.
+  */
+ FUNCTION GBtn_handleKey(GButton this, int eventType, int keyCode, int modifierCode)
+ {
+ 	if(EVENT_TYPE_KEYPRESSED == eventType) {
+ 		if (FIRE_PRESSED == keyCode || KEY_NUM5_PRESSED == keyCode){
+			if(this.btn_clicked > 0) {
+		 		int clicked_func = this.btn_clicked;
+		 		return @clicked_func(this);
+		 	}
+ 		}
+ 	}
+ 	
+ 	return FALSE;
+ }
+ 
+ /**
+  * Button 的handleTouch方法.
+  * @param this 
+  * @param eventType 事件类型.
+  * @paranm x(相对于button的位置) 
+  * @param  y 
+  * @return 事件是否处理了.
+  */
+ FUNCTION GBtn_handleTouch(GButton this, int eventType, int x, int y)
+ {
+ 	if ((EVENT_TYPE_TOUCHRELEASED == eventType) && this.btn_clicked > 0)
+ 	{
+ 		int clicked_func = this.btn_clicked;
+ 		return @clicked_func(this);
+ 	}
+ 	
+ 	return FALSE;
+ }

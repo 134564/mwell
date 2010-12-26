@@ -1,0 +1,64 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "ui_gui_test_checkbox";
+DESCRIPTION "gui checkboxµÄ²âÊÔ½Å±¾"; 
+
+#include "../core/gui/guiInclude.h"
+
+DATA{
+	GVMCanvasUnit vmCU;
+	GCheckBox[] checkbox;
+}
+
+FUNCTION event()
+{
+}
+
+FUNCTION init()
+{
+	String cuName = Realize(Object_Create("Canvas_Unit"));
+	vmCU = Realize(GVMCU_MakeGVMCU(NULL, cuName));
+	vmCU.isBackgroundPainted = TRUE;
+	vmCU.backgroundColor = 0xff06cc4c;
+	GW_setBound(vmCU, 0, 0, 240, 320);
+
+	checkbox = new GCheckBox[5];
+	String groupname = Realize(Object_Create("text_checkbox"));
+	for(int i = 0; i < 5; i++)
+	{
+		String checkBoxText = Realize(Object_Create(IntToStr(i)));
+		checkbox[i] = GCBOX_makeGCheckBox(NULL, checkBoxText, "CheckBox_" + checkBoxText);
+		free checkBoxText;
+		GC_addChildWidget(vmCU, checkbox[i], 0);
+		checkbox[i].backgroundColor = 0xff007630;
+		checkbox[i].isBackgroundPainted = TRUE;
+		checkbox[i].x = 50;
+		checkbox[i].y = i* 40;
+	}
+	checkbox[3].isSelected = TRUE;
+	free groupname;
+	
+	 
+}
+FUNCTION cycle()
+{
+}
+
+FUNCTION cycleUI()
+{
+}
+
+FUNCTION paint()
+{
+}
+
+FUNCTION destroy()
+{
+	free checkbox;
+	free vmCU;
+}
+
+FUNCTION processPacket()
+{
+}
