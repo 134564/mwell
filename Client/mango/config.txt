@@ -1,0 +1,7 @@
+#客户端工作目录,最后需带斜杠(\)。
+workDir=D:\project\mwell\Data\
+uiModel=Midp2Big
+#serverIP=192.168.10.179
+serverIP=192.168.10.97
+#serverIP=192.168.0.54
+serverPort=7000

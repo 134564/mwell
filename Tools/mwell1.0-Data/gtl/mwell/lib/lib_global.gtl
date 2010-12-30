@@ -1,0 +1,40 @@
+/**
+ *
+ * 数据集中，只放置全局变量
+ *
+ * 不放置任何方法，保证该lib编译后尺寸最小
+ * 
+*/
+LIBRARY; 
+VERSION 3;
+ID 2;
+ATTRIBUTE 64;
+NAME "lib_global";
+DESCRIPTION "内置函数库";
+
+#include "../../core/common/commonDef.h" 
+#include "../common/resource.gtl"
+
+DATA { 
+	///////////////////////////////////////////////////////////////////////////
+	// 数字图片
+	ImageSet res_number;
+	// ui资源
+	ImageSet res_ui;
+	// 物品图标
+	ImageSet res_item;
+	// 技能图标
+	ImageSet res_skill;
+	// 三国替代图
+	ImageSet res_sanguo; 
+}
+
+FUNCTION lib_global_init() { 
+	res_number = Realize(ImageSet_Create(RESOURCE_NUMBER_PIP, 1));
+	res_ui = Realize(ImageSet_Create(RESOURCE_UI_PIP, 1));
+	res_item = Realize(ImageSet_Create(RESOURCE_ITEM_PIP, 1));
+	res_skill = Realize(ImageSet_Create(RESOURCE_SKILL_PIP, 1));
+	res_sanguo = Realize(ImageSet_Create("ui_res.pip", 1)); 
+
+}
+
