@@ -6,7 +6,7 @@ var height = 0;
 var liquidTest;
 var step = 0;
  
-function LiquidTest(gsizeX, gsizeY, particlesX, particlesY)
+function LiquidTest(gsizeX, gsizeY, particlesX, particlesY)//100,100,50,50
 {
     this.particles = [];
  
@@ -41,7 +41,7 @@ function LiquidTest(gsizeX, gsizeY, particlesX, particlesY)
         for (i = 0; i < particlesX; i++)
             for (j = 0; j < particlesY; j++)
             {
-                p = new Particle(this.water, i + 4, j + 4, 0.0, 0.0);
+                p = new Particle(this.water, i + 11, j + 11, 0.0, 0.0);
                 this.particles.push(p);
             }
     }

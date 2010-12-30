@@ -1,0 +1,78 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "game_world";
+DESCRIPTION "游戏控制器"; 
+
+#include "../common/generalEx.gtl"
+  
+STRUCT Box {
+	int m;
+	int x;
+	int y;
+	int w;
+	int h;
+}
+
+DATA { 
+	int count;
+	Box[] boxArray;
+}
+
+FUNCTION init() {  
+	count = 2;
+	boxArray = new boxArray[count];
+	
+	Liquid_init(); 
+}
+FUNCTION event(){
+}
+FUNCTION cycle(){
+	Liquid_simulate();
+}
+
+FUNCTION cycleUI(){ 	
+} 
+
+FUNCTION processPacket() {
+}
+
+FUNCTION destroy(){
+}
+
+FUNCTION paint() {
+	Object g = Realize(GetSystemGraphics());
+	SetColor(g, 0);
+	
+	//画背景，填充矩形
+	FillRect(g, 0, 0, GetScreenWidth(), GetScreenHeight());
+	SetColor(g, 0xffffff);
+	Liquid_paint(g);
+	free g;
+}
+
+FUNCTION Liquid_init() {
+	 
+}
+
+FUNCTION Liquid_paint(Object g) {	
+	 for (int i = 0; i < count; i++) {  
+            FillRect(g, boxArray[i].x, boxArray[i].y, boxArray[i].w, boxArray[i].h); 
+     }
+}
+
+FUNCTION Liquid_simulate() {
+	for (int i = 0; i < count; i++) {  
+		Box b = boxArray[i];
+		b.y = m*9*t*t/2
+	} 
+       
+}
+//二维数组
+FUNCTION arraysValue(Nodes[] nodes, int x, int y) {
+	Nodes n = nodes[x];
+	return n.nodeArray[y];
+}
+
+ 
+ 

@@ -1,0 +1,46 @@
+
+#define GAME_COMMAND_CREATE_SPRITE                                              10005 //创建精灵
+#define GAME_COMMAND_SPRITE_LOAD_ANIMATE                                        10010 //戏通知控制机创建精灵时索取动画文件
+#define GAME_COMMAND_SPRITE_ANIMATE_OK                                          10020 //游戏通知控制机动画文件下载完毕 
+#define GAME_COMMAND_SPRITE_CHANGED                                             10030 //阵营改变
+#define GAME_COMMAND_SPRITE_SET_ANIMATE                                         10040 //设置动画
+#define GAME_COMMAND_SPRITE_ANIMATE_PLAY_END                                    10050 //动画播放完毕
+#define GAME_COMMAND_SPRITE_PLAY_ATTACK                                         10060 //播放攻击动画
+#define GAME_COMMAND_SPRITE_PLAY_PRE_ATTACK                                     10061 //播放攻击动画
+#define GAME_COMMAND_SPRITE_PLAY_ATTACKED                                       10070 //播放被攻击动画
+#define GAME_COMMAND_SPRITE_PLAY_DIE                                            10080 //播放死亡动画
+#define GAME_COMMAND_SPRITE_GET_UNIT_INFO                                       10090   
+#define GAME_COMMAND_SPRITE_TARGETED                                            10100 //是否被设为目标
+#define GAME_COMMAND_SPRITE_REFRESH_HEAD_STRING                                 10110 //刷新头顶文字
+#define GAME_COMMAND_SPRITE_STATE_CHANGED                                       10111 //状态改变(恐惧，麻痹等)
+#define GAME_COMMAND_SPRITE_CHASE_END                                           10120 //追击结束后的回调
+#define GAME_COMMAND_SPRITE_CHASE_STOP                                          10121 //寻路被中断
+#define GAME_COMMAND_SPRITE_PLAY_ATTACK_FAIL                                    10130 //攻击失败
+#define GAME_COMMAND_SPRITE_FIRE                                                10140 //精灵在选中的情况下被按了fire
+#define GAME_COMMAND_SPRITE_START_CHASE                                         10150 //启动精灵追击
+#define GAME_COMMAND_SPRITE_CANCEL_ATTACK                                       10160 //取消攻击
+#define GAME_COMMAND_SPRITE_PENDING_STOP                                        10170 //pending状态结束
+#define GAME_COMMAND_SPRITE_DESTROY                                             10180 //释放sprite
+#define GAME_COMMAND_SPRITE_LOAD_HOSRE_ANIMATE                                  10190 //载入坐骑
+#define GAME_COMMAND_SPRITE_PLAY_TWINKLE                                        10200 //载入装备光效
+
+
+
+//从java发起调用world控制机
+#define GAME_COMMAND_WORLD_SYNC_TARGET   14020 
+#define GAME_COMMAND_WORLD_QUEST_ACTION   14030 
+#define GAME_COMMAND_WORLD_PLAYER_OUT_VIEW   14040 
+#define GAME_COMMAND_WORLD_PLAYER_IN_VIEW   14041 
+#define GAME_COMMAND_WORLD_POINT_PRESSED   14042 
+#define GAME_COMMAND_WORLD_POINT_RELEASED   14043 
+#define GAME_COMMAND_WORLD_POINT_DRAGGED   14044 
+
+
+
+//从java发起调用游戏面板控制机
+#define GAME_COMMAND_PANEL_INIT   15010 
+#define GAME_COMMAND_PANEL_CHANGE_TARGET   15020 
+#define GAME_COMMAND_PANEL_SYNC_CD   15030 
+#define GAME_COMMAND_ROLE_MOVE   15040 
+#define GAME_COMMAND_PANEL_REFRESH_TARGET   15050 
+#define GAME_COMMAND_PANEL_CLEAR_ROLL   15060 

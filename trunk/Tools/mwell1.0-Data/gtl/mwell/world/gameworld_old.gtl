@@ -1,0 +1,827 @@
+VERSION 3;
+ID 0;
+ATTRIBUTE 128;
+NAME "sk";
+DESCRIPTION "横demo"; 
+
+#define SCREENCOLOR						0xad4619
+#define LINECOLOR						0xed621e
+#define LINEWHITECOLOR					0xffd77f
+#define HEADCOLOR						0xf79044
+#define NECKCOLOR						0xdfdbaf
+#define FONTCOLOR						0xfffe86
+#define LINECOLORWRITE					0xf8eec4
+#define BLACKCOLOR						0x000000
+#define SURECOLOR						0x541308
+#define RECTLINE						0x755c2c
+#define RECTINNER						0xae8835
+#define INNERRECT						0xfe70d3
+#define ADDCOLOR						0x7dfd6a
+#define POINTLINE						0xe8d16d
+#define HPBARLINEONE					0xff855b
+#define HPBARLINETWO					0xff3919
+#define HPBARLINETHREE					0xb10000
+#define HPBARLINEFOUR					0xcf0058
+#define HPBARLINEFIVE					0x57e1ff
+#define HPBARLINESIX					0x1c9cff
+#define HPBARLINESEVERN					0x0051d2
+#define HPBARLINEEIGHT					0x00afe1
+
+#include "../common/generalEx.gtl"
+
+STRUCT Character {
+	 int id;
+	 int pos_x;
+	 int pos_y;	 
+	 int map_x;
+	 int map_y; 
+	 String name;
+	 ImageSet actor;
+	 ImageSet icon;
+	 boolean active;
+	 
+	 ImageSet deadImg;
+	 boolean dead;
+	 int deadLoop;
+	 
+	 int hp;
+	 int attack;
+	 int hujia;
+	 
+	 int faceTo;
+	 
+	 boolean attacking;
+	 ImageSet attackImg;
+	 boolean beAttack;
+	 ImageSet beAttackImg;
+	 
+	 int attackScope;
+	 
+	 int loop;
+	 int loop_attack;
+	 int loop_beAttack;
+	 int speed;
+	 
+	 String talkInfo;
+	 boolean showTalk;
+}
+
+STRUCT Player extends Character{
+	int life;
+}
+
+STRUCT Npc extends Character{
+	
+}
+
+ 
+
+DATA {
+	ImageSet bgImg;
+	ImageSet bgImg2;
+	ImageSet emotion;
+	
+	Player skPlayer; 
+	
+	Npc[] monster;
+	
+	String sysMsg;
+	boolean showMsg;		
+	int sysMsgLoop;		
+			
+	ImageSet number;
+	ImageSet ui_res;
+	
+	//Camera
+	boolean moveCamera; 
+	int cameraPosX;
+	int cameraPosY; //TODO
+	int cameraTempPos;
+	int cameraPosX_To;
+	int	posXChanged;
+	int posYChanged;
+	int posChangeSpeed;
+	
+	//game config
+	int gameState;
+	boolean autoReBlood; 
+	
+	//talk
+	int talkStep;
+	String[] gameMsgInfo;
+	Character[] gameMsgPerson;
+	boolean talkShowing;
+	int talkLoop;
+}
+
+FUNCTION init() {
+	bgImg = Realize(ImageSet_Create("resource/beijin.pip", TRUE));
+	bgImg2 = Realize(ImageSet_Create("resource/exit240.pip", TRUE));
+	emotion = Realize(ImageSet_Create("resource/emotion.pip", TRUE));
+	
+	number = Realize(ImageSet_Create("resource/number.pip", TRUE));
+	ui_res = Realize(ImageSet_Create("resource/ui_res.pip", TRUE));
+	
+	sysMsg = Realize("系统信息"); 	
+	sysMsgLoop = 100; // -- -> 0
+	
+	//camera
+	posChangeSpeed = 15;
+	cameraTempPos = 0; 
+	cameraPosX_To = 0;
+	cameraPosX = 0;
+	
+	//game config
+	autoReBlood = TRUE;
+	gameState = 0; 
+	
+	
+	skPlayer = Realize(new Player);
+	skPlayer.name = "王二小";
+	skPlayer.hp = 10000;
+	skPlayer.actor = Realize(ImageSet_Create("resource/clt_load_1.pip", TRUE));
+	skPlayer.icon = Realize(ImageSet_Create("resource/body_2_1_4.pip", TRUE));//0	
+	skPlayer.deadImg = Realize(ImageSet_Create("resource/si.pip", TRUE));//9-13	  
+	skPlayer.attackImg = Realize(ImageSet_Create("resource/daoguang.pip", TRUE));
+	skPlayer.pos_x = 200;
+	skPlayer.pos_y = 300;
+	skPlayer.speed = 14;
+	skPlayer.attackScope = 30;
+	skPlayer.beAttackImg = Realize(ImageSet_Create("resource/beigong.pip", TRUE));
+	skPlayer.attack = 223;
+	skPlayer.hujia = 93;
+	skPlayer.active = TRUE; 
+	skPlayer.talkInfo = Realize(""); 
+	skPlayer.life = 3; 
+	monster = new Npc[4];
+	int i = 0;
+	monster[i] = new Npc;
+	monster[i].name = "漫步者"; 
+	monster[i].hp = 1000;
+	monster[i].actor = Realize(ImageSet_Create("resource/clt_load_1.pip", TRUE));
+	monster[i].icon = Realize(ImageSet_Create("resource/body_2_1_4.pip", TRUE));//1
+	monster[i].deadImg = Realize(ImageSet_Create("resource/si.pip", TRUE));//9-13	
+	monster[i].attackImg = Realize(ImageSet_Create("resource/daoguang.pip", TRUE));
+	monster[i].pos_x = 1400;
+	monster[i].pos_y = 320;
+	monster[i].faceTo = 2;
+	monster[i].speed = 1;
+	monster[i].attackScope = 20;
+	monster[i].beAttackImg = Realize(ImageSet_Create("resource/beigong.pip", TRUE));
+	monster[i].attack = 223;
+	monster[i].hujia = 13;
+	monster[i].active = TRUE; 
+	
+	i++;
+	monster[i] = new Npc;
+	monster[i].name = "monster2"; 
+	monster[i].hp = 1000;
+	monster[i].actor = Realize(ImageSet_Create("resource/clt_load_1.pip", TRUE));
+	monster[i].icon = Realize(ImageSet_Create("resource/body_2_1_4.pip", TRUE));//1
+	monster[i].deadImg = Realize(ImageSet_Create("resource/si.pip", TRUE));//9-13	
+	monster[i].attackImg = Realize(ImageSet_Create("resource/daoguang.pip", TRUE));
+	monster[i].pos_x = 1400;
+	monster[i].pos_y = 380;
+	monster[i].faceTo = 2;
+	monster[i].speed = 3;
+	monster[i].attackScope = 20;
+	monster[i].beAttackImg = Realize(ImageSet_Create("resource/beigong.pip", TRUE));
+	monster[i].attack = 223;
+	monster[i].hujia = 233;
+	monster[i].active = TRUE; 
+	
+	i++;
+	monster[i] = new Npc;
+	monster[i].name = "Boss";
+	monster[i].hp = 10000; 
+	monster[i].actor = Realize(ImageSet_Create("resource/clt_load_1.pip", TRUE));
+	monster[i].icon = Realize(ImageSet_Create("resource/body_2_1_4.pip", TRUE));//1
+	monster[i].deadImg = Realize(ImageSet_Create("resource/si.pip", TRUE));//9-13	
+	monster[i].attackImg = Realize(ImageSet_Create("resource/daoguang.pip", TRUE));
+	monster[i].pos_x = 400;
+	monster[i].pos_y = 260;
+	monster[i].faceTo = 2;
+	monster[i].speed = 10;
+	monster[i].attackScope = 20;
+	monster[i].beAttackImg = Realize(ImageSet_Create("resource/beigong.pip", TRUE));
+	monster[i].attack = 223;
+	monster[i].hujia = 333;
+	monster[i].active = TRUE; 
+	
+	i++;
+	monster[i] = new Npc;
+	monster[i].name = "monster4"; 
+	monster[i].hp = 1000;
+	monster[i].actor = Realize(ImageSet_Create("resource/clt_load_1.pip", TRUE));
+	monster[i].icon = Realize(ImageSet_Create("resource/body_2_1_4.pip", TRUE));//1
+	monster[i].deadImg = Realize(ImageSet_Create("resource/si.pip", TRUE));//9-13	
+	monster[i].attackImg = Realize(ImageSet_Create("resource/daoguang.pip", TRUE));
+	monster[i].pos_x = 480;
+	monster[i].pos_y = 320;
+	monster[i].faceTo = 2;
+	monster[i].speed = 2;
+	monster[i].attackScope = 20;
+	monster[i].beAttackImg = Realize(ImageSet_Create("resource/beigong.pip", TRUE));
+	monster[i].attack = 233;
+	monster[i].hujia = 43;
+	monster[i].active = TRUE; 
+	 
+	 
+	//game talk 
+	talkStep = 0;
+	initGameMsg();
+}
+FUNCTION event(){
+}
+FUNCTION cycle(){
+	switch(gameState){
+			case 0: {// 等待用户开始游戏
+				
+				break;
+			}
+			case 1 : {//游戏步骤，1对话
+				if(talkStep < Length(gameMsgPerson)) {
+					if(talkShowing == FALSE) { //?!
+						talkShowing = TRUE; 
+						charTalk(gameMsgPerson[talkStep], gameMsgInfo[talkStep]); 
+					}
+				}else {
+					gameState++;
+				}
+				break;
+			}
+			case 2 : {//游戏步骤，2操作 
+					for(int i = 0; i < Length(monster); i++) {
+						AIHandle(monster[i]);
+					}
+					
+					if(moveCamera) {
+						if(cameraTempPos < 20) {
+							cameraPosX += posXChanged; 
+							cameraTempPos++;
+						}else {
+							moveCamera = FALSE; 
+							cameraTempPos = Realize(0);
+						}
+					}
+					break;
+			}
+			case 3 :{ //游戏步骤， 3结束
+				break;
+			}
+	}
+	
+}
+
+FUNCTION cycleUI(){ 
+	switch(gameState){
+			case 0: {// 等待用户开始游戏
+				if(KeyPressed(UP_PRESSED,1)){
+						autoReBlood = TRUE; 
+				}
+				if(KeyPressed(DOWN_PRESSED,1)){
+						autoReBlood = FALSE; 
+				}
+				if(KeyPressed(FIRE_PRESSED,0)){
+						gameState = 1;   
+				}
+				break;
+			}
+			case 1 : {//游戏步骤，1对话 
+				break;
+			}
+			case 2 : {//游戏步骤，2操作 					
+					if(KeyPressed(UP_PRESSED,0)){
+						charMove(skPlayer, 0); 
+					}
+					if(KeyPressed(DOWN_PRESSED,0)){
+						charMove(skPlayer, 1);
+					}
+					if(KeyPressed(LEFT_PRESSED,0)){
+						charMove(skPlayer, 2);   
+					}
+					if(KeyPressed(RIGHT_PRESSED,0)){
+						charMove(skPlayer, 3);  
+					}
+					
+					if(KeyPressed(KEY_NUM1_PRESSED,0)){
+						charAttack(skPlayer, 0);  //todo skill
+					}
+				break;
+			}
+			case 3 :{ //游戏步骤， 3结束
+				break;
+			}
+	}
+	
+}
+
+FUNCTION paint() {
+	Object g = Realize(GetSystemGraphics());
+	SetColor(g, LINEWHITECOLOR);
+	
+	//画背景，填充矩形
+	FillRect(g, 0, 0, GetScreenWidth(), GetScreenHeight());
+	SetColor(g,LINECOLOR);
+	
+	//画框
+	DrawRect(g, 5, 5, 630, 470);
+	
+	//画title框
+	String title = "xxx广场";
+	SetColor(g,HEADCOLOR);	
+	FillRect(g, 20, 10, 600, 30);
+	SetColor(g,SCREENCOLOR);	
+	FillRect(g, 25, 12, 590, 24);
+	SetColor(g,FONTCOLOR); 
+	DrawString(g, title, 640-(640 - String_Length(title))/2,(40 - GetFontHeight())/2 + 2,1);
+	
+	SetColor(g,LINECOLOR);
+	//画边角图片      head
+	//左角 
+	ImageSet_DrawFrame(ui_res,g,8,20,10,0);
+	ImageSet_DrawFrame(ui_res,g,6,20,10,0);
+	ImageSet_DrawFrame(ui_res,g,7,20,10,0);
+	//右角     
+	//	翻转参数 0 不变    1 左转90  		2右转90  
+	//	对其参数 0不变     1上边中心对齐    2
+	ImageSet_DrawFrame2(ui_res,g,8,620 ,10,2,G_RIGHT); //右对齐
+	ImageSet_DrawFrame2(ui_res,g,6,620 ,10,2,G_RIGHT);
+	ImageSet_DrawFrame2(ui_res,g,7,620 ,10,2,G_RIGHT);
+	
+//	if(cameraPosX > cameraPosX_To){
+//		cameraPosX--;
+//	}else if(cameraPosX < cameraPosX_To) {
+//		cameraPosX++;
+//	}
+	
+	switch(gameState){
+			case 0: {// 等待用户开始游戏
+				//开始菜单
+				drawMenu(g);   
+				break;
+			}
+			case 1 : {//游戏步骤，1对话
+				
+				drawBg(g);//场景
+				
+				DrawRect(g, 20, 43, 600, 360); 
+				
+				drawChar(skPlayer);
+				
+				for(int i = 0; i < Length(monster); i++) {
+					drawChar(monster[i]);
+				} 
+				
+				//血条
+				drawBloodBar(g);
+				
+				//系统信息
+				drawSysMsg(g);
+				break;
+			}
+			case 2 : {//游戏步骤，2操作 			
+				drawBg(g);//场景
+				
+				DrawRect(g, 20, 43, 600, 360); 
+				
+				drawChar(skPlayer);
+				
+				for(i = 0; i < Length(monster); i++) {
+					drawChar(monster[i]);
+				} 
+				
+				//血条
+				drawBloodBar(g);
+				
+				//系统信息
+				drawSysMsg(g);
+				break;
+			}
+			case 3 :{ //游戏步骤， 3结束
+				drawBg(g);//场景
+				DrawRect(g, 20, 43, 600, 360); 
+				
+				drawChar(skPlayer);
+				
+				drawGameOver(g);
+				
+				break;
+			}
+	}  
+	
+	free g;
+}
+//case 0
+FUNCTION drawMenu(Object g) {
+	SetColor(g,HEADCOLOR);
+	int menuPos_x = (640 - 250)/2;
+	int menuPos_y = (480 - 200)/2;
+	FillRect(g, menuPos_x, menuPos_y, 250, 200);
+	SetColor(g,FONTCOLOR);
+	drawStrHasRect(g, "请选择回血模式",menuPos_x + 50, menuPos_y + 30, 50);
+	SetColor(g, 0xffffff);	
+	FillRect(g, menuPos_x + 90, menuPos_y + 80, 13, 13);
+	drawStrHasRect(g, "自动",menuPos_x + 110, menuPos_y + 80, 2);
+	SetColor(g, 0xffffff);	
+	FillRect(g, menuPos_x + 90, menuPos_y + 120, 13, 13);
+	drawStrHasRect(g, "手动",menuPos_x + 110, menuPos_y + 120, 2); 
+	
+	SetColor(g,HEADCOLOR);
+	//选择checkbox
+	if(autoReBlood) {
+		FillRect(g, menuPos_x + 94, menuPos_y + 84, 8, 8); 
+	}else {
+		FillRect(g, menuPos_x + 94, menuPos_y + 124, 8, 8); 
+	}
+	
+	ImageSet_DrawFrame(ui_res, g, 10, menuPos_x + 180, menuPos_y + 150, 20);//确定
+}
+
+FUNCTION drawGameOver(Object g) {
+	SetColor(g,HEADCOLOR);
+	sysMsgLoop--;
+	drawStrHasRect(g, "过关",300 + sysMsgLoop, 320, 100);  
+	if(sysMsgLoop < 0) {
+		gameState = 0;
+		init();
+	}
+}
+
+//case 1
+FUNCTION drawBg(Object g) {
+	ImageSet_DrawFrame(bgImg, g, 0, 250 - cameraPosX, 50, 20);  
+				
+	for(int i = 0; i < 5; i++) {
+		ImageSet_DrawFrame(bgImg2, g, i, 230 * (i + 3) - cameraPosX, 100, 20); 
+	}
+	
+	
+	ImageSet_DrawFrame(ui_res, g, 1, 550 - cameraPosX, 300, 20); 
+	ImageSet_DrawFrame(ui_res, g, 2, 650 - cameraPosX, 320, 20); 
+	ImageSet_DrawFrame(ui_res, g, 3, 750 - cameraPosX, 300, 20); 
+	ImageSet_DrawFrame(ui_res, g, 4, 800 - cameraPosX, 350, 20); 
+	
+	ImageSet_DrawFrame(ui_res, g, 66, 2000 - cameraPosX, 350, 20); 
+	ImageSet_DrawFrame(ui_res, g, 34, 2000 - cameraPosX, 300, 20); 
+	ImageSet_DrawFrame(ui_res, g, 34, 2000 - cameraPosX, 400, 20); 
+	ImageSet_DrawFrame(ui_res, g, 34, 2000 - cameraPosX, 320, 20);
+	ImageSet_DrawFrame(ui_res, g, 34, 2000 - cameraPosX, 420, 20); 
+}
+
+FUNCTION drawChar(Character char) {
+	Object g = Realize(GetSystemGraphics());  
+	if(char.active) {
+		//名字
+		drawStrHasRect(g, char.name, char.pos_x - 10  - cameraPosX,char.pos_y + 40, 2);
+		//动画
+		if(char.dead) {			
+			ImageSet_DrawFrame2(char.deadImg, g, char.deadLoop + 9 ,char.pos_x  - cameraPosX, char.pos_y, char.faceTo, 0);
+			char.deadLoop++;
+			if(char.deadLoop >= 5){
+				char.deadLoop = 0;
+				char.active = FALSE;
+				sysMsg = Realize("杀死 " + char.name);  
+				showMsg = TRUE;
+			}
+		}else {
+			if(char.loop == -1) {
+				ImageSet_DrawFrame2(char.actor, g, 0, char.pos_x  - cameraPosX, char.pos_y, char.faceTo, 0);
+			}else {
+//				char.speed TODO 将角色速度与绘制动画频率关联
+				ImageSet_DrawFrame2(char.actor, g, char.loop ,char.pos_x  - cameraPosX, char.pos_y, char.faceTo, 0);
+				char.loop++;
+				if(char.loop == 3){
+					char.loop = 0;
+				}
+			}
+		}
+		//对话框
+		if(char.showTalk) {
+			 
+			ImageSet_DrawFrame(char.icon, g, 0, char.pos_x - cameraPosX - 20, char.pos_y - talkLoop - 20, 0);
+			 
+			drawStrHasRect(g, char.talkInfo, char.pos_x - cameraPosX + 10, char.pos_y - talkLoop - 16, 0);
+			 	
+			talkLoop++;
+			if(talkLoop > 40) {
+				char.showTalk = FALSE;
+				talkLoop = 0;
+
+				talkShowing = FALSE;
+				talkStep++;
+			}
+			 
+		} 
+		//刀光
+		if(char.attacking) { 
+			if(char.faceTo == 0) {		
+				ImageSet_DrawFrame2(char.attackImg, g, char.loop_attack ,char.pos_x + 10  - cameraPosX, char.pos_y, char.faceTo, 20);
+				
+			}else {
+				ImageSet_DrawFrame2(char.attackImg, g, char.loop_attack ,char.pos_x - 20  - cameraPosX, char.pos_y, char.faceTo, 20);
+			}
+			char.loop_attack++;
+			if(char.loop_attack == 4) {
+				char.loop_attack = 0;
+				char.attacking = FALSE;
+			}
+			
+		}
+		
+		//被攻击
+		if(char.beAttack) {
+			ImageSet_DrawFrame2(char.beAttackImg, g, char.loop_beAttack % 3,char.pos_x  - cameraPosX, char.pos_y + 20, char.faceTo, 20);
+			//伤害显示
+			char.loop_beAttack++;
+			if(char.loop_beAttack == 10) {
+				char.loop_beAttack = 0;
+				char.beAttack = FALSE;
+			}
+			drawNumberString(skPlayer.attack - char.hujia,char.pos_x - cameraPosX,char.pos_y - char.loop_beAttack);
+		}
+	}
+	free g;
+}
+
+FUNCTION charTalk(Character char, String msg) {
+	char.talkInfo = msg;
+	char.showTalk = TRUE;
+	cameraPosX_To = char.pos_x - 300;
+	cameraToChar(char);
+}
+
+FUNCTION charMove(Character char, int action) { 
+	switch(action){
+			case 0: //上
+				if(char.pos_y > 200) {
+					char.pos_y -= char.speed/2;  
+				} 
+				break;
+			case 1: //下
+				if(char.pos_y < 350) {
+					char.pos_y += char.speed/2;    
+				} 
+				break;
+			case 2: //左
+				//转向
+				if(char.faceTo == 0) {
+					char.faceTo = 2;
+					cameraCtrl(-1);
+				}
+				if(char.pos_x - cameraPosX > 50) {
+					char.pos_x -= char.speed;  
+				}else {//，移动摄像机
+					if(cameraPosX > 0) {
+						cameraCtrl(0);
+					}
+				} 
+				break;
+			case 3: //右
+				//转向
+				if(char.faceTo == 2) {
+					char.faceTo = 0;
+					cameraCtrl(-1);
+				}
+				//终点
+				if(char.pos_x > 2000) {
+					gameState++;
+					return;
+				}
+				if(char.pos_x - cameraPosX < 550) {
+					char.pos_x += char.speed;  
+				}else { //到边，移动摄像机
+					if(cameraPosX < 1500) {
+						cameraCtrl(1);
+					} 
+				}  
+				break; 
+	 		default :
+	 			break;
+	}
+}
+
+FUNCTION charAttack(Character char, int skill) {
+		char.attacking = TRUE;
+		//检测攻击范围内的接受目标
+		int attackX;
+		if(char.faceTo == 0) {
+			attackX = char.pos_x - 5;
+		}else {
+			attackX = char.pos_x - 40;	
+		}
+		
+		for (int i = 0; i < Length(monster); i++ ) {
+			if(monster[i].pos_x > attackX 
+				&& monster[i].pos_x < attackX + char.attackScope 
+				&& (monster[i].pos_y - char.pos_y < 15 && monster[i].pos_y - char.pos_y > -15)) {
+					
+				monster[i].beAttack = TRUE;	
+				monster[i].hp -= skPlayer.attack - char.hujia;
+				if(monster[i].hp < 0) {
+					monster[i].hp = 0;
+					monster[i].dead = TRUE;
+				}
+			}
+		} 
+}
+
+FUNCTION npcAttack(Character npc, int skill) {
+		npc.attacking = TRUE;
+		//检测攻击范围内的接受目标
+		int attackX;
+		if(npc.faceTo == 0) {
+			attackX = npc.pos_x - 5;
+		}else {
+			attackX = npc.pos_x - 40;	
+		}
+		 
+		skPlayer.hp -= npc.attack - skPlayer.hujia;
+		skPlayer.beAttack = TRUE;	
+		
+		if(skPlayer.hp < 100) {
+			sysMsg = "强力补血剂！";  
+			showMsg = TRUE;
+			skPlayer.hp = 100000;		
+		}
+
+}
+
+//书写图片字符串的方法
+FUNCTION drawNumberString(int num,int x, int y){
+	Object g = Realize(GetSystemGraphics());
+	String str = IntToStr(num);
+	for(int i = 0;i < String_Length(str);i++){
+		String str1 = String_SubString(str, i , 1);
+		
+		int base = 45;
+		int weight = 12;
+		if(String_Equal(str1,"0")){
+			ImageSet_DrawFrame(number,g,base,x + weight*i,y,0);
+		}
+		if(String_Equal(str1,"1")){
+			ImageSet_DrawFrame(number,g,base + 1,x + weight*i,y,0);
+		}
+		if(String_Equal(str1,"2")){
+			ImageSet_DrawFrame(number,g,base + 2,x + weight*i,y,0);
+		}
+		if(String_Equal(str1,"3")){
+			ImageSet_DrawFrame(number,g,base + 3,x + weight*i,y,0);
+		}
+		if(String_Equal(str1,"4")){
+			ImageSet_DrawFrame(number,g,base + 4,x + weight*i,y,0);
+		}
+		if(String_Equal(str1,"5")){
+			ImageSet_DrawFrame(number,g,base + 5,x + weight*i,y,0);
+		}
+		if(String_Equal(str1,"6")){
+			ImageSet_DrawFrame(number,g,base + 6,x + weight*i,y,0);
+		}
+		if(String_Equal(str1,"7")){
+			ImageSet_DrawFrame(number,g,base + 7,x + weight*i,y,0);
+		}
+		if(String_Equal(str1,"8")){
+			ImageSet_DrawFrame(number,g,base + 8,x + weight*i,y,0);
+		}
+		if(String_Equal(str1,"9")){
+			ImageSet_DrawFrame(number,g,base + 9,x + weight*i,y,0);
+		}
+	}
+	
+	free g;
+}
+
+FUNCTION AIHandle(Npc npc) {
+	if(npc.active) {
+		if(npc.pos_x < 2000){//终点线 
+		
+			//判断需要靠近
+			if(npc.pos_x < skPlayer.pos_x &&  skPlayer.pos_x - npc.pos_x > 40) {
+				charMove(npc,3);
+				return;
+			}
+			if(npc.pos_x > skPlayer.pos_x &&  npc.pos_x - skPlayer.pos_x > 40) {
+				charMove(npc,2);  
+				return;
+			}
+			if(npc.pos_y < skPlayer.pos_y &&  skPlayer.pos_y - npc.pos_y > 5) {
+				charMove(npc,1); 
+				return;
+			}
+			if(npc.pos_y > skPlayer.pos_y &&  npc.pos_y - skPlayer.pos_y > 5) {
+				charMove(npc,0);
+				return;
+			}
+			
+			//足够接近 
+			npcAttack(npc, 0); 
+		}else {
+			npc.loop = -1;
+		}
+	}
+	
+}
+
+
+FUNCTION drawStrHasRect(Object g, String str, int x, int y, int margin) {
+		int strW = StringWidth(str) + margin;
+		int strH = GetFontHeight();
+		SetColor(g,HEADCOLOR);	 
+		FillRect(g, x, y, (strW + 5), (strH + 5));
+		SetColor(g,SCREENCOLOR);	
+		FillRect(g, x + 2, y + 2, strW + 1, strH + 1);
+		SetColor(g,FONTCOLOR);	
+		DrawString(g, str, x+margin/2+1, y+3, 0);
+}
+
+FUNCTION drawBloodBar(Object g) {
+	ImageSet_DrawFrame(skPlayer.icon, g, 0, 22, 43, 0);
+	int bar_x = 50;
+	drawStrHasRect(g, skPlayer.name + "  HP： " + skPlayer.hp, bar_x, 48, 0);
+	int j = 2;
+	for(int i = 0; i < Length(monster); i++) {
+		if(monster[i].active && monster[i].beAttack) {
+			j++;
+			ImageSet_DrawFrame(monster[i].icon, g, 1, 22, j * 22, 0);
+			drawStrHasRect(g, monster[i].name + "  HP： " + monster[i].hp, bar_x, j * 22 + 5, 0);
+		}
+	}
+}
+
+
+FUNCTION drawSysMsg(Object g) {
+	if(showMsg) {
+		drawStrHasRect(g, sysMsg, 200, sysMsgLoop , 0);		
+		sysMsgLoop--;
+		if(sysMsgLoop < 1) {
+			showMsg = FALSE;
+			free sysMsg;
+			sysMsgLoop = 100;
+		}
+	}
+	
+}
+
+
+FUNCTION cameraCtrl(int action) {
+	switch(action){
+			case 0: //左
+				moveCamera = TRUE; 
+				posXChanged = 0 -  posChangeSpeed;
+				posYChanged = 0;
+				break;
+			case 1: //右
+				moveCamera = TRUE; 
+				posXChanged = posChangeSpeed;
+				posYChanged = 0;
+				break;
+			default : //-1
+				moveCamera = FALSE; 
+				posXChanged = 0;
+				posYChanged = 0;
+				break;
+	}
+}
+
+FUNCTION cameraToChar(Character char) {
+	int center = char.pos_x;
+	
+}
+
+FUNCTION initGameMsg() {
+	gameMsgInfo = new String[5]; 
+	gameMsgPerson = new Character[5]; 
+
+	int i = 0;
+	gameMsgPerson[i] = skPlayer;
+	gameMsgInfo[i] = "天王盖抵沪";
+	i++;
+	gameMsgPerson[i] = monster[2];
+	gameMsgInfo[i] = "*&（×&！@（#&……×&……";
+	i++;
+	gameMsgPerson[i] = skPlayer;
+	gameMsgInfo[i] = "怎么不说‘宝塔镇和要’哇？";
+	i++;
+	gameMsgPerson[i] = monster[2];
+	gameMsgInfo[i] = "*^%$^#$？";
+	i++;
+	gameMsgPerson[i] = skPlayer;
+	gameMsgInfo[i] = "看来不是自己人，跑吧";
+	 
+	 
+}
+
+FUNCTION processPacket() {
+}
+
+FUNCTION destroy(){
+	free skPlayer;
+	free monster;
+	free bgImg;
+	free number;
+	free ui_res;
+	free gameMsgInfo;
+	free gameMsgPerson;
+	free sysMsg;
+}
+

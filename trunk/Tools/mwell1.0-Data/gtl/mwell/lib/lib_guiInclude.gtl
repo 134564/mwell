@@ -1,0 +1,60 @@
+LIBRARY;
+VERSION 3;
+ID 12;
+ATTRIBUTE 64;
+NAME "lib_guiInclude";
+DESCRIPTION "扩展GUI引用库";
+
+// Configuration.
+#include "../../core/common/commonDef.h"
+#include "../../core/gui/common/GuiCommonDef.h"
+// Abstract Gui Base class.
+#include "../../core/gui/control/GGuiObject.h"
+
+// Control
+#include "../../core/gui/control/GButton.gtl"
+#include "../../core/gui/control/GCheckBox.gtl"
+#include "../../core/gui/control/GContainer.gtl"
+#include "../../core/gui/control/GGameIcon.gtl"
+#include "../../core/gui/control/GGrid.gtl"
+#include "../../core/gui/control/GGridBox.gtl"
+#include "../../core/gui/control/GIcon.gtl"
+#include "../../core/gui/control/GImageNumber.gtl"
+#include "../../core/gui/control/GLabel.gtl"
+#include "../../core/gui/control/GListBox.gtl"
+#include "../../core/gui/control/GMessageBox.gtl"
+#include "../../core/gui/control/GProgressBar.gtl"
+#include "../../core/gui/control/GRadioButton.gtl"
+#include "../../core/gui/control/GTextArea.gtl"
+#include "../../core/gui/control/GTextField.gtl"
+//include "../../core/gui/control/GTree.gtl"
+#include "../../core/gui/control/GScrollBar.gtl"
+#include "../../core/gui/control/GScrollPanel.gtl"
+#include "../../core/gui/control/GSlider.gtl"
+#include "../../core/gui/control/GVMCanvasUnit.gtl"
+#include "../../core/gui/control/GWidget.gtl"
+#include "../../core/gui/control/GWindow.gtl"
+#include "../../core/gui/control/GTreeView.gtl"
+#include "../../core/gui/control/GTable.gtl"
+
+// 轩辕自定义组件
+
+//include "../guiEx/GDragGrid.gtl"
+//include "../guiEx/GFontNumber.gtl"
+//include "../guiEx/GMenu.gtl"
+//include "../guiEx/GNumberIcon.gtl"
+//include "../guiEx/GNumberInput.gtl"
+//include "../guiEx/GTabWindow.gtl"
+//include "../guiEx/GTransferLabel.gtl"
+//include "../guiEx/GChatFlow.gtl"
+//include "../guiEx/GAutoCloseMessageBox.gtl"
+//include "../guiEx/GMask.gtl"
+
+// Layout
+#include "../../core/gui/layout/GLayoutData.gtl"
+
+// Event
+#include "../../core/gui/event/GEvent.gtl"
+
+// Gtl Common function callback.
+#include "../../core/gui/common/GuiProcessCallBack.gtl"
