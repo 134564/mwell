@@ -183,4 +183,8 @@ public class Packet{
 		return data;
 	}
 
+	public double getDouble() { 
+		return data.getDouble();
+	}
+
 }
