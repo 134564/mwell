@@ -241,6 +241,10 @@ public class UASegment{
     public void writeLong(long l) throws IOException{
         outputCache.writeLong(l);
     }
+    
+    public void writeDouble(double l) throws IOException{
+    	outputCache.writeDouble(l);
+    }
 
     public void writeString(String s) throws IOException{
         outputCache.writeUTF((s == null)? "": s);

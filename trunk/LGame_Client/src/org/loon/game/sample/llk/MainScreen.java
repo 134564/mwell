@@ -20,54 +20,35 @@ import org.loon.framework.android.game.core.graphics.window.LSelect;
 import org.loon.framework.android.game.core.timer.LTimer;
 import org.loon.framework.android.game.core.timer.LTimerContext;
 
+import client.event.EventCode;
+import client.event.Eventable;
 import client.nio.NConnector;
 import client.nio.OpCode;
 import client.nio.SegmentManager;
 import client.nio.UASegment;
 import client.script.GameWorld;
 import client.script.Player;
+import client.util.LocationUtils;
 
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-public class MainScreen extends Screen {
+public class MainScreen extends Screen implements Eventable{
 
 	final private static String SORRY = "抱歉";
 
-	final private static String START_MES = "游戏开始！", SORRY1_MES = SORRY + ", <r刷新/> 在目前使用了。", SORRY2_MES = SORRY
-			+ ", <r提示/> 在目前无法使用了。", SORRY3_MES = SORRY + ", <r炸弹/> 在目前无法使用了。", EASY_MES = "好的，这非常容易～";
+	final private static String START_MES = "游戏开始！", 
+	SORRY1_MES = SORRY + ", <r刷新/> 在目前使用了。", 
+	SORRY2_MES = SORRY + ", <r提示/> 在目前无法使用了。",
+			SORRY3_MES = SORRY + ", <r炸弹/> 在目前无法使用了。",
+			FIX_FAIL = "定位失败, 重新定位?",
+			FIX_SUCCEED = "定位成功, 是否降落",
+			EASY_MES = "好的，这非常容易～";
 
 	final private static String WAIT_MES = "预备……", HELP_MES = "我能为你提供什么服务吗？";
 
-	private int bomb_number, refresh_number, tip_number, progress_number;
-
-	private int xBound;
-
-	private int yBound;
-
-	private int pcount;
-
-	private int refreshcount;
-
-	private int bombcount;
-
-	private int tipcount;
-
-	private int sub;
-
 	private LTimer timer, timer1;
- 
-
-	private Grid grid[][];
-
-	private Grid nexts;
-
-	private Grid nexte;
-
-	private LinkedList<Grid>[] path;
-
-	private Thread clickThread;
 
 	private StatusBar progress;
 
@@ -77,8 +58,6 @@ public class MainScreen extends Screen {
 
 	private LPaper title, over;
 
-	private Grid prev;
-
 	private LMessage mes;
 
 	private LSelect select;
@@ -87,42 +66,33 @@ public class MainScreen extends Screen {
 
 	private boolean wingame, failgame, init, overFlag;
 
-	private int stageNo, count, delCount;
-
-	private int offsetX, offsetY;
+	private int stageNo, count;
 
 	public MainScreen() {
 
 	}
 
-	public void onLoad() {
-		setBackground(Images.getInstance().getImage(10));
-		Log.i("MainScreen", "onLoad...");
-		UASegment seg = new UASegment(OpCode.TEST_OP_CLIENT, false);
-		try {
-			seg.writeInt(10);
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		NConnector.sendRequest(seg);
-		
-		initUI();
+	public void onLoad() { 
+		initGround(); 
 	}
- 
+
 	// 结束调用
 	public void dispose() {
-
+	 
 	}
+	
 
-	private void initRole() {
-		delCount = 0;
+	private void initGround() {
+		setBackground(Images.getInstance().getImage(10));
+		
 		role = new Picture(Images.getInstance().getImage(11));
 		mes = new LMessage(Images.getInstance().getImage(14), (getWidth() - 460) / 2, getHeight() - 126 - 10) {
 			public void doClick() {
 				if (!init) {
 					if (count == 0) {
 						role.setImage(Images.getInstance().getImage(12));
-						setMessage(START_MES);
+						setMessage("开始定位...");
+						LocationUtils.fixPosition();
 					} else if (isComplete()) {
 						Runnable runnable = new Runnable() {
 							public void run() {
@@ -141,7 +111,7 @@ public class MainScreen extends Screen {
 								init = true;
 								count = 0;
 
-								progress = new StatusBar(progress_number, progress_number, 325, 5, 150, 25);
+								progress = new StatusBar(80, 100, 325, 5, 150, 25);
 								progress.setDead(true);
 								MainScreen.this.add(progress);
 								if (title == null) {
@@ -188,9 +158,8 @@ public class MainScreen extends Screen {
 									MainScreen.this.remove(this);
 									break;
 								case 1:
-									mes.setVisible(true); 
-									mes.setMessage("发送登录网路请求....");
-									Player.login();
+									mes.setVisible(true);
+									mes.setMessage(EASY_MES);
 									MainScreen.this.remove(this);
 									break;
 								case 2:
@@ -227,8 +196,20 @@ public class MainScreen extends Screen {
 					if (stage != null) {
 						stage.setVisible(true);
 					}
-				}
+				} else if ((FIX_SUCCEED.equalsIgnoreCase(getMessage()) ) && isComplete()) {
+					Player.login();
+					mes.setVisible(false);
+					role.setVisible(false);
+					helpRole.setVisible(true);
+					if (stage != null) {
+						stage.setVisible(true);
+					}
 			}
+				
+				
+			}
+
+			
 		};
 		mes.setMessageLength(20);
 		mes.setAlpha(0.8f);
@@ -290,7 +271,7 @@ public class MainScreen extends Screen {
 							public void doClick() {
 								if (getAlpha() >= 1.0 && overFlag) {
 									over = null;
-									removeAll(); 
+									removeAll();
 									getSprites().setVisible(true);
 								}
 							}
@@ -306,20 +287,8 @@ public class MainScreen extends Screen {
 
 		} else {
 			wingame = false;
-			removeAll(); 
+			removeAll();
 		}
-	}
-
-	private void initUI() {
-
-		xBound = 2;
-		yBound = 2;
-  
-		wingame = false;
-		tipcount = tip_number;
-		bombcount = bomb_number;
-		refreshcount = refresh_number;
-		initRole();
 	}
 
 	public void setPaused(boolean p) {
@@ -338,39 +307,10 @@ public class MainScreen extends Screen {
 		return result;
 	}
 
-	
-	 
-	 
- 
-
-	 
-
- 
-
 	// 纯组件制作，所以不需要手动绘图。
 	public void draw(LGraphics g) {
 		GameWorld.drawAll(g);
 	}
-
-	private Grid getGrid(int x, int y) {
-
-		Sprites ss = getSprites();
-		if (ss == null) {
-			return null;
-		}
-		ISprite[] s = ss.getSprites();
-		for (int i = 0; i < s.length; i++) {
-			if (s[i] instanceof Grid) {
-				Grid g = (Grid) s[i];
-				if (g.getCollisionBox().contains(x, y)) {
-					return g;
-				}
-			}
-		}
-		return null;
-	}
-
-	 
 
 	public void onTouch(float x, float y, MotionEvent e, int pointerCount, int pointerId) {
 
@@ -388,81 +328,25 @@ public class MainScreen extends Screen {
 		if (!init) {
 			return false;
 		}
-		if (failgame) {
-			return false;
-		}
-		if (wingame || progress.getValue() == 0) {
-			return false;
-		}
-		if (nexte != null && nexts != null) {
-			if (helpRole != null) {
-				if (!role.isVisible() && helpRole.isVisible()) {
-					if (failgame) {
-						return false;
+
+		if (helpRole != null) {
+			if (!role.isVisible() && helpRole.isVisible()) {
+
+				if (onClick(helpRole)) {
+					if (stage != null) {
+						stage.setVisible(false);
 					}
-					if (onClick(helpRole)) {
-						if (stage != null) {
-							stage.setVisible(false);
-						}
-						helpRole.setVisible(false);
-						role.setImage(Images.getInstance().getImage(13));
-						role.setVisible(true);
-						mes.setMessageLength(20);
-						mes.setMessage(HELP_MES);
-						mes.setVisible(true);
-						return true;
-					}
+					helpRole.setVisible(false);
+					role.setImage(Images.getInstance().getImage(13));
+					role.setVisible(true);
+					mes.setMessageLength(20);
+					mes.setMessage(HELP_MES);
+					mes.setVisible(true);
+					return true;
 				}
 			}
 		}
 
-		if (clickThread != null) {
-			clickThread = null;
-			return false;
-		}
-
-		clickThread = new Thread() {
-			public void run() {
-				Grid current = null;
-				try {
-					if (prev != null) {
-						prev.setBorder(3);
-					}
-
-					if (prev == null) {
-						prev = getGrid(getTouchX(), getTouchY());
-						if (prev != null) {
-							prev.setBorder(0);
-						}
-					} else {
-						if (progress.getValue() == 0) {
-							return;
-						}
-
-						current = getGrid(getTouchX(), getTouchY());
-						if (current == prev) {
-							return;
-						}
-						if (current == null) {
-							prev = null;
-						}
-						if (prev == null) {
-							return;
-						}
-						
-					}
-				} catch (Exception ex) {
-					if (prev != null) {
-						prev.setBorder(3);
-					}
-					if (current != null) {
-						current.setBorder(3);
-					}
-				}
-			}
-		};
-		clickThread.start();
-		clickThread = null;
 		return true;
 	}
 
@@ -473,4 +357,34 @@ public class MainScreen extends Screen {
 	public boolean onTouchUp(MotionEvent e) {
 		return true;
 	}
+
+	@Override
+	public void handEvent(int eventCode, Object[] params) {
+		switch (eventCode) {
+			case EventCode.UPDATE_LOCATION_SUCCEED:
+				fixLocationSucceed();
+				break;
+			case EventCode.UPDATE_LOCATION_FAIL:
+				fixLocationFail();
+				break;
+
+			default:
+				break;
+		}
+		
+	}
+
+	private void fixLocationFail() {
+		mes.setVisible(true);
+		mes.setMessage(FIX_FAIL);
+		
+	}
+
+	private void fixLocationSucceed() {
+		mes.setVisible(true);
+		mes.setMessage(FIX_SUCCEED);
+		 
+	}
+	
+	 
 }

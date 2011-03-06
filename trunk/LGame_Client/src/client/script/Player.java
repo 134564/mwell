@@ -13,6 +13,7 @@ import org.loon.framework.android.game.core.graphics.device.LGraphics;
 import client.nio.NConnector;
 import client.nio.OpCode;
 import client.nio.UASegment;
+import client.util.LocationUtils;
 
 public class Player extends Sprite {
  
@@ -44,7 +45,10 @@ public class Player extends Sprite {
 	public static void login() {
 		UASegment seg = new UASegment(OpCode.PLAYER_LOGIN_CLIENT, false);
 		try {
-			seg.writeInt(1);
+			seg.writeString("maName");
+			seg.writeString("pwd");
+			seg.writeDouble(LocationUtils.lat);
+			seg.writeDouble(LocationUtils.lng);
 		} catch (IOException e) { 
 			e.printStackTrace();
 		}
