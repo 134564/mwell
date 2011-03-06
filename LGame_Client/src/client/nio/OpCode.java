@@ -29,12 +29,15 @@ public class OpCode {
 	
 	
 	/**
-	 * �û���¼<br>
-	 * int id<br>
+	 * 用户登录<br>
+	 * String username<br>
+	 * String pwd<br>
+	 * double id<br>
+	 * double id<br>
 	 */
 	public static final short PLAYER_LOGIN_CLIENT = 102;
 	/**
-	 * ��ɫ��Ϣ<br> 
+	 * 返回用户登录<br> 
 	 * String name
 	 */
 	public static final short PLAYER_LOGIN_SERVER = 103;

@@ -15,8 +15,10 @@ public class Log {
 	}
 	private static void log(String s){
 		System.out.println(s);
+		android.util.Log.i("Log ", s);
 	}
 	public static void err(String string) {
 		System.err.println("ERRO:"+string);
+		android.util.Log.e("Log ", string);
 	}
 }
