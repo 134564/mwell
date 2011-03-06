@@ -14,6 +14,7 @@ import server.io.Packet;
 public class Player extends CombatUnit implements Client {
 	
 	protected ClientSession session;
+	
 	 
 	
 	@Override
@@ -122,6 +123,12 @@ public class Player extends CombatUnit implements Client {
 	@Override
 	public void setMapCell(MapCell cell) {
 		// TODO Auto-generated method stub
+		
+	}
+
+	public void setPosition(double lat, double lng) {
+		this.lat = lat;
+		this.lng = lng;
 		
 	}
  

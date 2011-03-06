@@ -41,10 +41,17 @@ public class PlayerService implements Service {
 	
 	@OP(code = OpCode.PLAYER_LOGIN_CLIENT)
 	public void login(Packet packet, ClientSession session) {
-		int id = packet.getInt();
+		String name = packet.getString();
+		String pwd = packet.getString();
+		double lat = packet.getDouble();
+		double lng = packet.getDouble();
 		
 		Player player = new Player();
-		player.setName("player_" + id);
+		player.setName("player_" + name);
+		player.setPosition(lat, lng);
+		
+		log.info(name + " µÇÂ¼³É¹¦ : " + "[ " + lat+ ", " + lng +"]");
+		
 		loginSuccess(player);
 		session.setClient(player);
 		

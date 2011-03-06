@@ -10,6 +10,7 @@ public abstract class BaseUnit implements Unit {
 	private String name;
 	protected VMapReference map;
 	protected int x, y;
+	protected double lat, lng; 
 	protected MapCell mapCell;
 	protected int moveType;
 
@@ -58,6 +59,24 @@ public abstract class BaseUnit implements Unit {
 
 	public void setY(int y) {
 		this.y = y;
+	}
+	
+	
+
+	public double getLat() {
+		return lat;
+	}
+
+	public void setLat(double lat) {
+		this.lat = lat;
+	}
+
+	public double getLng() {
+		return lng;
+	}
+
+	public void setLng(double lng) {
+		this.lng = lng;
 	}
 
 	@Override
