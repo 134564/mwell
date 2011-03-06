@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<peony>
+	<connections>
+		<connection>
+			<type>direct</type>
+			<address>0.0.0.0</address>
+			<port>7070</port>
+		</connection> 
+	</connections>
+ 
+</peony>
