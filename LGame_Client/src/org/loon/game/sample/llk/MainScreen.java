@@ -1,0 +1,476 @@
+package org.loon.game.sample.llk;
+
+import java.io.IOException;
+import java.util.LinkedList;
+
+import org.loon.framework.android.game.action.sprite.ISprite;
+import org.loon.framework.android.game.action.sprite.Label;
+import org.loon.framework.android.game.action.sprite.Picture;
+import org.loon.framework.android.game.action.sprite.Sprite;
+import org.loon.framework.android.game.action.sprite.Sprites;
+import org.loon.framework.android.game.action.sprite.StatusBar;
+import org.loon.framework.android.game.core.graphics.LColor;
+import org.loon.framework.android.game.core.graphics.LFont;
+import org.loon.framework.android.game.core.graphics.LImage;
+import org.loon.framework.android.game.core.graphics.Screen;
+import org.loon.framework.android.game.core.graphics.device.LGraphics;
+import org.loon.framework.android.game.core.graphics.window.LMessage;
+import org.loon.framework.android.game.core.graphics.window.LPaper;
+import org.loon.framework.android.game.core.graphics.window.LSelect;
+import org.loon.framework.android.game.core.timer.LTimer;
+import org.loon.framework.android.game.core.timer.LTimerContext;
+
+import client.nio.NConnector;
+import client.nio.OpCode;
+import client.nio.SegmentManager;
+import client.nio.UASegment;
+import client.script.GameWorld;
+import client.script.Player;
+
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+
+public class MainScreen extends Screen {
+
+	final private static String SORRY = "抱歉";
+
+	final private static String START_MES = "游戏开始！", SORRY1_MES = SORRY + ", <r刷新/> 在目前使用了。", SORRY2_MES = SORRY
+			+ ", <r提示/> 在目前无法使用了。", SORRY3_MES = SORRY + ", <r炸弹/> 在目前无法使用了。", EASY_MES = "好的，这非常容易～";
+
+	final private static String WAIT_MES = "预备……", HELP_MES = "我能为你提供什么服务吗？";
+
+	private int bomb_number, refresh_number, tip_number, progress_number;
+
+	private int xBound;
+
+	private int yBound;
+
+	private int pcount;
+
+	private int refreshcount;
+
+	private int bombcount;
+
+	private int tipcount;
+
+	private int sub;
+
+	private LTimer timer, timer1;
+ 
+
+	private Grid grid[][];
+
+	private Grid nexts;
+
+	private Grid nexte;
+
+	private LinkedList<Grid>[] path;
+
+	private Thread clickThread;
+
+	private StatusBar progress;
+
+	private Label stage, time;
+
+	private Picture role;
+
+	private LPaper title, over;
+
+	private Grid prev;
+
+	private LMessage mes;
+
+	private LSelect select;
+
+	private Sprite helpRole;
+
+	private boolean wingame, failgame, init, overFlag;
+
+	private int stageNo, count, delCount;
+
+	private int offsetX, offsetY;
+
+	public MainScreen() {
+
+	}
+
+	public void onLoad() {
+		setBackground(Images.getInstance().getImage(10));
+		Log.i("MainScreen", "onLoad...");
+		UASegment seg = new UASegment(OpCode.TEST_OP_CLIENT, false);
+		try {
+			seg.writeInt(10);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		NConnector.sendRequest(seg);
+		
+		initUI();
+	}
+ 
+	// 结束调用
+	public void dispose() {
+
+	}
+
+	private void initRole() {
+		delCount = 0;
+		role = new Picture(Images.getInstance().getImage(11));
+		mes = new LMessage(Images.getInstance().getImage(14), (getWidth() - 460) / 2, getHeight() - 126 - 10) {
+			public void doClick() {
+				if (!init) {
+					if (count == 0) {
+						role.setImage(Images.getInstance().getImage(12));
+						setMessage(START_MES);
+					} else if (isComplete()) {
+						Runnable runnable = new Runnable() {
+							public void run() {
+
+								stage = new Label("Stage - " + stageNo, 160, 25);
+								stage.setColor(LColor.black);
+								stage.setFont(LFont.getFont("Dialog", 1, 20));
+								MainScreen.this.add(stage);
+								time = new Label("Time", 270, 25);
+								time.setColor(LColor.black);
+								time.setFont(LFont.getFont("Dialog", 1, 20));
+								MainScreen.this.add(time);
+								setVisible(false);
+								role.setVisible(false);
+								setVisible(false);
+								init = true;
+								count = 0;
+
+								progress = new StatusBar(progress_number, progress_number, 325, 5, 150, 25);
+								progress.setDead(true);
+								MainScreen.this.add(progress);
+								if (title == null) {
+									title = new LPaper(Images.getInstance().getImage(15), 55, 55);
+								} else {
+									title.setLocation(55, 55);
+								}
+								centerOn(title);
+								MainScreen.this.add(title);
+								if (stageNo < 5) {
+									if (helpRole == null) {
+										helpRole = new Sprite(Images.getInstance().getImage(8));
+										helpRole.setLocation(MainScreen.this.getWidth() - helpRole.getWidth() - 10,
+												MainScreen.this.getHeight() - helpRole.getHeight() - 10);
+										MainScreen.this.add(helpRole);
+									} else {
+										helpRole.setVisible(true);
+										MainScreen.this.add(helpRole);
+									}
+								} else {
+									if (helpRole != null) {
+										helpRole.setVisible(false);
+									}
+								}
+
+							}
+						};
+						callEvent(runnable);
+
+					}
+					count++;
+				}
+
+				if (HELP_MES.equalsIgnoreCase(getMessage()) && isComplete()) {
+					setVisible(false);
+					select = new LSelect(Images.getInstance().getImage(14), (MainScreen.this.getWidth() - 460) / 2,
+							MainScreen.this.getHeight() - 126 - 10) {
+						public void doClick() {
+
+							switch (getResultIndex()) {
+								case 0:
+									mes.setVisible(true);
+									mes.setMessage(EASY_MES);
+									MainScreen.this.remove(this);
+									break;
+								case 1:
+									mes.setVisible(true); 
+									mes.setMessage("发送登录网路请求....");
+									Player.login();
+									MainScreen.this.remove(this);
+									break;
+								case 2:
+									MainScreen.this.remove(this);
+									break;
+								case 3:
+									mes.setVisible(true);
+									MainScreen.this.remove(this);
+									mes.setVisible(false);
+									role.setVisible(false);
+									helpRole.setVisible(true);
+									if (stage != null) {
+										stage.setVisible(true);
+									}
+									break;
+								default:
+									break;
+							}
+						}
+
+					};
+					select.setFontColor(LColor.black);
+					select.setAlpha(0.8f);
+					select.setTopOffset(-5);
+					select.setMessage(new String[] { "1.刷新", "2.登录", "3.炸弹", "4.取消" });
+					MainScreen.this.add(select);
+					return;
+
+				} else if ((EASY_MES.equalsIgnoreCase(getMessage()) || getMessage().startsWith(SORRY)) && isComplete()) {
+
+					mes.setVisible(false);
+					role.setVisible(false);
+					helpRole.setVisible(true);
+					if (stage != null) {
+						stage.setVisible(true);
+					}
+				}
+			}
+		};
+		mes.setMessageLength(20);
+		mes.setAlpha(0.8f);
+		mes.setFontColor(LColor.black);
+		mes.setMessage(WAIT_MES);
+		add(role);
+		add(mes);
+
+	}
+
+	public void alter(LTimerContext t) {
+		SegmentManager.cycle();
+
+		if (isWait()) {
+			return;
+		}
+		if (timer1 == null) {
+			timer1 = new LTimer(50);
+		}
+		if (title != null && timer1.action(t.getTimeSinceLastUpdate())) {
+			if (title.getY() > 50) {
+				title.move_up(8);
+				title.validatePosition();
+			} else if (title.getAlpha() > 0.2f) {
+				title.setAlpha(title.getAlpha() - 0.1f);
+			} else {
+				title.setVisible(false);
+				remove(title);
+				title = null;
+			}
+			return;
+		} else if (over != null && timer1.action(t.getTimeSinceLastUpdate()) && !overFlag) {
+			if (over.getY() < (getHeight() - over.getHeight()) / 2) {
+				over.move_down(8);
+				over.validatePosition();
+			} else if (over.getAlpha() < 1.0f) {
+				over.setAlpha(over.getAlpha() + 0.1f);
+			} else {
+				centerOn(over);
+				overFlag = true;
+			}
+
+			return;
+		}
+		if (!wingame) {
+			if (timer == null) {
+				timer = new LTimer(100);
+			}
+			if (timer.action(t.getTimeSinceLastUpdate())) {
+				if (progress != null) {
+
+					progress.setUpdate(progress.getValue() - (stageNo * 10));
+					if (progress.getValue() <= 100 && !failgame) {
+
+						failgame = true;
+						getSprites().setVisible(false);
+
+						over = new LPaper(Images.getInstance().getImage(16), 0, 0) {
+							public void doClick() {
+								if (getAlpha() >= 1.0 && overFlag) {
+									over = null;
+									removeAll(); 
+									getSprites().setVisible(true);
+								}
+							}
+						};
+						over.setAlpha(0.1f);
+						centerOn(over);
+						over.setY(0);
+						add(over);
+					}
+				}
+
+			}
+
+		} else {
+			wingame = false;
+			removeAll(); 
+		}
+	}
+
+	private void initUI() {
+
+		xBound = 2;
+		yBound = 2;
+  
+		wingame = false;
+		tipcount = tip_number;
+		bombcount = bomb_number;
+		refreshcount = refresh_number;
+		initRole();
+	}
+
+	public void setPaused(boolean p) {
+		if (p) {
+			getSprites().setVisible(false);
+		} else {
+			getSprites().setVisible(true);
+		}
+	}
+
+	public boolean isWait() {
+		boolean result = false;
+		if (role != null) {
+			result = role.isVisible();
+		}
+		return result;
+	}
+
+	
+	 
+	 
+ 
+
+	 
+
+ 
+
+	// 纯组件制作，所以不需要手动绘图。
+	public void draw(LGraphics g) {
+		GameWorld.drawAll(g);
+	}
+
+	private Grid getGrid(int x, int y) {
+
+		Sprites ss = getSprites();
+		if (ss == null) {
+			return null;
+		}
+		ISprite[] s = ss.getSprites();
+		for (int i = 0; i < s.length; i++) {
+			if (s[i] instanceof Grid) {
+				Grid g = (Grid) s[i];
+				if (g.getCollisionBox().contains(x, y)) {
+					return g;
+				}
+			}
+		}
+		return null;
+	}
+
+	 
+
+	public void onTouch(float x, float y, MotionEvent e, int pointerCount, int pointerId) {
+
+	}
+
+	public boolean onKeyDown(int keyCode, KeyEvent e) {
+		return false;
+	}
+
+	public boolean onKeyUp(int keyCode, KeyEvent e) {
+		return false;
+	}
+
+	public boolean onTouchDown(MotionEvent e) {
+		if (!init) {
+			return false;
+		}
+		if (failgame) {
+			return false;
+		}
+		if (wingame || progress.getValue() == 0) {
+			return false;
+		}
+		if (nexte != null && nexts != null) {
+			if (helpRole != null) {
+				if (!role.isVisible() && helpRole.isVisible()) {
+					if (failgame) {
+						return false;
+					}
+					if (onClick(helpRole)) {
+						if (stage != null) {
+							stage.setVisible(false);
+						}
+						helpRole.setVisible(false);
+						role.setImage(Images.getInstance().getImage(13));
+						role.setVisible(true);
+						mes.setMessageLength(20);
+						mes.setMessage(HELP_MES);
+						mes.setVisible(true);
+						return true;
+					}
+				}
+			}
+		}
+
+		if (clickThread != null) {
+			clickThread = null;
+			return false;
+		}
+
+		clickThread = new Thread() {
+			public void run() {
+				Grid current = null;
+				try {
+					if (prev != null) {
+						prev.setBorder(3);
+					}
+
+					if (prev == null) {
+						prev = getGrid(getTouchX(), getTouchY());
+						if (prev != null) {
+							prev.setBorder(0);
+						}
+					} else {
+						if (progress.getValue() == 0) {
+							return;
+						}
+
+						current = getGrid(getTouchX(), getTouchY());
+						if (current == prev) {
+							return;
+						}
+						if (current == null) {
+							prev = null;
+						}
+						if (prev == null) {
+							return;
+						}
+						
+					}
+				} catch (Exception ex) {
+					if (prev != null) {
+						prev.setBorder(3);
+					}
+					if (current != null) {
+						current.setBorder(3);
+					}
+				}
+			}
+		};
+		clickThread.start();
+		clickThread = null;
+		return true;
+	}
+
+	public boolean onTouchMove(MotionEvent e) {
+		return true;
+	}
+
+	public boolean onTouchUp(MotionEvent e) {
+		return true;
+	}
+}
