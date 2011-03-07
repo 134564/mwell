@@ -15,6 +15,6 @@ public class GameWorld {
 			sprite.drawMe(g); 
 		}
 		g.setColor(0);
-		g.drawString(error, 10, 50);
+		g.drawString(error, 10, 80);
 	}
 }
