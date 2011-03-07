@@ -54,7 +54,8 @@ public class PlayerService implements Service {
 		
 		loginSuccess(player);
 		session.setClient(player);
-		
+		player.setX((int)lat);
+		player.setY((int)lng);
 		Packet pt = new Packet(OpCode.PLAYER_LOGIN_SERVER);		
 		pt.put(player.toClientBytes());
 		
