@@ -4,6 +4,6 @@
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="lib" path="libs/admob-sdk-android.jar"/>
-	<classpathentry kind="lib" path="libs/LGame-Android-Core-0.2.9.jar" sourcepath="D:/project/LGame_0.2.97/LGame-Android-0.2.9/src"/>
+	<classpathentry kind="lib" path="libs/LGame-Android-Core-0.2.9.jar" sourcepath="E:/LGame/LGame-Android-0.2.9/src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

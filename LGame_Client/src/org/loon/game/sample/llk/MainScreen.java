@@ -23,6 +23,8 @@ import org.loon.framework.android.game.core.timer.LTimerContext;
 import client.event.Event;
 import client.event.EventCode;
 import client.event.Eventable;
+import client.game.gui.CallBackAction;
+import client.game.gui.LMessageEx;
 import client.nio.NConnector;
 import client.nio.OpCode;
 import client.nio.SegmentManager;
@@ -59,7 +61,7 @@ public class MainScreen extends Screen implements Eventable{
 
 	private LPaper title, over;
 
-	private LMessage mes;
+	private LMessageEx mes;
 
 	private LSelect select;
 
@@ -68,6 +70,8 @@ public class MainScreen extends Screen implements Eventable{
 	private boolean wingame, failgame, init, overFlag;
 
 	private int stageNo, count;
+	
+	private CallBackAction initAction;
 
 	public MainScreen() {
 		Event.add(EventCode.UPDATE_LOCATION_FAIL, this);
@@ -88,66 +92,26 @@ public class MainScreen extends Screen implements Eventable{
 		setBackground(Images.getInstance().getImage(10));
 		
 		role = new Picture(Images.getInstance().getImage(11));
-		mes = new LMessage(Images.getInstance().getImage(14), (getWidth() - 460) / 2, getHeight() - 126 - 10) {
-			public void doClick() {
+		mes = new LMessageEx(Images.getInstance().getImage(14), (getWidth() - 460) / 2, getHeight() - 126 - 10);
+		
+	    initAction = new CallBackAction(){
+			public void run() {
 				if (!init) {
 					if (count == 0) {
 						role.setImage(Images.getInstance().getImage(12));
-						setMessage("开始定位..."); 
-					} else if (isComplete()) { 
-						Runnable runnable = new Runnable() {
-							public void run() {
-								LocationUtils.fixPosition();
-								stage = new Label("Stage - " + stageNo, 160, 25);
-								stage.setColor(LColor.black);
-								stage.setFont(LFont.getFont("Dialog", 1, 20));
-								MainScreen.this.add(stage);
-								time = new Label("Time", 270, 25);
-								time.setColor(LColor.black);
-								time.setFont(LFont.getFont("Dialog", 1, 20));
-								MainScreen.this.add(time);
-								setVisible(false);
-								role.setVisible(false);
-								setVisible(false);
-								init = true;
-								count = 0;
-
-								progress = new StatusBar(80, 100, 325, 5, 150, 25);
-								progress.setDead(true);
-								MainScreen.this.add(progress);
-								if (title == null) {
-									title = new LPaper(Images.getInstance().getImage(15), 55, 55);
-								} else {
-									title.setLocation(55, 55);
-								}
-								centerOn(title);
-								MainScreen.this.add(title);
-								if (stageNo < 5) {
-									if (helpRole == null) {
-										helpRole = new Sprite(Images.getInstance().getImage(8));
-										helpRole.setLocation(MainScreen.this.getWidth() - helpRole.getWidth() - 10,
-												MainScreen.this.getHeight() - helpRole.getHeight() - 10);
-										MainScreen.this.add(helpRole);
-									} else {
-										helpRole.setVisible(true);
-										MainScreen.this.add(helpRole);
-									}
-								} else {
-									if (helpRole != null) {
-										helpRole.setVisible(false);
-									}
-								}
-
-							}
-						};
-						callEvent(runnable);
+						mes.setMessage("开始定位..."); 
+					} else if (mes.isComplete()) { 
+						if(LocationUtils.lat != 0) {
+							fixLocationSucceed();
+						}
+						 
 
 					}
 					count++;
 				}
 
-				if (HELP_MES.equalsIgnoreCase(getMessage()) && isComplete()) {
-					setVisible(false);
+				if (HELP_MES.equalsIgnoreCase(mes.getMessage()) && mes.isComplete()) {
+					mes.setVisible(false);
 					select = new LSelect(Images.getInstance().getImage(14), (MainScreen.this.getWidth() - 460) / 2,
 							MainScreen.this.getHeight() - 126 - 10) {
 						public void doClick() {
@@ -189,7 +153,7 @@ public class MainScreen extends Screen implements Eventable{
 					MainScreen.this.add(select);
 					return;
 
-				} else if ((EASY_MES.equalsIgnoreCase(getMessage()) || getMessage().startsWith(SORRY)) && isComplete()) {
+				} else if ((EASY_MES.equalsIgnoreCase(mes.getMessage()) || mes.getMessage().startsWith(SORRY)) && mes.isComplete()) {
 
 					mes.setVisible(false);
 					role.setVisible(false);
@@ -197,21 +161,14 @@ public class MainScreen extends Screen implements Eventable{
 					if (stage != null) {
 						stage.setVisible(true);
 					}
-				} else if ((FIX_SUCCEED.equalsIgnoreCase(getMessage()) ) && isComplete()) {
-					Player.login();
-					mes.setVisible(false);
-					role.setVisible(false);
-					helpRole.setVisible(true);
-					if (stage != null) {
-						stage.setVisible(true);
-					}
-			}
+				}
 				
 				
 			}
 
 			
 		};
+		mes.setAction(initAction);
 		mes.setMessageLength(20);
 		mes.setAlpha(0.8f);
 		mes.setFontColor(LColor.black);
@@ -223,73 +180,7 @@ public class MainScreen extends Screen implements Eventable{
 
 	public void alter(LTimerContext t) {
 		SegmentManager.cycle();
-
-		if (isWait()) {
-			return;
-		}
-		if (timer1 == null) {
-			timer1 = new LTimer(50);
-		}
-		if (title != null && timer1.action(t.getTimeSinceLastUpdate())) {
-			if (title.getY() > 50) {
-				title.move_up(8);
-				title.validatePosition();
-			} else if (title.getAlpha() > 0.2f) {
-				title.setAlpha(title.getAlpha() - 0.1f);
-			} else {
-				title.setVisible(false);
-				remove(title);
-				title = null;
-			}
-			return;
-		} else if (over != null && timer1.action(t.getTimeSinceLastUpdate()) && !overFlag) {
-			if (over.getY() < (getHeight() - over.getHeight()) / 2) {
-				over.move_down(8);
-				over.validatePosition();
-			} else if (over.getAlpha() < 1.0f) {
-				over.setAlpha(over.getAlpha() + 0.1f);
-			} else {
-				centerOn(over);
-				overFlag = true;
-			}
-
-			return;
-		}
-		if (!wingame) {
-			if (timer == null) {
-				timer = new LTimer(100);
-			}
-			if (timer.action(t.getTimeSinceLastUpdate())) {
-				if (progress != null) {
-
-					progress.setUpdate(progress.getValue() - (stageNo * 10));
-					if (progress.getValue() <= 100 && !failgame) {
-
-						failgame = true;
-						getSprites().setVisible(false);
-
-						over = new LPaper(Images.getInstance().getImage(16), 0, 0) {
-							public void doClick() {
-								if (getAlpha() >= 1.0 && overFlag) {
-									over = null;
-									removeAll();
-									getSprites().setVisible(true);
-								}
-							}
-						};
-						over.setAlpha(0.1f);
-						centerOn(over);
-						over.setY(0);
-						add(over);
-					}
-				}
-
-			}
-
-		} else {
-			wingame = false;
-			removeAll();
-		}
+ 
 	}
 
 	public void setPaused(boolean p) {
@@ -311,6 +202,9 @@ public class MainScreen extends Screen implements Eventable{
 	// 纯组件制作，所以不需要手动绘图。
 	public void draw(LGraphics g) {
 		GameWorld.drawAll(g);
+		
+		g.fill3DRect(100, 100, 20, 20, true);
+		g.drawString("TEST", 100, 100 - 20);
 	}
 
 	public void onTouch(float x, float y, MotionEvent e, int pointerCount, int pointerId) {
@@ -377,14 +271,37 @@ public class MainScreen extends Screen implements Eventable{
 
 	private void fixLocationFail() {
 		mes.setVisible(true);
-		mes.setMessage(FIX_FAIL);
+		mes.setMessage(FIX_FAIL, new CallBackAction() {
+			@Override
+			public void run() {
+				if (mes.isComplete()) {
+					Player.login();
+					mes.setVisible(false);
+					role.setVisible(false);
+					helpRole.setVisible(true); 
+				}
+			}
+
+		});
 		
 	}
 
 	private void fixLocationSucceed() {
 		mes.setVisible(true);
-		mes.setMessage(FIX_SUCCEED);
-		 
+		mes.setMessage(FIX_SUCCEED, new CallBackAction() {
+			@Override
+			public void run() {
+				if (mes.isComplete()) {
+					if (GameWorld.spriteList.size() == 0) {
+						Player.login();
+					}else {
+						mes.setVisible(false);
+						role.setVisible(false); 
+					}
+				}
+			}
+
+		}); 
 	}
 	
 	 
