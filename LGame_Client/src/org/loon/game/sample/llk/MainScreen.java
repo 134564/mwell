@@ -20,6 +20,7 @@ import org.loon.framework.android.game.core.graphics.window.LSelect;
 import org.loon.framework.android.game.core.timer.LTimer;
 import org.loon.framework.android.game.core.timer.LTimerContext;
 
+import client.event.Event;
 import client.event.EventCode;
 import client.event.Eventable;
 import client.nio.NConnector;
@@ -69,7 +70,8 @@ public class MainScreen extends Screen implements Eventable{
 	private int stageNo, count;
 
 	public MainScreen() {
-
+		Event.add(EventCode.UPDATE_LOCATION_FAIL, this);
+		Event.add(EventCode.UPDATE_LOCATION_SUCCEED, this);
 	}
 
 	public void onLoad() { 
@@ -91,12 +93,11 @@ public class MainScreen extends Screen implements Eventable{
 				if (!init) {
 					if (count == 0) {
 						role.setImage(Images.getInstance().getImage(12));
-						setMessage("开始定位...");
-						LocationUtils.fixPosition();
-					} else if (isComplete()) {
+						setMessage("开始定位..."); 
+					} else if (isComplete()) { 
 						Runnable runnable = new Runnable() {
 							public void run() {
-
+								LocationUtils.fixPosition();
 								stage = new Label("Stage - " + stageNo, 160, 25);
 								stage.setColor(LColor.black);
 								stage.setFont(LFont.getFont("Dialog", 1, 20));

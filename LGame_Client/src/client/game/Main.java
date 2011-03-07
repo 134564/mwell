@@ -7,6 +7,7 @@ import android.content.Context;
 import android.location.LocationManager;
 
 import client.nio.NConnector;
+import client.util.LocationUtils;
 
 
 public class Main extends LGameAndroid2DActivity {
@@ -22,6 +23,7 @@ public class Main extends LGameAndroid2DActivity {
 		
 		new Thread(new NConnector("192.168.10.97:7070", NConnector.THREAD_UWAP, false)).start();
 		locationManager = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
+//		LocationUtils.fixPosition();
 	}
 
 }

@@ -18,5 +18,5 @@
 	<classpathentry kind="lib" path="/Server_Engine/trunk/lib/slf4j-log4j12-1.6.1.jar"/>
 	<classpathentry kind="lib" path="/Server_Engine/trunk/lib/trove-3.0.0a5.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/LGame_Client"/>
-	<classpathentry kind="output" path="LGame-Android/TDExmaple/bin"/>
+	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -35,7 +35,7 @@ public class LocationUtils {
 		}
 
 		public void onProviderDisabled(String provider) {
-			updateWithNewLocation(null);
+//			updateWithNewLocation(null);
 		}
 
 		public void onProviderEnabled(String provider) {
@@ -49,10 +49,10 @@ public class LocationUtils {
 		if (location != null) {
 			lat = location.getLatitude();
 			lng = location.getLongitude(); 
-			Log.info("获取地理信息");
+			Log.info("定位成功!");
 			Event.fire(EventCode.UPDATE_LOCATION_SUCCEED);
 		} else { 
-			Log.info("获取地理信息失败");
+			Log.info("定位失败!");
 			Event.fire(EventCode.UPDATE_LOCATION_FAIL);
 		}
 		 
