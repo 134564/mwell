@@ -1,7 +1,6 @@
 package client.game;
 
 import org.loon.framework.android.game.LGameAndroid2DActivity;
-import org.loon.game.sample.llk.MainScreen;
 
 import android.content.Context;
 import android.location.Criteria;

@@ -1,4 +1,4 @@
-package org.loon.game.sample.llk;
+package client.util;
 
 import org.loon.framework.android.game.core.graphics.LImage;
 import org.loon.framework.android.game.core.resource.LPKResource;
