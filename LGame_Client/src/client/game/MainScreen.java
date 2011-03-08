@@ -38,29 +38,20 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-public class MainScreen extends Screen implements Eventable{
+public class MainScreen extends Screen implements Eventable {
 
 	final private static String SORRY = "抱歉";
 
-	final private static String START_MES = "游戏开始！", 
-	SORRY1_MES = SORRY + ", <r刷新/> 在目前使用了。", 
-	SORRY2_MES = SORRY + ", <r提示/> 在目前无法使用了。",
-			SORRY3_MES = SORRY + ", <r炸弹/> 在目前无法使用了。",
-			FIX_FAIL = "定位失败, 重新定位?",
-			FIX_SUCCEED = "定位成功, 是否降落",
-			EASY_MES = "好的，这非常容易～";
+	final private static String START_MES = "游戏开始！", SORRY1_MES = SORRY + ", <r刷新/> 在目前使用了。", SORRY2_MES = SORRY
+			+ ", <r提示/> 在目前无法使用了。", SORRY3_MES = SORRY + ", <r炸弹/> 在目前无法使用了。", FIX_FAIL = "定位失败, 重新定位?",
+			FIX_SUCCEED = "定位成功, 是否降落", EASY_MES = "好的，这非常容易～";
 
 	final private static String WAIT_MES = "预备……", HELP_MES = "我能为你提供什么服务吗？";
-
-	private LTimer timer, timer1;
-
-	private StatusBar progress;
-
+ 
 	private Label stage, time;
 
 	private Picture role;
-
-	private LPaper title, over;
+ 
 
 	private LMessageEx mes;
 
@@ -71,7 +62,7 @@ public class MainScreen extends Screen implements Eventable{
 	private boolean wingame, failgame, init, overFlag;
 
 	private int stageNo, count;
-	
+
 	private CallBackAction initAction;
 
 	public MainScreen() {
@@ -79,33 +70,31 @@ public class MainScreen extends Screen implements Eventable{
 		Event.add(EventCode.UPDATE_LOCATION_SUCCEED, this);
 	}
 
-	public void onLoad() { 
-		initGround(); 
+	public void onLoad() {
+		initGround();
 	}
 
 	// 结束调用
 	public void dispose() {
-	 
+
 	}
-	
 
 	private void initGround() {
 		setBackground(Images.getInstance().getImage(10));
-		
+
 		role = new Picture(Images.getInstance().getImage(11));
 		mes = new LMessageEx(Images.getInstance().getImage(14), (getWidth() - 460) / 2, getHeight() - 126 - 10);
-		
-	    initAction = new CallBackAction(){
+
+		initAction = new CallBackAction() {
 			public void run() {
 				if (!init) {
 					if (count == 0) {
 						role.setImage(Images.getInstance().getImage(12));
-						mes.setMessage("开始定位..."); 
-					} else if (mes.isComplete()) { 
-						if(LocationUtils.lat != 0) {
+						mes.setMessage("开始定位...");
+					} else if (mes.isComplete()) {
+						if (LocationUtils.lat != 0) {
 							fixLocationSucceed();
 						}
-						 
 
 					}
 					count++;
@@ -154,7 +143,8 @@ public class MainScreen extends Screen implements Eventable{
 					MainScreen.this.add(select);
 					return;
 
-				} else if ((EASY_MES.equalsIgnoreCase(mes.getMessage()) || mes.getMessage().startsWith(SORRY)) && mes.isComplete()) {
+				} else if ((EASY_MES.equalsIgnoreCase(mes.getMessage()) || mes.getMessage().startsWith(SORRY))
+						&& mes.isComplete()) {
 
 					mes.setVisible(false);
 					role.setVisible(false);
@@ -163,11 +153,9 @@ public class MainScreen extends Screen implements Eventable{
 						stage.setVisible(true);
 					}
 				}
-				
-				
+
 			}
 
-			
 		};
 		mes.setAction(initAction);
 		mes.setMessageLength(20);
@@ -181,7 +169,7 @@ public class MainScreen extends Screen implements Eventable{
 
 	public void alter(LTimerContext t) {
 		SegmentManager.cycle();
- 
+
 	}
 
 	public void setPaused(boolean p) {
@@ -192,18 +180,11 @@ public class MainScreen extends Screen implements Eventable{
 		}
 	}
 
-	public boolean isWait() {
-		boolean result = false;
-		if (role != null) {
-			result = role.isVisible();
-		}
-		return result;
-	}
-
-	// 纯组件制作，所以不需要手动绘图。
+	 
+ 
 	public void draw(LGraphics g) {
 		GameWorld.drawAll(g);
-		
+
 		g.fill3DRect(100, 100, 20, 20, true);
 		g.drawString("TEST", 100, 100 - 20);
 	}
@@ -267,7 +248,7 @@ public class MainScreen extends Screen implements Eventable{
 			default:
 				break;
 		}
-		
+
 	}
 
 	private void fixLocationFail() {
@@ -279,31 +260,31 @@ public class MainScreen extends Screen implements Eventable{
 					Player.login();
 					mes.setVisible(false);
 					role.setVisible(false);
-					helpRole.setVisible(true); 
+					helpRole.setVisible(true);
 				}
 			}
 
 		});
-		
+
 	}
 
 	private void fixLocationSucceed() {
 		mes.setVisible(true);
-		mes.setMessage(FIX_SUCCEED, new CallBackAction() {
+		String locType = LocationUtils.locationedType == 0 ? "精确的" : "Gear ";
+		mes.setMessage(locType + FIX_SUCCEED, new CallBackAction() {
 			@Override
 			public void run() {
 				if (mes.isComplete()) {
 					if (GameWorld.spriteList.size() == 0) {
 						Player.login();
-					}else {
+					} else {
 						mes.setVisible(false);
-						role.setVisible(false); 
+						role.setVisible(false);
 					}
 				}
 			}
 
-		}); 
+		});
 	}
-	
-	 
+
 }
